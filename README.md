@@ -11,7 +11,7 @@
 
 `course-forge` builds record-ready Vite + React + TypeScript interactive courseware that behaves like a professional e-learning production surface. Start from a single knowledge document or prepared narration script, and the skill guides you through section planning, interactive chapter development, TTS audio synthesis, subtitle timing, and deployment — all with hard checkpoints for human approval.
 
-**Born from 97+ chapters of production courseware** for China's AI Trainer Level-3 vocational certification, covering text, video, speech, and point-cloud data processing.
+**Born from 97+ chapters of production courseware** across text, video, speech, and point-cloud data processing domains.
 
 ---
 
