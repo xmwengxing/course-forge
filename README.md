@@ -151,13 +151,13 @@ course/
 
 ## Theme Gallery
 
-`course-forge` inherits 23 built-in themes from web-video-presentation. Each has its own design signature, typography, and motion character.
+Select a theme during checkpoint phase, or browse all 23:
 
 | creative-voltage | blueprint | swiss-ikb | chalk-garden |
 |:--:|:--:|:--:|:--:|
-| ![cv](https://cdn.jsdelivr.net/gh/ConardLi/garden-skills@main/skills/web-video-presentation/themes/creative-voltage/theme.json) | ![bp](https://cdn.jsdelivr.net/gh/ConardLi/garden-skills@main/skills/web-video-presentation/themes/blueprint/theme.json) | ![si](https://cdn.jsdelivr.net/gh/ConardLi/garden-skills@main/skills/web-video-presentation/themes/swiss-ikb/theme.json) | ![cg](https://cdn.jsdelivr.net/gh/ConardLi/garden-skills@main/skills/web-video-presentation/themes/chalk-garden/theme.json) |
+| creative talks | tech architecture | data reports | popular science |
 
-> **Full 23-theme gallery with live previews:** [open in original project](https://github.com/ConardLi/garden-skills/blob/main/skills/web-video-presentation/README.md#theme-gallery)
+> **Full 23-theme gallery with live 16:9 previews, design signatures, and best-for tags:** [open in original project](https://github.com/ConardLi/garden-skills/blob/main/skills/web-video-presentation/README.md#theme-gallery)
 
 ---
 
