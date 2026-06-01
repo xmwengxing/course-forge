@@ -60,6 +60,8 @@ bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk
 
 ## 课程结构
 
+![课程布局示意图](./assets/layout-diagram.svg)
+
 ```
 course/
 ├── course.json              # 段/节/章 三级架构
@@ -72,7 +74,7 @@ course/
 
 ## 主题
 
-继承 web-video-presentation 的 23 个内置主题，每个有独立的设计签名、字体和动效风格。
+继承 web-video-presentation 的 23 个内置主题，每个有独立的设计签名、字体和动效风格。[查看完整主题画廊 →](https://github.com/ConardLi/garden-skills/blob/main/skills/web-video-presentation/README.md#theme-gallery)
 
 ---
 
