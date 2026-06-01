@@ -18,16 +18,16 @@
 
 ```bash
 # 完整安装（模板 + 主题 + 脚本）
-npx skills add shijingtian/course-forge
+npx skills add xmwengxing/course-forge
 
 # 最小安装（仅 SKILL.md + references + scripts）
-npx skills add shijingtian/course-forge -s course-forge --minimal
+npx skills add xmwengxing/course-forge -s course-forge --minimal
 ```
 
 ### 方式 B · 手动复制
 
 ```bash
-git clone https://github.com/shijingtian/course-forge.git
+git clone https://github.com/xmwengxing/course-forge.git
 cp -r course-forge /你的项目/.opencode/skills/
 ```
 
@@ -36,7 +36,7 @@ cp -r course-forge /你的项目/.opencode/skills/
 ## 快速开始
 
 ```bash
-npx skills add shijingtian/course-forge
+npx skills add xmwengxing/course-forge
 bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk-garden
 ```
 
@@ -78,4 +78,4 @@ course/
 
 ## 许可证
 
-[MIT](./LICENSE) © [shijingtian](https://github.com/shijingtian)
+[MIT](./LICENSE) © [xmwengxing](https://github.com/shijingtian)

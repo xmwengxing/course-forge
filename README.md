@@ -46,22 +46,7 @@
 
 ### Course Layout
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ ┌─ ChapterMenu ─┐                                       │
-│ │ 1.1 Business   │     ┌──────────────────────┐         │
-│ │ 1.2 Text       │     │                      │         │
-│ │ 1.3 Video  ▸   │     │   16:9 Stage Area    │         │
-│ │   S1 Import    │     │   (1920 × 1080)      │         │
-│ │   S2 Pipeline  │     │                      │         │
-│ │   ...          │     │   Interactive        │         │
-│ │ 1.4 Speech     │     │   Quiz / 3D Scene    │         │
-│ │ 1.5 PointCloud │     │                      │         │
-│ └────────────────┘     └──────────────────────┘         │
-│              ── Subtitles (auto-timed) ──               │
-│              [▶ Pause] [⛶ Fullscreen]                  │
-└─────────────────────────────────────────────────────────┘
-```
+![Course Layout Diagram](./assets/layout-diagram.svg)
 
 ---
 
@@ -71,16 +56,16 @@
 
 ```bash
 # Full install (templates + themes + scripts)
-npx skills add shijingtian/course-forge
+npx skills add xmwengxing/course-forge
 
 # Minimal install (SKILL.md + references + scripts only, ~50KB)
-npx skills add shijingtian/course-forge -s course-forge --minimal
+npx skills add xmwengxing/course-forge -s course-forge --minimal
 ```
 
 ### Option B · Claude Code Plugin Marketplace
 
 ```bash
-/plugin marketplace add shijingtian/course-forge
+/plugin marketplace add xmwengxing/course-forge
 /plugin install course-forge@course-forge
 ```
 
@@ -89,21 +74,21 @@ npx skills add shijingtian/course-forge -s course-forge --minimal
 ```bash
 VERSION=1.0.0
 curl -fsSL -o course-forge.zip \
-  "https://github.com/shijingtian/course-forge/releases/download/v${VERSION}/course-forge-${VERSION}.zip"
+  "https://github.com/xmwengxing/course-forge/releases/download/v${VERSION}/course-forge-${VERSION}.zip"
 unzip -q course-forge.zip -d .claude/skills/
 ```
 
 ### Option D · Manual Copy
 
 ```bash
-git clone https://github.com/shijingtian/course-forge.git
+git clone https://github.com/xmwengxing/course-forge.git
 cp -r course-forge /your-project/.opencode/skills/
 ```
 
 ### Option E · Git Submodule
 
 ```bash
-git submodule add https://github.com/shijingtian/course-forge.git vendor/course-forge
+git submodule add https://github.com/xmwengxing/course-forge.git vendor/course-forge
 ln -s ../../vendor/course-forge .opencode/skills/course-forge
 ```
 
@@ -113,7 +98,7 @@ ln -s ../../vendor/course-forge .opencode/skills/course-forge
 
 ```bash
 # 1. Install
-npx skills add shijingtian/course-forge
+npx skills add xmwengxing/course-forge
 
 # 2. Scaffold a new course
 bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk-garden
@@ -241,4 +226,4 @@ Built on the foundation of [**web-video-presentation**](https://github.com/Conar
 
 ## License
 
-[MIT](./LICENSE) © [shijingtian](https://github.com/shijingtian)
+[MIT](./LICENSE) © [xmwengxing](https://github.com/shijingtian)
