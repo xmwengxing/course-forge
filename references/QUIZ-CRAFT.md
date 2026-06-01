@@ -102,9 +102,7 @@ export default function ShortAnswer({ step }: ChapterStepProps) {
 ---
 
 ## CSS 3D 探索场景（Experimental）
-
-零依赖方案：`transform-style: preserve-3d` + `translate3d` + pointer events。
-
+- 零依赖方案：`transform-style: preserve-3d` + `translate3d` + pointer events。
 ```tsx
 const [rotation, setRotation] = useState({ x: -25, y: 15 });
 const [colorMode, setColorMode] = useState<'height' | 'intensity'>('height');
@@ -117,8 +115,129 @@ onPointerDown → setPointerCapture → onPointerMove (delta → rotation) → o
   <div style={{ transform: `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`, background: getColor(p) }} />
 ))}
 ```
-
 这种方案适用于需要学员亲手操作的三维数据（如点云、分子结构、地理信息），代码量约 200 行，零额外依赖。
+
+---
+
+## 倒计时暂停思考（Pause & Think）
+
+> 适用于 S4 实战找茬 / S3 案例演练 / 任何"翁老师先抛问题 → 学员思考 → 再讲"的场景。
+> 比传统"一句话旁白"更能调动学员参与感。
+
+### 实现方式
+
+`useState` + `setTimeout` 实现的 60s 倒计时（数字实时更新）：
+
+```tsx
+import { useEffect, useState } from "react";
+import type { ChapterStepProps } from "../../registry/types";
+import "./PauseThink.css";
+
+const COUNTDOWN_SECONDS = 60;
+
+export default function PauseThink({ step }: ChapterStepProps) {
+  const [secondsLeft, setSecondsLeft] = useState(COUNTDOWN_SECONDS);
+  const [running, setRunning] = useState(false);
+
+  // 仅在 step === 3 启动倒计时
+  useEffect(() => {
+    if (step < 3) {
+      setSecondsLeft(COUNTDOWN_SECONDS);
+      setRunning(false);
+      return;
+    }
+    if (step === 3) {
+      setSecondsLeft(COUNTDOWN_SECONDS);
+      setRunning(true);
+    }
+  }, [step]);
+
+  // 每秒递减
+  useEffect(() => {
+    if (!running) return;
+    if (secondsLeft <= 0) {
+      setRunning(false);
+      return;
+    }
+    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [running, secondsLeft]);
+
+  const progress = secondsLeft / COUNTDOWN_SECONDS;
+
+  return (
+    <div className="pt-root scene-pad">
+      <div className="pt-stage">
+        <span className="pt-eyebrow">⏸ 暂停思考 · 60s</span>
+
+        {step === 3 && (
+          <div
+            className="pt-countdown"
+            style={{ ["--progress" as string]: progress.toFixed(3) } as React.CSSProperties}
+          >
+            <div className="pt-countdown-ring" />
+            <div className="pt-countdown-inner">
+              <span className="pt-countdown-num">{secondsLeft}</span>
+              <span className="pt-countdown-unit">SECONDS</span>
+            </div>
+          </div>
+        )}
+
+        {step >= 4 && (
+          <div className="pt-done">
+            <span>✅</span>
+            <span>时间到</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+### 倒计时圆环 CSS
+
+```css
+.pt-countdown {
+  position: relative;
+  width: 280px; height: 280px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pt-countdown-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--accent) calc(var(--progress, 1) * 360deg),
+    var(--surface-3) 0
+  );
+  box-shadow: 0 0 32px var(--accent-glow);
+  transition: background 1s linear;
+}
+.pt-countdown-inner {
+  position: absolute; inset: 12px;
+  background: var(--surface-2);
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  border: 1px solid var(--rule);
+}
+.pt-countdown-num {
+  font-family: var(--font-display-en);
+  font-size: 96px; line-height: 1;
+  color: var(--accent);
+  text-shadow: 0 0 18px var(--accent-glow);
+  font-variant-numeric: tabular-nums;
+}
+```
+
+### 注册为交互步骤
+
+Auto 模式会在 step 3 自动暂停等用户思考（不会硬推进）。
+
+```typescript
+{ id: "pause-think", ..., interactiveSteps: [3] }
+```
+
+> **关键设计**：用 `useEffect` 监听 `step` 变化启动计时器，不要用 `setInterval` —— 后者在组件卸载后会泄漏。
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: course-forge
-description: 把知识文档或口播稿，做成带旁白配音、互动测验、3D探索和嵌入式评估的分段式互动课件。产出物 = Vite + React + TS 项目 + course.json 三级课程架构 + 按章节切分的音频 + 字幕时序。工作流：知识文档 → 分段拆分(S1-S5) → 逐段开发(每段3-8章) → 互动组件嵌入(选择题/简答题/CSS 3D探索) → 音频合成(provider-agnostic) → 字幕生成(字数占比分配ms) → 录屏部署。适合职业教育、企业培训、技能认证等场景。
+description: 把知识文档或口播稿，做成带旁白配音、互动测验、3D探索和嵌入式评估的分段式互动课件。产出物 = Vite + React + TS 项目 + course.json 三级课程架构 + 按章节切分的音频 + 字幕时序。工作流：知识文档 → 分段拆分(S1-S5) → 逐段开发(每段3-8章) → 互动组件嵌入(选择题/简答题/CSS 3D探索) → 音频合成(TTS provider-agnostic) → 字幕生成(字数占比分配ms) → 录屏部署。适合职业教育、企业培训、技能认证等场景。
 ---
 
 # Course Forge — Interactive Courseware Builder
@@ -205,28 +205,57 @@ npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 
 ## Phase 3 — 音频合成
 
-### 3.1 MiniMax TTS（默认）
+### 3.1 TTS Provider 抽象（默认 minimax）
+
+TTS runner 是 **provider-agnostic** 的：runner 本身不绑定任何 TTS 后端，每个后端是 `scripts/tts-providers/<name>.sh` 一个文件。
 
 ```bash
-# .env
-MINIMAX_API_KEY=sk-cp-...
-
 # 提取音频段 → 合成
 npm run extract-narrations
-npm run synthesize-audio   # 默认 minimax provider, skip 已存在
+npm run synthesize-audio   # 默认 provider, skip 已存在
 ```
 
-**已知踩坑**：
-- API 端点 `api.minimax.chat`（非 `.io`），Token Plan key 才有效
-- 错误码 2056 = Token Plan 额度未分配，联系 MiniMax 客服
-- 限流：每 ~25s 调用一次，否则 RPM rate limit
+| Provider | 默认 | 何时用 |
+|---|---|---|
+| `minimax` | ✓ | 中文口播首选（要 API key + 选语音 ID） |
+| `openai` | —— | 多数 agent 已有 `OPENAI_API_KEY`；curl-based、响应快 |
+| `edge` | —— | 免费 / 无 key / pip install edge-tts |
 
-### 3.2 其他 Provider
+换 / 加 provider 见 [`scripts/tts-providers/README.md`](scripts/tts-providers/README.md)
+（脚手架跑完后路径是 `presentation/scripts/tts-providers/README.md`）。
+README 里附 5 套**可粘贴**现成片段（ElevenLabs / edge-tts / macOS say / Azure / Google Cloud）和写自定义 provider 的三函数契约。
 
 ```bash
-PRESENTATION_TTS=openai npm run synthesize-audio   # 需要 OPENAI_API_KEY
-PRESENTATION_TTS=edge npm run synthesize-audio     # 免费，需要 edge-tts
+# 换 provider
+PRESENTATION_TTS=openai npm run synthesize-audio
+npm run synthesize-audio -- --provider=elevenlabs --voice=Rachel
 ```
+
+**通用 TTS 限流处理**（任何 provider 都适用）：
+- 错误：HTTP 429 / "rate limit exceeded" / 1002 (RPM) / 1039 (TPM)
+- 重试：等 **60s** 后重新跑 `npm run synthesize-audio`，脚本自动跳过已合成
+- 一个 round 最多合成 50-60 个 mp3（取决于每条字数）
+- 用 `script.md` 字数判断 limit，**不**依赖厂商具体数值
+
+### 3.2 验收时长统计（必跑）
+
+```bash
+# 整课
+python3 scripts/chapter-stats.py --file presentation/audio-segments.json
+
+# 只看某段 (S1-S5)
+python3 scripts/chapter-stats.py --section S1
+
+# 只看某课程前缀 (如 t6)
+python3 scripts/chapter-stats.py --section t6
+```
+
+输出：每章 / 每段 narrations / 字数 / 纯朗读 / 视频估算。
+
+**验收报告必含**（参考 `IMPROVEMENT-NOTES.md` C3）：
+- 本段 narrations 总数 / 总字数 / 纯朗读 / 视频估算
+- 5 维画面-口播对位自检（参考 `CHAPTER-CRAFT.md` 附录 A）
+- 已修复 bug 清单
 
 ### 3.3 字幕时序生成
 
@@ -283,10 +312,13 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 
 1. **course.json 绝对禁止手工 edit 追加**：每次新增章节后运行 `regenerate-course-json.py`
 2. **每段验收**：做完 S1 停一次，做完 S2 停一次，不允许整课一口气开发
-3. **字幕 0-indexed**：`str(s['step'] - 1)` 对齐 Subtitle 组件的 `stepIndex` 参数
-4. **STORAGE_KEY bump**：章节结构变化时 bump `useStepper.ts` 中的版本号
-5. **双源原则**：每步画面不能只念口播，要从原始文档抽信息池挂到屏幕上
-6. **不要废话**：用知识点深度和广度扩展内容，不用排比句凑时长
+3. **验收时统计时长**：每段交付前必跑 `scripts/chapter-stats.py` 输出 narrations / 字数 / 时长（参考 `IMPROVEMENT-NOTES.md` C3）
+4. **5 维画面-口播对位自检**：每章 TSX 写完后强制走附录 A 五项检查
+5. **5 类动态来源**：每屏至少 1 类（建议 2-3 类），单画面只 fade-in 不合格（参考 `CHAPTER-CRAFT.md` 附录 B）
+6. **字幕 0-indexed**：`str(s['step'] - 1)` 对齐 Subtitle 组件的 `stepIndex` 参数
+7. **STORAGE_KEY bump**：章节结构变化时 bump `useStepper.ts` 中的版本号
+8. **双源原则**：每步画面不能只念口播，要从原始文档抽信息池挂到屏幕上
+9. **不要废话**：用知识点深度和广度扩展内容，不用排比句凑时长
 
 ---
 
@@ -299,8 +331,11 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 - 五种 Web 应用嵌入方案（new-tab / iframe / React / DB 驱动 / URL 参数）
 - course.json 自动生成脚本（防止 JSON 损坏）
 - Chunk-based 字幕系统（60 字阈值 / 字数占比分配 ms / 0-indexed）
-- TTS 限流处理（25s 间隔 + 诊断脚本）
+- TTS provider-agnostic 合成（任何 TTS 都可接入，runner 不绑厂商）
+- 5 个通用构建积木（AnimatedNumber / BpmnFlow / FlippableCard / StaggeredAppear / TabSwitcher）
+- 验收时长统计（chapter-stats.py 自动算 narrations/字数/纯朗读/视频估算）
 - 画布优化（stage-pad 56/40 + margin 32/48）
+- 语义化配色 token（--bad/--good/--info/--flow，避免纯黄色疲劳）
 
 ---
 

@@ -222,3 +222,169 @@ AI 生成的网页有几种共有的"视觉指纹"，**全部不要**：
       超出会被 Auto 模式当场切断，动画演到一半就跳下一步
 
 任一未过 → 回去改。**不要**"先放着以后修"。
+
+---
+
+## 附录 A：5 维画面-口播对位自检（每章完成后强制走一遍）
+
+口播稿是节奏，画面是视觉冲击，两者必须**逐项对得上**。否则录屏时观众会感觉"看到的和听到的不一样"。
+
+每章 TSX 写完后**强制**逐项核查，任一不过回去改：
+
+- [ ] **数字对位**：口播"7 天"画面有"7"；口播"200 亿"画面有"200 亿"
+- [ ] **专名对位**：口播"ECRS"画面有"ECRS"；口播"翁老师"画面有人物图/卡
+- [ ] **形状对位**：口播"矩形"画面有矩形；口播"椭圆"画面有椭圆
+- [ ] **对比对位**：口播"旧 vs 新"画面有双卡片或左右对比布局
+- [ ] **时序对位**：口播"先 A 再 B"画面动画按 A→B 顺序揭示（不是 B 先 A 后）
+
+> 失败案例：1.6 S2-1 t6-bpmn-symbols 第一版，narrations 扩到 10 步但 TSX 仍按 6 步分支做——口播说"矩形"时画面已在讲其他话题。
+
+---
+
+## 附录 B：5 类画面动态来源（每屏至少 2 类）
+
+用户原话"单一画面内也没有任何动态效果，非常呆板"——单画面如果只有 fade-in + translateY 一组入场就**不算合格**。每屏**必须**从以下 5 类里挑 ≥ 1 类（建议 2-3 类）：
+
+1. **数字滚动** — `AnimatedNumber` 从 0 滚到目标（峰值时刻用："80% 的失败案例"）
+2. **序列入场** — `StaggeredAppear` 让多元素分批出现（清单/列表/网格场景）
+3. **微动效** — 元素出场后做小幅度脉动 / 浮动 / 旋转（避免静止呆板）
+4. **互动组件** — `TabSwitcher` / `FlippableCard` 让用户点击触发（教学场景标配）
+5. **路径绘制** — 流程图节点用 `stroke-dasharray` 动画（流程图场景）
+
+> **反面教材**：1.6 S1 第一版大量"虚线框 + 一段文字"画面，静态呆板，被批"毫无动态效果"。
+> **正面教材**：1.6 S3 t6-eliminate 单页 5 步内混合 3 类（数字滚动 + 节点高亮 + 路径绘制）。
+
+---
+
+## 附录 C：5 个公共组件（src/components/，templates 已含）
+
+> 1.6 课件开发**自然沉淀**出 5 个通用构建积木，零外部依赖，跨主题/跨领域复用。
+> 全部加 `data-no-advance` 防误触推进。
+
+### C.1 AnimatedNumber — 数字 ease-out-quart 滚动入场
+
+```tsx
+import { AnimatedNumber } from "../../components/AnimatedNumber";
+
+<AnimatedNumber value={200} suffix="亿" />
+<AnimatedNumber value={60} suffix="%" />
+<AnimatedNumber value={1.5} decimals={1} />
+```
+
+| Prop | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `value` | number | (必填) | 目标数字 |
+| `duration` | number | 1400 | 动画时长 ms |
+| `prefix` / `suffix` | string | "" | 前缀/后缀（"亿" / "%" / " 天"） |
+| `decimals` | number | 0 | 小数位数 |
+| `delay` | number | 0 | 启动延迟（多数字 stagger 时用） |
+
+### C.2 BpmnFlow — 流程图节点（reveal 顺序 + killed 划线 + focused 高亮）
+
+```tsx
+import { BpmnFlow, FlowNode } from "../../components/BpmnFlow";
+
+<BpmnFlow
+  nodes={[
+    { id: "A", label: "客户报案", kind: "start" },
+    { id: "B", label: "人工派单", kind: "task" },
+    { id: "C", label: "金额判断", kind: "decision" },
+    { id: "D", label: "AI 审批", kind: "task", killed: true },
+  ] as FlowNode[]}
+  revealOrder={["A", "B", "C"]}
+  step={currentStep}
+  focusedId="B"
+/>
+```
+
+| Prop | 类型 | 说明 |
+|------|------|------|
+| `nodes` | `FlowNode[]` | 节点数组（id / label / kind / active / killed） |
+| `revealOrder` | string[] | 按 step 揭示的 id 顺序 |
+| `step` | number | 当前 step（驱动 reveal） |
+| `focusedId` | string | 当前讲解的节点 id（高亮） |
+
+**注意**：横向布局。复杂分支需 BpmnFlowAdvanced（待开发）。
+
+### C.3 FlippableCard — 3D 翻转卡片
+
+```tsx
+import { FlippableCard } from "../../components/FlippableCard";
+
+<FlippableCard
+  front={<div className="front">正面：问题</div>}
+  back={<div className="back">背面：答案</div>}
+/>
+```
+
+典型场景：闪卡 / 单词记忆 / 测验 / 概念对位。
+
+### C.4 StaggeredAppear — 序列入场（stagger delay 控制）
+
+```tsx
+import { StaggeredAppear } from "../../components/StaggeredAppear";
+
+<StaggeredAppear stagger={200} initialDelay={100}>
+  <CardA />
+  <CardB />
+  <CardC />
+</StaggeredAppear>
+```
+
+| Prop | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `stagger` | number | 200 | 子元素间隔 ms |
+| `initialDelay` | number | 0 | 首个子元素延迟 ms |
+| `slideIn` | boolean | true | 是否滑入（false = 仅淡入） |
+
+### C.5 TabSwitcher — 标签页切换
+
+```tsx
+import { TabSwitcher } from "../../components/TabSwitcher";
+
+<TabSwitcher
+  tabs={[
+    { id: "A", label: "定义", content: <div>...</div> },
+    { id: "B", label: "案例", content: <div>...</div> },
+  ]}
+  defaultActiveId="A"
+/>
+```
+
+**注意**：所有 panel 同 DOM 渲染（CSS 切显隐），所以动画状态不会重置。
+
+---
+
+## 附录 D：验收时长统计脚本
+
+`scripts/chapter-stats.py` 自动从 `audio-segments.json` 算出每章 / 每段时长。**每次验收前必跑**。
+
+```bash
+# 整课统计
+python3 scripts/chapter-stats.py --file presentation/audio-segments.json
+
+# 只看某段
+python3 scripts/chapter-stats.py --file presentation/audio-segments.json --section S1
+
+# 只看某课程前缀（如 t6）
+python3 scripts/chapter-stats.py --file presentation/audio-segments.json --section t6
+
+# JSON 输出（供其他脚本消费）
+python3 scripts/chapter-stats.py --file presentation/audio-segments.json --json
+```
+
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `--file` | `presentation/audio-segments.json` | segments 文件路径 |
+| `--section` | (无) | 过滤段名（S1-S5）或课程前缀（t6/t2） |
+| `--audio-ms` | 380 | 每字毫秒（翁老师录音语速） |
+| `--visual-s` | 1.5 | 每步视觉过渡秒数 |
+| `--json` | false | 输出 JSON |
+
+**验收报告必含**（参考 `IMPROVEMENT-NOTES.md` C3）：
+- 本段 narrations 总数
+- 总字数（中文）
+- 纯朗读时长（380ms/字）
+- 视频估算时长（+ 视觉过渡 1.5s/步）
+- 5 维对位自检结果（附录 A）
+- 已修复 bug 清单

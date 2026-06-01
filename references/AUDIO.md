@@ -238,27 +238,10 @@ Auto 模式首次需要按一次 `Space` 启动（绕过浏览器自动播放限
 | 中间断了几条没合成 | `npm run synthesize-audio` 重跑 —— 已存在文件会跳过 |
 | 浏览器没播音频 | Auto / Audio 模式下首次需要用户手势——确认你按了 SPACE 启动 Auto，或者点过页面 |
 | 音频 404 但 Auto 模式还能跑 | 找不到 mp3 时 useAudioPlayer 退化到字数估时（4 字/秒），保证预览不中断 |
+| **HTTP 429 / "rate limit exceeded"** | **通用限流**：等 60s 后重跑，runner 自动跳过已合成；不要换 provider / 改 endpoint |
+| **错误码 1002 (RPM) / 1039 (TPM)** | **通用限流**：每分钟请求/token 超限，等 60s 后重试 |
 
-minimax 专属：
-
-| 现象 | 原因 / 修法 |
-|---|---|
-| `mmx: command not found` | `npm install -g mmx-cli`；npm 全局 bin 不在 PATH 时 `npm config get prefix` 看一下 |
-| `mmx is not authenticated` | `mmx auth login --api-key sk-xxxxx` 重新登录 |
-| 中文音色不自然 | mmx 默认音色未必最佳；查 `mmx speech --help` 看 `--voice` 可选项，传 `--voice=<id>` |
-| 整段合成被截断 | 单段过长（mmx 默认上限约 5000 字符）。在 narrations.ts 里把这条拆成两条（也意味着该 step 应该拆成两个 step） |
-
-openai 专属：
-
-| 现象 | 原因 / 修法 |
-|---|---|
-| `OPENAI_API_KEY is not set` | `export OPENAI_API_KEY=sk-...`，或者把它加到 shell rc / `.env` |
-| 全部段 FAILED + key 是对的 | 多半 model / voice 名字错。`--voice=alloy` 试默认值；`OPENAI_TTS_MODEL=tts-1` 试默认模型；用 `bash -x scripts/synthesize-audio.sh` 看请求体 |
-| 走代理 / 走 Azure-OpenAI | `export OPENAI_BASE_URL=https://your-proxy/v1` |
-| HD 太慢 | 改成 `OPENAI_TTS_MODEL=tts-1`（默认）；HD 大约慢 2 倍 |
-| 中文音色不像真人 | OpenAI 6 种音色都是英语偏向；中文角色用 `minimax` 更合适 |
-
-换其它（自定义）provider 之后：
+**自定义 provider 之后**：
 
 | 现象 | 原因 / 修法 |
 |---|---|
@@ -271,6 +254,4 @@ openai 专属：
 ## 相关链接
 
 - Provider 契约 + 现成片段：[`scripts/tts-providers/README.md`](../templates/scripts/tts-providers/README.md)
-- mmx-cli 仓库：<https://github.com/MiniMax-AI/cli>
-- mmx 官方文档：<https://platform.minimaxi.com/docs/token-plan/minimax-cli>
-- mmx 参数 / 音色查询：`mmx speech --help`
+- 验收时长统计：[`chapter-stats.py`](../templates/scripts/chapter-stats.py)
