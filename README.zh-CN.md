@@ -78,6 +78,12 @@ course/
 
 ---
 
+## 致谢
+
+基于 [**web-video-presentation**](https://github.com/ConardLi/garden-skills) 项目构建，原作者 [ConardLi](https://github.com/ConardLi) 开创了 16:9 固定舞台 Web 演示范式。`course-forge` 将其从单视频制作扩展为完整课程开发，增加了互动评估、3D 探索和多模态数据处理能力。
+
+---
+
 ## 许可证
 
-[MIT](./LICENSE) © [xmwengxing](https://github.com/shijingtian)
+[MIT](./LICENSE) © [xmwengxing](https://github.com/xmwengxing)
