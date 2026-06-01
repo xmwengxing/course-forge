@@ -1,0 +1,19 @@
+# Development documentation (internal, not for publishing)
+DEV.md
+
+# Dependencies
+node_modules
+
+# Build artifacts
+presentation/dist
+
+# Environment
+.env
+
+# Audio files (large binary)
+*.mp3
+*.wav
+
+# OS files
+.DS_Store
+Thumbs.db
