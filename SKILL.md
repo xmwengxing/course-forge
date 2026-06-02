@@ -210,62 +210,46 @@ npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 TTS runner 是 **provider-agnostic** 的：runner 本身不绑定任何 TTS 后端，每个后端是 `scripts/tts-providers/<name>.sh` 一个文件。
 
 ```bash
-# 提取音频段 → 合成
 npm run extract-narrations
-npm run synthesize-audio   # 默认 provider, skip 已存在
+npm run synthesize-audio   # skip 已存在
 ```
 
 | Provider | 默认 | 何时用 |
 |---|---|---|
 | `minimax` | ✓ | 中文口播首选（要 API key + 选语音 ID） |
-| `openai` | —— | 多数 agent 已有 `OPENAI_API_KEY`；curl-based、响应快 |
+| `openai` | —— | 多数 agent 已有 `OPENAI_API_KEY` |
 | `edge` | —— | 免费 / 无 key / pip install edge-tts |
 
-换 / 加 provider 见 [`scripts/tts-providers/README.md`](scripts/tts-providers/README.md)
-（脚手架跑完后路径是 `presentation/scripts/tts-providers/README.md`）。
-README 里附 5 套**可粘贴**现成片段（ElevenLabs / edge-tts / macOS say / Azure / Google Cloud）和写自定义 provider 的三函数契约。
-
-```bash
-# 换 provider
-PRESENTATION_TTS=openai npm run synthesize-audio
-npm run synthesize-audio -- --provider=elevenlabs --voice=Rachel
-```
-
-**通用 TTS 限流处理**（任何 provider 都适用）：
+**通用 TTS 限流处理**：
 - 错误：HTTP 429 / "rate limit exceeded" / 1002 (RPM) / 1039 (TPM)
 - 重试：等 **60s** 后重新跑 `npm run synthesize-audio`，脚本自动跳过已合成
-- 一个 round 最多合成 50-60 个 mp3（取决于每条字数）
-- 用 `script.md` 字数判断 limit，**不**依赖厂商具体数值
 
-### 3.2 验收时长统计（必跑）
+### 3.2 字幕时序生成
 
-```bash
-# 整课
-python3 scripts/chapter-stats.py --file presentation/audio-segments.json
-
-# 只看某段 (S1-S5)
-python3 scripts/chapter-stats.py --section S1
-
-# 只看某课程前缀 (如 t6)
-python3 scripts/chapter-stats.py --section t6
-```
-
-输出：每章 / 每段 narrations / 字数 / 纯朗读 / 视频估算。
-
-**验收报告必含**（参考 `IMPROVEMENT-NOTES.md` C3）：
-- 本段 narrations 总数 / 总字数 / 纯朗读 / 视频估算
-- 5 维画面-口播对位自检（参考 `CHAPTER-CRAFT.md` 附录 A）
-- 已修复 bug 清单
-
-### 3.3 字幕时序生成
+**双模式**：默认（快速）用于现有章节，minimax（精确）用于新合成章节。
 
 ```bash
-python3 << 'EOF'
-# ... 完整脚本见 scripts/subtitle-timing.py
-EOF
+# 默认模式：80字切分 + ffprobe 实测音频时长（无需重合成）
+python3 scripts/subtitle-timing.py
+
+# MiniMax 词级精确模式：逐词 ms 对齐（新合成章节专用）
+python3 scripts/subtitle-timing.py --mode minimax
 ```
 
-参数：`max_chars=60`，`300ms/char`，`min_ms=2500`，`0-indexed keys`。
+| 模式 | 切分方式 | 步级时长 | 精度 | 适用范围 |
+|------|---------|---------|:--:|------|
+| default | 80字句界切分 | ffprobe 实测 mp3 时长 | ⭐⭐⭐ | 现有章节（不改动音频） |
+| minimax | 按词级时间戳聚合 | MiniMax API 返回的逐词 ms | ⭐⭐⭐⭐⭐ | 新合成章节 |
+
+**minimax 模式前提**：合成时 `minimax.sh` 自动请求 `subtitle_enable: true, subtitle_type: "word"`，词级时间戳存到 `public/minimax-word-timing/<chapter>/<step>.json`。
+
+### 3.3 浮动字幕 UI
+
+课件模板内置**浮动字幕**（无背景条遮挡画布）：
+
+- 字幕直接浮于画面之上，纯 text-shadow 保证可读性
+- 右上角 👁 切换按钮（stage hover 时出现），localStorage 持久化偏好
+- 字幕字体 28px，双层 text-shadow：`0 1px 4px rgba(0,0,0,.85), 0 0 16px rgba(0,0,0,.5)`
 
 ---
 

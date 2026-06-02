@@ -25,6 +25,10 @@
   --accent:       #e91e63;             /* riso magenta */
   --accent-soft:  rgba(233, 30, 99, 0.10);
   --accent-glow:  rgba(233, 30, 99, 0.40);
+  --accent-tech:  #22d3ee;
+  --accent-good:  #4ade80;
+  --accent-warn:  #fb923c;
+  --accent-deep:  #a78bfa;
 
   /* ─── fonts ─── */
   --font-display-cn: "Noto Serif SC", "Source Han Serif SC", serif;

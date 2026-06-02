@@ -26,6 +26,10 @@
   --accent:       #c25e3a;             /* warm terracotta */
   --accent-soft:  rgba(194, 94, 58, 0.10);
   --accent-glow:  rgba(194, 94, 58, 0.32);
+  --accent-tech:  #22d3ee;
+  --accent-good:  #4ade80;
+  --accent-warn:  #fb923c;
+  --accent-deep:  #a78bfa;
 
   /* ─── fonts ─── */
   --font-display-cn: "Noto Serif SC", "Source Han Serif SC", serif;

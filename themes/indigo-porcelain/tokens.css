@@ -28,6 +28,10 @@
   --accent:       #1e3a8a;             /* slightly brighter indigo for emphasis */
   --accent-soft:  rgba(30, 58, 138, 0.10);
   --accent-glow:  rgba(30, 58, 138, 0.30);
+  --accent-tech:  #22d3ee;
+  --accent-good:  #4ade80;
+  --accent-warn:  #fb923c;
+  --accent-deep:  #a78bfa;
 
   /* ─── fonts ─── */
   --font-display-cn: "Noto Serif SC", "Source Han Serif SC", serif;

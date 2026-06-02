@@ -30,6 +30,10 @@
   --accent:       #d24a78;             /* magenta */
   --accent-soft:  rgba(210, 74, 120, 0.10);
   --accent-glow:  rgba(210, 74, 120, 0.35);
+  --accent-tech:  #22d3ee;
+  --accent-good:  #4ade80;
+  --accent-warn:  #fb923c;
+  --accent-deep:  #a78bfa;
 
   /* ─── fonts ─── */
   --font-display-cn: "Noto Sans SC", "Source Han Sans SC", -apple-system, sans-serif;

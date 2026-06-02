@@ -53,7 +53,9 @@ import json, sys
 payload = {
     'model': '$MODEL',
     'text': sys.argv[1],
-    'voice_setting': {'voice_id': '$voice'}
+    'voice_setting': {'voice_id': '$voice'},
+    'subtitle_enable': True,
+    'subtitle_type': 'word'
 }
 print(json.dumps(payload, ensure_ascii=False))
 " "$text")" \
@@ -61,15 +63,25 @@ print(json.dumps(payload, ensure_ascii=False))
 
   if grep -q '"status_code":\s*0' "$tmp_resp" 2>/dev/null; then
     python3 -c "
-import json, sys
+import json, sys, os
 with open('$tmp_resp') as f:
     resp = json.load(f)
 audio_hex = resp.get('data', {}).get('audio', '')
 if audio_hex:
     with open('$out', 'wb') as f:
         f.write(bytes.fromhex(audio_hex))
+
+# Extract word-level subtitle timing from response
+subtitles = resp.get('extra_info', {}).get('subtitles', [])
+if subtitles:
+    word_dir = os.path.join('public', 'minimax-word-timing', os.path.basename(os.path.dirname('$out')))
+    os.makedirs(word_dir, exist_ok=True)
+    word_file = os.path.join(word_dir, os.path.basename('$out').replace('.mp3', '.json'))
+    word_data = [{'text': s['text'], 'start_ms': s.get('start_ms', 0), 'end_ms': s.get('end_ms', 0)} for s in subtitles]
+    with open(word_file, 'w') as f:
+        json.dump(word_data, f, ensure_ascii=False)
 else:
-    print('No audio in response', file=sys.stderr)
+    print('No word timing in response', file=sys.stderr)
     sys.exit(1)
 "
     rm -f "$tmp_resp"

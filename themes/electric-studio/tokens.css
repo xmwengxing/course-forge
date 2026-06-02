@@ -28,6 +28,10 @@
   --accent:       #4361ee;             /* electric corporate blue */
   --accent-soft:  rgba(67, 97, 238, 0.10);
   --accent-glow:  rgba(67, 97, 238, 0.32);
+  --accent-tech:  #22d3ee;
+  --accent-good:  #4ade80;
+  --accent-warn:  #fb923c;
+  --accent-deep:  #a78bfa;
 
   /* ─── fonts ─── */
   --font-display-cn: "Noto Sans SC", "Source Han Sans SC", -apple-system, sans-serif;
