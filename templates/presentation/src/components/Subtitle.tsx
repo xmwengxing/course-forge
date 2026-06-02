@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import "./Subtitle.css";
 
 type ChunkTiming = { text: string; ms: number };
@@ -8,8 +8,6 @@ interface Props { text: string; chapterId: string; stepIndex: number; timingMap:
 
 function ChunkCycle({ chunks, delays, cycleKey }: { chunks: string[]; delays: number[]; cycleKey: string }) {
   const [idx, setIdx] = useState(0);
-  const rafRef = useRef(0);
-  const startRef = useRef(0);
   const cumulative = useMemo(() => {
     const arr: number[] = []; let acc = 0;
     for (const d of delays) { acc += d; arr.push(acc); }
@@ -19,20 +17,12 @@ function ChunkCycle({ chunks, delays, cycleKey }: { chunks: string[]; delays: nu
   useEffect(() => {
     setIdx(0);
     if (chunks.length <= 1) return;
-    startRef.current = performance.now();
-    const tick = () => {
-      const elapsed = performance.now() - startRef.current;
-      let newIdx = 0;
-      for (let i = 0; i < cumulative.length; i++) {
-        if (elapsed >= cumulative[i]) newIdx = i + 1;
-      }
-      if (newIdx >= chunks.length) return;
-      setIdx(newIdx);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [cycleKey]); // force re-run on every step change via unique key
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    for (let i = 1; i < chunks.length; i++) {
+      timers.push(setTimeout(() => setIdx(i), cumulative[i - 1]));
+    }
+    return () => timers.forEach(clearTimeout);
+  }, [cycleKey]);
 
   return (
     <span className="sub-text">
@@ -75,11 +65,11 @@ export function Subtitle({ text, chapterId, stepIndex, timingMap }: Props) {
   if (!text) return null;
 
   return (
-    <div className="sub-bar">
+    <div className={`sub-bar${!visible ? " sub-bar--blind" : ""}`}>
       {visible ? (
-        <button className="sub-toggle sub-toggle-active" onClick={toggle} data-no-advance title="隐藏字幕">👁</button>
+        <button className="sub-toggle" onClick={toggle} data-no-advance title="隐藏字幕">👁</button>
       ) : (
-        <button className="sub-toggle sub-toggle-active" onClick={toggle} data-no-advance title="显示字幕">👁‍🗨</button>
+        <button className="sub-toggle" onClick={toggle} data-no-advance title="显示字幕">👁‍🗨</button>
       )}
       {visible && <ChunkCycle key={cycleKey} chunks={chunks} delays={delays} cycleKey={cycleKey} />}
     </div>
