@@ -7,4 +7,3 @@
 .sub-toggle { position:absolute; top:-6px; right:-6px; z-index:30; width:32px; height:32px; border-radius:50%; border:none; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .25s var(--ease-quart); font-size:14px; color:#fff; }
 .sub-toggle:hover { background:rgba(0,0,0,.6); }
 .sub-bar:hover .sub-toggle { opacity:1; }
-.sub-toggle-active { opacity:0; }
