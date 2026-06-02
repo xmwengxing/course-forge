@@ -238,7 +238,22 @@ npm run synthesize-audio   # skip 已存在
 - 错误：HTTP 429 / "rate limit exceeded" / 1002 (RPM) / 1039 (TPM)
 - 重试：等 **60s** 后重新跑 `npm run synthesize-audio`，脚本自动跳过已合成
 
-### 3.2 字幕时序生成
+### 3.2 音频压缩（可选，推荐）
+
+TTS 合成输出的 MP3 通常码率偏高（MiniMax 平均值 ~388kbps），对纯语音叙述而言严重浪费。推荐在合成后运行压缩：
+
+```bash
+bash scripts/compress-audio.sh --preset high    # 64kbps, ↓50%, 语音透明 (推荐)
+bash scripts/compress-audio.sh --preset medium  # 48kbps, ↓62%
+bash scripts/compress-audio.sh --preset low     # 32kbps, ↓75%
+bash scripts/compress-audio.sh --dry-run        # 预览不实际修改
+```
+
+**行为**：遍历 `public/audio/*/` 下所有 MP3，目标码率已达标则跳过，压缩后替换原文件。音频时长不变，字幕时序无需重新生成。
+
+**建议工作流位置**：`synthesize-audio` 之后、`subtitle-timing` 之前。
+
+### 3.3 字幕时序生成
 
 **双模式**：默认（快速）用于现有章节，minimax（精确）用于新合成章节。
 
@@ -257,7 +272,7 @@ python3 scripts/subtitle-timing.py --mode minimax
 
 **minimax 模式前提**：合成时 `minimax.sh` 自动请求 `subtitle_enable: true, subtitle_type: "word"`，词级时间戳存到 `public/minimax-word-timing/<chapter>/<step>.json`。
 
-### 3.3 浮动字幕 UI
+### 3.4 浮动字幕 UI
 
 课件模板内置**浮动字幕**（无背景条遮挡画布）：
 
