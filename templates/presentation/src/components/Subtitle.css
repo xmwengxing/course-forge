@@ -4,7 +4,6 @@
 .sub-on { opacity:1; z-index:1; }
 @keyframes sub-slide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-.sub-toggle { position:absolute; top:6px; right:0; z-index:30; width:32px; height:32px; border-radius:50%; border:none; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .25s var(--ease-quart); font-size:14px; color:#fff; }
-.sub-toggle:hover { background:rgba(0,0,0,.6); }
-.sub-bar:hover .sub-toggle, .sub-bar--blind .sub-toggle { opacity:1; }
-.sub-bar--blind .sub-toggle { opacity:0.6; background:rgba(0,0,0,.6); }
+.sub-toggle { position:absolute; top:6px; right:0; z-index:30; width:32px; height:32px; border-radius:50%; border:none; background:rgba(0,0,0,.4); backdrop-filter:blur(4px); cursor:pointer; display:flex; align-items:center; justify-content:center; opacity:0.4; transition:opacity .25s var(--ease-quart); font-size:14px; color:#fff; }
+.sub-toggle:hover { opacity:1; background:rgba(0,0,0,.65); }
+.sub-bar--blind .sub-toggle { opacity:0.55; background:rgba(0,0,0,.6); }
