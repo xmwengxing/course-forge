@@ -192,6 +192,7 @@ npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 | `ComparisonPanel` | `interactive/ComparisonPanel.tsx` | 双面板对比 + VS 裁决按钮 | 方案对比、多模态冲突仲裁 |
 | `StaggeredList` | `interactive/StaggeredList.tsx` | 逐行动画列表/表格 | 审计清单、风险表、对比表 |
 | `CircleStateDiagram` | `interactive/CircleStateDiagram.tsx` | 状态切换圆形图 | 熔断器三态、状态机、流程阶段 |
+| `TimeDisplay` | `TimeDisplay.tsx` | 课件时长倒计时 + 进度条 | 右上角剩余时间 -HH:MM:SS，基于 audio/subtitle-timing 数据 |
 
 **使用方式**：在章节 TSX 中直接 import 使用，每个组件接受 `prefix` prop 用于 CSS 命名空间避免跨章冲突。
 
@@ -347,6 +348,7 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 - 画布优化（stage-pad 56/40 + margin 32/48）
 - 验收时长统计（每段交付前输出步骤数/字数/时长）
 - 5 个可复用通用交互组件（Quiz / Accordion / ComparisonPanel / StaggeredList / CircleStateDiagram）
+- 课件时长倒计时（TimeDisplay：-HH:MM:SS 倒计时 + 进度条，基于音频实测时长自动计算）
 - DB 自动同步模式（POST /detect 读取 course.json 自动创建章节）
 
 ---
