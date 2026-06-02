@@ -183,6 +183,20 @@ npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 
 ### 2.6 互动组件
 
+课件模板内置 **5 个可复用通用交互组件**，位于 `src/components/interactive/`：
+
+| 组件 | 文件 | 用途 | 使用场景 |
+|------|------|------|------|
+| `Quiz` | `interactive/Quiz.tsx` | 通用选择题测验 | 随堂弹题、课后测试、知识自检 |
+| `Accordion` | `interactive/Accordion.tsx` | 可展开/收起层级卡片 | 降级链、优先级表、操作步骤 |
+| `ComparisonPanel` | `interactive/ComparisonPanel.tsx` | 双面板对比 + VS 裁决按钮 | 方案对比、多模态冲突仲裁 |
+| `StaggeredList` | `interactive/StaggeredList.tsx` | 逐行动画列表/表格 | 审计清单、风险表、对比表 |
+| `CircleStateDiagram` | `interactive/CircleStateDiagram.tsx` | 状态切换圆形图 | 熔断器三态、状态机、流程阶段 |
+
+**使用方式**：在章节 TSX 中直接 import 使用，每个组件接受 `prefix` prop 用于 CSS 命名空间避免跨章冲突。
+
+**完整交互模式分类与设计指南**：见 [references/INTERACTIVE-PATTERNS.md](./references/INTERACTIVE-PATTERNS.md)（10 类交互模式，基于 182 章课件验证）。
+
 **选择题**（type A）：在 TSX 中嵌入选项按钮，按钮带 `data-no-advance` 属性防止误触推进。option 中有一个 `correct` 标记。在 narrations 对应的步骤后设置 `interactiveSteps` 数组。
 
 ```tsx
@@ -317,6 +331,7 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 - 语义化配色 token（--accent / --accent-tech / --accent-good / --accent-warn / --accent-deep）
 - 画布优化（stage-pad 56/40 + margin 32/48）
 - 验收时长统计（每段交付前输出步骤数/字数/时长）
+- 5 个可复用通用交互组件（Quiz / Accordion / ComparisonPanel / StaggeredList / CircleStateDiagram）
 - DB 自动同步模式（POST /detect 读取 course.json 自动创建章节）
 
 ---
@@ -329,6 +344,7 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 | `references/QUIZ-CRAFT.md` | 互动题设计模式（choice / textarea / 3D） |
 | `references/EMBEDDING.md` | Web 应用嵌入方案（5 种） |
 | `references/CHAPTER-CRAFT.md` | 章节开发详细指引 |
+| `references/INTERACTIVE-PATTERNS.md` | 交互模式分类与设计指南（10 类） |
 | `references/SCRIPT-STYLE.md` | 口播稿风格指南 |
 | `references/AUDIO.md` | 音频合成完整流程 |
 | `scripts/regenerate-course-json.py` | course.json 自动维护 |
