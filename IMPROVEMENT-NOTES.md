@@ -132,5 +132,28 @@ python3 scripts/subtitle-timing.py --mode minimax --chapters t6-bill-gate,t6-rol
 早期字幕切分阈值 34 字导致平均 3.7 块/步 → 字幕溢出框外。后改 60 字降至 1.9 块/步。
 
 ### 现行标准
-- 80 字切分阈值（28px 字体下 ≈ 2 行画布上限）
+- 55 字切分阈值（28px 字体下 ≈ 1.5 行，单块率 < 10%）
 - 最小块停留时间 2000ms（确保可读性）
+- ffprobe 实测 MP3 时长替代字数估算
+
+---
+
+## 6. DB 自动同步模式
+
+**日期**: 2026-06-02
+
+### 问题
+每开发完一门新课，需手动计算 start_chapter、手写 SQL 录入 interactive_courses 表。步骤繁琐且易出错——start_chapter 算错会导致点击章节卡片跳到错误章节。
+
+### 方案
+后端新增 `POST /api/interactive-courses/detect` 端点：
+1. 读取 `dist/courses/<course>/course.json`
+2. 遍历 sections，计算每个 section 的 start_chapter（累计前面章节数）
+3. 对比 DB 已有记录，自动 INSERT 缺失条目（title/start_chapter/sort_order 全部自动填入）
+4. 返回 `{ created: [...], message }` 供前端展示
+
+前端管理面板增加「同步课件章节」按钮，选中课程组后一键检测并添加。
+
+### 关键实现
+- 服务层：`detectAndCreateChapters(db, groupId)` — 读取 course.json → 对比 DB → INSERT
+- Docker 容器需挂载 `dist` 目录（`docker-compose.yml` 增加 `- ./dist:/app/dist:ro`）

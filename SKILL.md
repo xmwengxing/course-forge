@@ -229,7 +229,7 @@ npm run synthesize-audio   # skip 已存在
 **双模式**：默认（快速）用于现有章节，minimax（精确）用于新合成章节。
 
 ```bash
-# 默认模式：80字切分 + ffprobe 实测音频时长（无需重合成）
+# 默认模式：55字句界切分 + ffprobe 实测音频时长（无需重合成）
 python3 scripts/subtitle-timing.py
 
 # MiniMax 词级精确模式：逐词 ms 对齐（新合成章节专用）
@@ -294,15 +294,11 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 
 ## 硬性约束
 
-1. **course.json 绝对禁止手工 edit 追加**：每次新增章节后运行 `regenerate-course-json.py`
-2. **每段验收**：做完 S1 停一次，做完 S2 停一次，不允许整课一口气开发
-3. **验收时统计时长**：每段交付前必跑 `scripts/chapter-stats.py` 输出 narrations / 字数 / 时长（参考 `IMPROVEMENT-NOTES.md` C3）
-4. **5 维画面-口播对位自检**：每章 TSX 写完后强制走附录 A 五项检查
-5. **5 类动态来源**：每屏至少 1 类（建议 2-3 类），单画面只 fade-in 不合格（参考 `CHAPTER-CRAFT.md` 附录 B）
-6. **字幕 0-indexed**：`str(s['step'] - 1)` 对齐 Subtitle 组件的 `stepIndex` 参数
-7. **STORAGE_KEY bump**：章节结构变化时 bump `useStepper.ts` 中的版本号
-8. **双源原则**：每步画面不能只念口播，要从原始文档抽信息池挂到屏幕上
-9. **不要废话**：用知识点深度和广度扩展内容，不用排比句凑时长
+1. **course.json 禁手工编辑** — 每次新增章节后运行 `python3 regenerate-course-json.py`
+2. **逐段验收 + 时长汇报** — 做完每段必输出步骤数/时长，确保全课在 45-60 分钟区间
+3. **双源原则** — 口播定节拍 + 文档定画面密度。用知识深度和广度扩展内容，不用废话凑时长
+4. **字幕 0-indexed** — `str(s['step'] - 1)` 对齐 Subtitle 组件；用 `python3 scripts/subtitle-timing.py` 自动生成
+5. **STORAGE_KEY bump** — 章节结构变化时 bump `useStepper.ts` 中的版本号
 
 ---
 
@@ -314,12 +310,14 @@ ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
 - 三种教学方法（视觉化演示 / 极端场景推演 / 案发现场复盘）
 - 五种 Web 应用嵌入方案（new-tab / iframe / React / DB 驱动 / URL 参数）
 - course.json 自动生成脚本（防止 JSON 损坏）
-- Chunk-based 字幕系统（60 字阈值 / 字数占比分配 ms / 0-indexed）
-- TTS provider-agnostic 合成（任何 TTS 都可接入，runner 不绑厂商）
-- 5 个通用构建积木（AnimatedNumber / BpmnFlow / FlippableCard / StaggeredAppear / TabSwitcher）
-- 验收时长统计（chapter-stats.py 自动算 narrations/字数/纯朗读/视频估算）
+- Chunk-based 字幕系统（55字切分 / ffprobe 实测时长 / 0-indexed）
+- 字幕双模式（default ffprobe + minimax 逐词对齐）
+- TTS provider-agnostic 合成（任何 TTS 都可接入）
+- 浮动字幕 UI（无背景条 + 👁 切换按钮 + localStorage）
+- 语义化配色 token（--accent / --accent-tech / --accent-good / --accent-warn / --accent-deep）
 - 画布优化（stage-pad 56/40 + margin 32/48）
-- 语义化配色 token（--bad/--good/--info/--flow，避免纯黄色疲劳）
+- 验收时长统计（每段交付前输出步骤数/字数/时长）
+- DB 自动同步模式（POST /detect 读取 course.json 自动创建章节）
 
 ---
 
