@@ -20,7 +20,7 @@ TIMING_FILE = os.path.join(ROOT, "public", "subtitle-timing.json")
 WORD_TIMING_DIR = os.path.join(ROOT, "public", "minimax-word-timing")
 
 # ── Config ──
-MAX_CHARS = 80
+MAX_CHARS = 55
 MIN_MS_CHUNK = 2000
 
 def split_text(text: str, max_chars: int = MAX_CHARS) -> list[str]:

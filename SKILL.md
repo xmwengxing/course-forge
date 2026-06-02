@@ -238,7 +238,7 @@ python3 scripts/subtitle-timing.py --mode minimax
 
 | 模式 | 切分方式 | 步级时长 | 精度 | 适用范围 |
 |------|---------|---------|:--:|------|
-| default | 80字句界切分 | ffprobe 实测 mp3 时长 | ⭐⭐⭐ | 现有章节（不改动音频） |
+| default | 55字句界切分 | ffprobe 实测 mp3 时长 | ⭐⭐⭐ | 现有章节（单块率 <10%） |
 | minimax | 按词级时间戳聚合 | MiniMax API 返回的逐词 ms | ⭐⭐⭐⭐⭐ | 新合成章节 |
 
 **minimax 模式前提**：合成时 `minimax.sh` 自动请求 `subtitle_enable: true, subtitle_type: "word"`，词级时间戳存到 `public/minimax-word-timing/<chapter>/<step>.json`。
