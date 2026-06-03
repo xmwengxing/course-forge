@@ -11,7 +11,7 @@
 
 `course-forge` builds record-ready Vite + React + TypeScript interactive courseware that behaves like a professional e-learning production surface. Start from a single knowledge document or prepared narration script, and the skill guides you through section planning, interactive chapter development, TTS audio synthesis, subtitle timing, and deployment — all with hard checkpoints for human approval.
 
-**Born from 97+ chapters of production courseware** across text, video, speech, and point-cloud data processing domains.
+**Born from 280+ chapters of production courseware** across text, video, speech, and point-cloud data processing domains.
 
 ---
 
@@ -218,7 +218,39 @@ Every chapter uses two sources: the narration script sets the **beat** (step seq
 
 ---
 
-## Acknowledgments
+## AI Interactive Courseware vs. Human-Recorded Video
+
+A side-by-side comparison across key dimensions, based on 280+ chapters of production courseware development.
+
+| Dimension | AI Interactive Courseware (`course-forge`) | Human-Recorded Video |
+|---|---|---|
+| **Storage Footprint** | 🟢 160 KB per chapter (TSX + CSS + compressed 64kbps MP3); full 23-chapter course ≈ 3.5 MB | 🔴 720p MP4 averages 50-200 MB per 45-min lesson; multi-course library easily exceeds 10 GB |
+| **Interactive Elements** | 🟢 Full spectrum: click-to-reveal annotations, drag-to-rotate 3D scenes, ranking quizzes, decision tree walkthroughs, accordion expand/collapse, comparison panels with verdict buttons, live metric calculators | 🔴 None — passive linear playback only. Quizzes require a separate LMS platform |
+| **Partial Adjustments** | 🟢 Edit a single chapter's `narrations.ts` → rebuild → deploy. No re-recording needed. Fix a typo or add a chapter in minutes | 🔴 Requires re-recording the entire video segment, re-editing the timeline, and re-exporting. A 30-second fix can take 2+ hours |
+| **Cross-Platform Compatibility** | 🟡 Renders in any modern browser (Chrome/Firefox/Safari/Edge). Responsive stage scaling adapts to desktop, tablet, and mobile. Fullscreen API + orientation lock for mobile landscape mode | 🟢 MP4 plays virtually everywhere — browsers, media players, smart TVs, embedded in slides. Slightly better legacy device support |
+| **Access Control & Copyright** | 🟢 Full control via web server auth middleware, token-gated access, domain whitelisting, or paywall integration. Source code (TSX/CSS/narrations) easily protected by back-end routing | 🔴 Once the MP4 file is downloaded, it can be freely copied, re-uploaded, or pirated. DRM solutions are expensive and easily bypassed |
+| **Theme Richness & Extensibility** | 🟢 23 built-in themes with independent design signatures (font pairing, color palette, animation curves). 5 semantic color tokens (`--accent`, `--accent-tech`, `--accent-good`, `--accent-warn`, `--accent-deep`). New themes added via CSS variable overrides | 🟡 Visual style is locked at recording time — backgrounds, overlays, lower-thirds are "baked in." Re-styling requires a full re-shoot or video post-production |
+| **Voice-Over Flexibility** | 🟢 Provider-agnostic TTS pipeline: MiniMax (Chinese-optimized), OpenAI, Edge-TTS, or custom providers. Re-synthesize any single chapter independently. Change voice, speed, or language per segment | 🔴 Requires a human narrator. Re-recording means booking studio/voice talent, matching tone consistency with existing segments, and re-syncing. Expensive and slow |
+| **Development Efficiency** | 🟡 Initial development: ~2-4 hours per 45-min course (narration scripting + TSX layout + CSS + audio synthesis). After first course, common components accelerate subsequent courses. **60 chapters developed in one session (3 courses)** is feasible with AI assistance | 🔴 Typical production pipeline: script writing → rehearsal → studio recording → editing → post-production → export. A polished 45-min video often takes 2-5 working days end-to-end |
+| **Offline Usage** | 🟡 Works offline after initial page load (static Vite build). Audio is preloaded as MP3 assets. Service worker caching can enable full offline PWA mode | 🟢 MP4 file can be downloaded and played offline on any device with zero technical setup |
+| **Content Searchability** | 🟢 Chapter titles, narration text, and interactive prompts are all in plain text (TypeScript) — fully searchable and indexable by search engines when deployed as static HTML | 🔴 Video content is opaque — requires manual transcription or auto-generated captions for searchability. Captions often lag behind content updates |
+| **Learner Analytics** | 🟢 Built-in: step-by-step progress tracking, quiz answer logging, completion rates, time spent per chapter, interactive engagement metrics. Data feeds directly into the Kirkpatrick L1-L4 evaluation model | 🔴 Requires an external LMS (Learning Management System) or video hosting platform with analytics add-ons. Often limited to play/pause/completion events |
+| **Human Presence** | 🔴 No real human face, body language, or live energy. Relies on visual design quality and interactivity to maintain engagement | 🟢 Human instructor's expressions, gestures, and vocal nuances create a personal connection. Body language aids comprehension |
+| **Physical Demonstration** | 🔴 Limited to 2D/3D simulated visualizations. Cannot show real-world physical operations, lab experiments, or hands-on tool usage | 🟢 Can show real-world operations, physical demonstrations, whiteboard sketching, and tool walkthroughs |
+| **Real-Time Adaptability** | 🔴 Pre-authored logic — cannot dynamically respond to an individual learner's questions or adjust pacing based on live audience feedback | 🟡 In live-stream or classroom settings, the instructor can pause for Q&A, adapt examples on the fly, and read the room |
+
+### When to Choose Which
+
+| Scenario | Recommendation |
+|---|---|
+| Large-scale standardized training (1000+ learners) | **AI Interactive** — consistent quality, zero marginal delivery cost |
+| Rapid iteration and frequent content updates | **AI Interactive** — edit a chapter in minutes |
+| Quizzes, hands-on exercises, decision-making practice | **AI Interactive** — built-in interactivity |
+| Leadership/keynote/inspirational content | **Human Video** — personal presence matters |
+| Physical skills training (lab, workshop, sports) | **Human Video** — real demonstration needed |
+| Learner analytics and compliance tracking | **AI Interactive** — native data collection |
+| Quick MVP for a new course concept | **AI Interactive** — develop and iterate in hours |
+| High-stakes certification exam prep | **Hybrid** — AI interactive for content + human proctoring |
 
 Built on the foundation of [**web-video-presentation**](https://github.com/ConardLi/garden-skills) by [ConardLi](https://github.com/ConardLi) — the original skill that pioneered the 16:9 fixed-stage web presentation paradigm. `course-forge` extends it from single-video production to full-course development with interactive assessments, 3D exploration, and multi-modal data processing.
 
