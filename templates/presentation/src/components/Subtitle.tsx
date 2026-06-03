@@ -4,9 +4,9 @@ import "./Subtitle.css";
 type ChunkTiming = { text: string; ms: number };
 type TimingMap = Record<string, Record<string, ChunkTiming[]>>;
 
-interface Props { text: string; chapterId: string; stepIndex: number; timingMap: TimingMap | null; }
+interface Props { text: string; chapterId: string; stepIndex: number; timingMap: TimingMap | null; paused?: boolean; }
 
-function ChunkCycle({ chunks, delays, cycleKey }: { chunks: string[]; delays: number[]; cycleKey: string }) {
+function ChunkCycle({ chunks, delays, cycleKey, paused }: { chunks: string[]; delays: number[]; cycleKey: string; paused?: boolean }) {
   const [idx, setIdx] = useState(0);
   const cumulative = useMemo(() => {
     const arr: number[] = []; let acc = 0;
@@ -17,12 +17,13 @@ function ChunkCycle({ chunks, delays, cycleKey }: { chunks: string[]; delays: nu
   useEffect(() => {
     setIdx(0);
     if (chunks.length <= 1) return;
+    if (paused) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     for (let i = 1; i < chunks.length; i++) {
       timers.push(setTimeout(() => setIdx(i), cumulative[i - 1]));
     }
     return () => timers.forEach(clearTimeout);
-  }, [cycleKey]);
+  }, [cycleKey, paused]);
 
   return (
     <span className="sub-text">
@@ -37,7 +38,7 @@ function readVisibility(): boolean {
   try { return localStorage.getItem("sub-visible") !== "0"; } catch { return true; }
 }
 
-export function Subtitle({ text, chapterId, stepIndex, timingMap }: Props) {
+export function Subtitle({ text, chapterId, stepIndex, timingMap, paused }: Props) {
   const [visible, setVisible] = useState(readVisibility);
 
   const toggle = useCallback((e: React.MouseEvent) => {
@@ -71,7 +72,7 @@ export function Subtitle({ text, chapterId, stepIndex, timingMap }: Props) {
       ) : (
         <button className="sub-toggle" onClick={toggle} data-no-advance title="显示字幕">👁‍🗨</button>
       )}
-      {visible && <ChunkCycle key={cycleKey} chunks={chunks} delays={delays} cycleKey={cycleKey} />}
+      {visible && <ChunkCycle key={cycleKey} chunks={chunks} delays={delays} cycleKey={cycleKey} paused={paused} />}
     </div>
   );
 }
