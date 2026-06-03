@@ -152,11 +152,15 @@ The skill follows a structured pipeline with human checkpoints at critical decis
   └──────────────┬──────────────┘
                  ▼
   ┌──────────────┴──────────────┐
-  │ Phase 3 — Deploy             │
-  │  3.1  Build static assets   │    npm run build → dist/
-  │  3.2  Deploy (Nginx / CDN   │    Framework-agnostic — adapt to
-  │       / Docker / CI/CD)     │    your own infrastructure
-  │  3.3  Embed in web app      │    new-tab / iframe / DB-driven
+  │ Phase 3 — Build & Verify    │
+  │  3.1  npm run build → dist/ │    Self-contained static files
+  │  3.2  Local preview         │    npx serve dist → user verifies
+  └──────────────┬──────────────┘
+                 ▼
+  ┌──────────────┴──────────────┐
+  │ Phase 4 — Deploy & Embed    │
+  │  4.1  Deploy standalone     │    Nginx / CDN / Docker / GitHub Pages
+  │  4.2  Embed in web app      │    new-tab / iframe / DB-driven
   └─────────────────────────────┘
 ```
 

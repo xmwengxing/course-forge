@@ -92,11 +92,15 @@ bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk
   └──────────────┬──────────────┘
                  ▼
   ┌──────────────┴──────────────┐
-  │ Phase 3 — 构建与部署        │
-  │  3.1  构建静态资源          │    npm run build → dist/
-  │  3.2  部署（Nginx / CDN    │    按项目技术栈适配
-  │       / Docker / CI/CD）    │
-  │  3.3  嵌入 Web 应用         │    新窗口 / iframe / DB 驱动
+  │ Phase 3 — 构建与本地验收    │
+  │  3.1  npm run build → dist/ │    纯静态文件，独立自包含
+  │  3.2  本地预览验收          │    npx serve dist → 用户验收入
+  └──────────────┬──────────────┘
+                 ▼
+  ┌──────────────┴──────────────┐
+  │ Phase 4 — 部署与嵌入        │
+  │  4.1  独立站点部署          │    Nginx / CDN / Docker / GitHub Pages
+  │  4.2  嵌入已有 Web 应用     │    新窗口 / iframe / DB 驱动
   └─────────────────────────────┘
 ```
 

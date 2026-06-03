@@ -27,7 +27,14 @@ Phase 1   逐段开发（S1→S2→S3→S4→S5）
 [Checkpoint Audio]   ← 硬节点。是否合成音频
    ▼
 Phase 2   音频合成与字幕（可选）
-Phase 3   构建与部署（按项目技术栈适配）
+   ▼
+Phase 3   构建与本地验收
+   3.1   npm run build → dist/（纯静态文件，零服务端依赖）
+   3.2   本地预览 → 用户验收通过
+   ▼
+[Checkpoint Accept]  ← 硬节点。课件内容通过本地验收
+   ▼
+Phase 4   部署与嵌入（后期，按项目技术栈适配）
 ```
 
 ## 何时不使用（降级为 web-video-presentation）
@@ -284,36 +291,58 @@ python3 scripts/subtitle-timing.py --mode minimax
 
 ---
 
-## Phase 3 — 构建与部署
+## Phase 3 — 构建与本地验收
 
-构建与部署方案取决于项目的技术选型，技能提供通用适配框架而非绑定具体栈。
+课件是一个**独立、自包含的纯前端项目**。构建产物是纯静态文件，无需任何后端服务即可验收。
 
-### 3.1 通用构建流程
-
-### 3.1 通用构建流程
+### 3.1 构建
 
 ```bash
-# 1. 构建前端静态资源
-cd presentation && npm run build        # → dist/
-
-# 2. 复制 dist 到 Web 应用的静态资源目录
-cp -r dist/* <web-app>/public/courses/<course-name>/
-
-# 3. 重新构建 Web 应用（如需要）
-cd <web-app> && npm run build
+cd presentation && npm run build        # tsc + vite build → dist/
 ```
 
-### 3.2 部署适配（按技术栈选型）
+产出物 `dist/` 包含 `index.html`、`embed.html`、JS/CSS bundle、音频文件和字幕数据。
 
-| 部署场景 | 适配方式 |
+### 3.2 本地预览与验收
+
+构建完成后立刻可以本地预览，**不需要嵌入任何主项目**：
+
+```bash
+# 方式 A：npx serve（最简单）
+npx serve dist
+# → http://localhost:3000/?auto=1
+
+# 方式 B：Python HTTP Server
+python3 -m http.server 3000 --directory dist
+# → http://localhost:3000/?auto=1
+
+# 方式 C：已有 Nginx / Caddy
+# 将 dist/ 目录配置为静态站点根目录
+```
+
+URL 参数：`?auto=1`（自动播放模式）, `?chapter=N`（从第 N 章开始）。
+
+**用户验收**：浏览课件全部章节，确认画面、字幕、音频、互动功能无误后，进入 Phase 4 决定如何部署嵌入。
+
+---
+
+## Phase 4 — 部署与嵌入
+
+验收通过后，根据实际项目技术栈选择部署方式。课件 `dist/` 是纯静态文件，**对部署环境没有框架依赖**。
+
+### 4.1 独立站点部署
+
+模拟 Phase 3 的本地预览，部署到生产环境：
+
+| 平台 | 方式 |
 |------|------|
-| **静态站点 **（Nginx/Apache/CDN） | 将 `dist/` 下文件部署到任意静态文件服务即可。课件是纯前端静态资源，无服务端依赖 |
-| **Docker 容器化** | 在 `docker-compose.yml` 中将 `dist/` 目录挂载到 Nginx 容器的静态文件路径 |
-| **嵌入已有 Web 应用** | 将课件目录放入项目的 `public/` 或 `static/` 目录，随主项目一起构建部署 |
-| **rsync/scp 推送** | 适合传统 VPS 部署，直接同步 `dist/` 到服务器静态文件目录 |
-| **CI/CD 管线** | 在 pipeline 中依次执行：`npm ci → npm run build → 上传 artifacts → 部署` |
+| **Nginx** | 将 `dist/` 配置为 `root` 目录，添加 `/api` 反向代理如需要 |
+| **CDN / OSS** | 将 `dist/` 下所有文件上传至云存储桶，开启静态网站托管 |
+| **GitHub Pages** | 将 `dist/` 推送到 `gh-pages` 分支 |
+| **Docker** | `docker-compose.yml` 中挂载 `dist/` 到 Nginx 容器的 `/usr/share/nginx/html` |
+| **rsync** | 直接推送 `dist/` 到 VPS 静态文件目录 |
 
-### 3.3 嵌入 Web 应用
+### 4.2 嵌入已有 Web 应用
 
 **推荐方案：新窗口独立页面**（兼容性最好，已验证）
 
@@ -328,7 +357,7 @@ const openChapter = (c: Chapter) => {
 
 详细方案见 [EMBEDDING.md](./references/EMBEDDING.md)
 
-### 3.4 录屏
+### 4.4 录屏
 
 如需制作视频版本用于分发或预览：
 
@@ -338,7 +367,7 @@ cd presentation && npm run dev
 # 按 SPACE → 全自动播放 → 录屏 → 裁头尾即成片
 ```
 
-### 3.5 DB 集成模式（可选）
+### 4.5 DB 集成模式（可选）
 
 如需将课件嵌入已有 Web 应用的章节管理系统，可通过数据库驱动课程导航：
 
