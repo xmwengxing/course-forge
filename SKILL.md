@@ -12,26 +12,22 @@ description: 把知识文档或口播稿，做成带旁白配音、互动测验�
 ## 工作流总览
 
 ```
-Phase 0   结构规划
-   0.1   识别用户输入（知识文档 / 口播稿）
-   0.2   拆分章节方案：S1-S5 段 → 用户确认
+Phase 0   输入识别与内容准备
+   0.1   识别用户输入（5 种场景）
+   0.2   口播稿生成 → docs/ 目录存档 → 用户验收
+   0.3   拆分章节方案：S1-S5 段 → 用户确认
+   0.4   主题选定（chalk-garden 推荐用于教学）
    ▼
-[Checkpoint Split]   ← 硬节点。确认 S1-S5 拆分 + 主题
+[Checkpoint Plan]   ← 硬节点。确认口播稿 + S1-S5 拆分 + 主题
    ▼
-Phase 1   内容准备
-   1.1   生成 script.md（口播稿） + outline.md（开发计划 + 信息池）
-   1.2   主题选定（chalk-garden 推荐用于教学）
-   ▼
-[Checkpoint Plan]    ← 硬节点。确认稿子/outline/主题/模式
-   ▼
-Phase 2   逐段开发（S1→S2→S3→S4→S5）
-   2.1   脚手架
-   2.2-2.N  每段 3-6 章，逐章制作 TSX+CSS+narrations，逐段验收
+Phase 1   逐段开发（S1→S2→S3→S4→S5）
+   1.1   脚手架
+   1.2-1.N  每段 3-8 章，逐章制作 TSX+CSS+narrations，逐段验收
    ▼
 [Checkpoint Audio]   ← 硬节点。是否合成音频
    ▼
-Phase 3   音频合成（可选）
-Phase 4   录屏 + 后期
+Phase 2   音频合成与字幕（可选）
+Phase 3   构建与部署（按项目技术栈适配）
 ```
 
 ## 何时不使用（降级为 web-video-presentation）
@@ -43,17 +39,33 @@ Phase 4   录屏 + 后期
 
 ---
 
-## Phase 0 — 结构规划
+## Phase 0 — 输入识别与内容准备
 
 ### 0.1 识别用户输入
 
-| 用户给 | 操作 |
-|--------|------|
-| 知识文档（含教学设计、口播稿） | 解析为 S1-S5 段，在 0.2 拆分 |
-| 直接的口播稿 / 视频脚本 | 使用已有 script.md，仍需做 S1-S5 拆分 |
-| "帮我做门 X 主题的课" | **反问**：先给素材或大纲 |
+根据用户首次提供的内容，匹配以下行为路径：
 
-### 0.2 拆分章节方案
+| # | 用户输入 | 触发行为 | 进入 |
+|---|---------|------|:--:|
+| **A** | 知识文档 + 口播稿 | 已有完整材料，跳过 0.2 | → 0.3 拆分 |
+| **B** | 知识文档，无口播稿 | **询问**：是否根据文档生成口播稿？→ 是则执行 0.2 | → 0.2 → 0.3 |
+| **C** | 仅课件大纲 / 主题 / 知识点列表 | **先生成课程大纲**，自动存档到 `docs/` → 再生成口播稿 → 存档 | → 0.2 → 0.3 |
+| **D** | 仅课程名称 / 一句话需求 | **反问**：什么主题领域？有素材或大纲吗？请先提供内容 | — |
+| **E** | 直接口播稿文本（粘贴/贴文件） | 跳过 0.2，直接使用已有稿子 | → 0.3 拆分 |
+
+### 0.2 口播稿生成与存档
+
+当用户选择生成口播稿（场景 B/C）时：
+
+1. **生成口播稿**：根据源文档内容 + 下文 0.3 的 S1-S5 模板，逐段生成完整口播稿
+   - 每章 ~3-4 步，每步 80-130 字，通过增加知识深度和广度扩展内容
+   - 遵循双源原则（口播定节拍 + 画面定密度）
+2. **创建目录**：如项目中不存在 `docs/` 目录则自动创建
+3. **存档**：口播稿保存为 `docs/<标题>.md`（如 `docs/1.8 复杂场景业务流程分析与优化.md`）
+4. **告知路径**：明确告知用户「口播稿已生成：`docs/xxx.md`，请审阅验收后继续」
+5. **用户验收**：等用户确认口播稿内容无误（或提出修改意见）后，方可进入 0.3
+
+### 0.3 拆分章节方案
 
 **硬性拆分规则**（基于 97 章生产级课件验证）：
 
@@ -93,18 +105,7 @@ S5 总结通关 (~7 min): <章节数>章 — <内容概要>
 确认后我按 S1→S2→S3→S4→S5 逐段开发验收。
 ```
 
----
-
-## Phase 1 — 内容准备
-
-### 1.1 口播稿生成原则
-
-1. **避免制造废话**：不要为凑时长写空泛的排比句。通过增加知识深度（具体数值、技术原理、行业背景）和广度（案例对比、应用场景延伸）来扩展内容
-2. **双源原则**：口播稿 script 定节拍（每步对应一个想法），原始文档 article 定画面密度（哪些信息要挂到屏幕上）
-3. **口播稿自检**：每步 ~80-130 字，300ms/字语速为基准。单步过多则拆分，过少则合并
-4. **章节标题**在 narrations.ts 开头或 TSX 组件中体现，口播中不念"接下来讲第X章"
-
-### 1.2 主题选择
+### 0.4 主题选择
 
 **教学场景推荐 `chalk-garden`**（暗石板底+粉笔黄+手写字体，教室感）
 
@@ -112,9 +113,9 @@ S5 总结通关 (~7 min): <章节数>章 — <内容概要>
 
 ---
 
-## Phase 2 — 逐段开发
+## Phase 1 — 逐段开发
 
-### 2.1 脚手架
+### 1.1 脚手架
 
 ```bash
 bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
@@ -122,7 +123,7 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 
 删掉 `01-example` demo 章节，然后在 `chapters.ts` 中移除对应 import。
 
-### 2.2-2.N 实现单章
+### 1.2-1.N 实现单章
 
 **每章结构**：
 ```
@@ -153,7 +154,7 @@ src/chapters/XX-<id>/
 - 每章首段从原始文档抽**信息池**（数字/引用/案例/标签）
 - 口播稿中的数字翻译成感受（除非是核心冲击数字），但画面中保留原始精确值
 
-### 2.3 注册章节
+### 1.3 注册章节
 
 ```typescript
 // chapters.ts
@@ -166,7 +167,7 @@ export const CHAPTERS: ChapterDef[] = [
 ];
 ```
 
-### 2.4 更新 course.json
+### 1.4 更新 course.json
 
 **禁止用文本编辑器的查找替换追加 JSON**（会导致括号错位、导航菜单消失）。
 
@@ -174,14 +175,14 @@ export const CHAPTERS: ChapterDef[] = [
 1. 编辑根目录 `course.json`，在对应 section 的 segments 中添加章节条目
 2. 运行 `python3 regenerate-course-json.py` 验证 + 同步到 `presentation/public/`
 
-### 2.5 构建验证
+### 1.5 构建验证
 
 ```bash
 npm run build    # tsc + vite build
 npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 ```
 
-### 2.6 互动组件
+### 1.6 互动组件
 
 课件模板内置 **5 个可复用通用交互组件**，位于 `src/components/interactive/`：
 
@@ -218,9 +219,9 @@ npm run extract-narrations   # 提取所有 narrations → audio-segments.json
 
 ---
 
-## Phase 3 — 音频合成
+## Phase 2 — 音频合成与字幕
 
-### 3.1 TTS Provider 抽象（默认 minimax）
+### 2.1 TTS Provider 抽象（默认 minimax）
 
 TTS runner 是 **provider-agnostic** 的：runner 本身不绑定任何 TTS 后端，每个后端是 `scripts/tts-providers/<name>.sh` 一个文件。
 
@@ -239,7 +240,7 @@ npm run synthesize-audio   # skip 已存在
 - 错误：HTTP 429 / "rate limit exceeded" / 1002 (RPM) / 1039 (TPM)
 - 重试：等 **60s** 后重新跑 `npm run synthesize-audio`，脚本自动跳过已合成
 
-### 3.2 音频压缩（可选，推荐）
+### 2.2 音频压缩（可选，推荐）
 
 TTS 合成输出的 MP3 通常码率偏高（MiniMax 平均值 ~388kbps），对纯语音叙述而言严重浪费。推荐在合成后运行压缩：
 
@@ -254,7 +255,7 @@ bash scripts/compress-audio.sh --dry-run        # 预览不实际修改
 
 **建议工作流位置**：`synthesize-audio` 之后、`subtitle-timing` 之前。
 
-### 3.3 字幕时序生成
+### 2.3 字幕时序生成
 
 **双模式**：默认（快速）用于现有章节，minimax（精确）用于新合成章节。
 
@@ -273,7 +274,7 @@ python3 scripts/subtitle-timing.py --mode minimax
 
 **minimax 模式前提**：合成时 `minimax.sh` 自动请求 `subtitle_enable: true, subtitle_type: "word"`，词级时间戳存到 `public/minimax-word-timing/<chapter>/<step>.json`。
 
-### 3.4 浮动字幕 UI
+### 2.4 浮动字幕 UI
 
 课件模板内置**浮动字幕**（无背景条遮挡画布）：
 
@@ -283,18 +284,36 @@ python3 scripts/subtitle-timing.py --mode minimax
 
 ---
 
-## Phase 4 — 录屏与部署
+## Phase 3 — 构建与部署
 
-### 录屏
+构建与部署方案取决于项目的技术选型，技能提供通用适配框架而非绑定具体栈。
+
+### 3.1 通用构建流程
+
+### 3.1 通用构建流程
 
 ```bash
-# 启动 dev server
-cd presentation && npm run dev
-# 浏览器打开 http://localhost:5173/?auto=1
-# 按 SPACE → 全自动播放 → 录屏 → 裁头尾即成片
+# 1. 构建前端静态资源
+cd presentation && npm run build        # → dist/
+
+# 2. 复制 dist 到 Web 应用的静态资源目录
+cp -r dist/* <web-app>/public/courses/<course-name>/
+
+# 3. 重新构建 Web 应用（如需要）
+cd <web-app> && npm run build
 ```
 
-### 嵌入 Web 应用
+### 3.2 部署适配（按技术栈选型）
+
+| 部署场景 | 适配方式 |
+|------|------|
+| **静态站点 **（Nginx/Apache/CDN） | 将 `dist/` 下文件部署到任意静态文件服务即可。课件是纯前端静态资源，无服务端依赖 |
+| **Docker 容器化** | 在 `docker-compose.yml` 中将 `dist/` 目录挂载到 Nginx 容器的静态文件路径 |
+| **嵌入已有 Web 应用** | 将课件目录放入项目的 `public/` 或 `static/` 目录，随主项目一起构建部署 |
+| **rsync/scp 推送** | 适合传统 VPS 部署，直接同步 `dist/` 到服务器静态文件目录 |
+| **CI/CD 管线** | 在 pipeline 中依次执行：`npm ci → npm run build → 上传 artifacts → 部署` |
+
+### 3.3 嵌入 Web 应用
 
 **推荐方案：新窗口独立页面**（兼容性最好，已验证）
 
@@ -309,16 +328,35 @@ const openChapter = (c: Chapter) => {
 
 详细方案见 [EMBEDDING.md](./references/EMBEDDING.md)
 
-### DB 集成模式
+### 3.4 录屏
 
-如需要将课件嵌入已有 Web 应用的章节管理系统（如 ExamMaster 模式）：
+如需制作视频版本用于分发或预览：
 
-```sql
-ALTER TABLE interactive_courses ADD COLUMN start_chapter INTEGER DEFAULT 0;
--- 1.1 → start_chapter=0, 1.2 → start_chapter=30, ...
+```bash
+cd presentation && npm run dev
+# 浏览器打开 http://localhost:5173/?auto=1
+# 按 SPACE → 全自动播放 → 录屏 → 裁头尾即成片
 ```
 
-每节课的 `start_chapter` 对应其在 presentation 中的起始章节 index。
+### 3.5 DB 集成模式（可选）
+
+如需将课件嵌入已有 Web 应用的章节管理系统，可通过数据库驱动课程导航：
+
+```sql
+-- 课程表结构（通用示例，按实际 schema 调整）
+CREATE TABLE IF NOT EXISTS courses (
+  id VARCHAR(64) PRIMARY KEY,
+  title VARCHAR(256) NOT NULL,
+  base_path VARCHAR(256) NOT NULL,     -- e.g. 'courses/ai-trainer/'
+  start_chapter INTEGER DEFAULT 0,     -- 该课在 presentation 中的起始章节 index
+  sort_order INTEGER DEFAULT 0,
+  status VARCHAR(16) DEFAULT 'published'
+);
+
+-- 每门课的 start_chapter = 前面所有已发布章节的总数
+```
+
+前端嵌入方式参考 [EMBEDDING.md](./references/EMBEDDING.md)。
 
 ---
 

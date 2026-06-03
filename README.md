@@ -117,6 +117,61 @@ The agent will:
 
 ---
 
+---
+
+## Workflow
+
+The skill follows a structured pipeline with human checkpoints at critical decision points:
+
+```
+  User provides knowledge doc / outline / narration script
+                 │
+  ┌──────────────┴──────────────┐
+  │ Phase 0 — Input & Content ▼ │
+  │  0.1  Identify input type   │
+  │  0.2  Generate narration    │        User reviews narration at docs/xxx.md
+  │       (if not provided)      │
+  │  0.3  Propose S1-S5 split   │        User confirms chapter plan + duration
+  │  0.4  Select theme          │
+  └──────────────┬──────────────┘
+                 ▼
+  ┌──────────────┴──────────────┐
+  │ Phase 1 — Build (per seg)   │
+  │  1.1  Scaffold project      │
+  │  1.2  Build S1 → review     │◄── Segment-by-segment verification
+  │  ...  Build S2 → review     │    with duration reporting
+  │  1.N  Build S5 → review     │
+  └──────────────┬──────────────┘
+                 ▼
+  ┌──────────────┴──────────────┐
+  │ Phase 2 — Audio & Subtitles │
+  │  2.1  Synthesize narration  │    TTS (MiniMax / OpenAI / Edge)
+  │  2.2  Compress audio (opt)  │    64kbps → 50% size reduction
+  │  2.3  Generate subtitle     │    ffprobe-measured chunk timing
+  │       timing                 │
+  └──────────────┬──────────────┘
+                 ▼
+  ┌──────────────┴──────────────┐
+  │ Phase 3 — Deploy             │
+  │  3.1  Build static assets   │    npm run build → dist/
+  │  3.2  Deploy (Nginx / CDN   │    Framework-agnostic — adapt to
+  │       / Docker / CI/CD)     │    your own infrastructure
+  │  3.3  Embed in web app      │    new-tab / iframe / DB-driven
+  └─────────────────────────────┘
+```
+
+### Imperative: What You Control
+
+| Step | What You Decide | AI Does |
+|------|:--:|------|
+| Narration script | Approve or request edits | Generates from source doc |
+| S1-S5 split | Approve chapter count × duration | Proposes optimal breakdown |
+| Theme | Choose (chalk-garden recommended) | Shows theme options |
+| Each segment (S1-S5) | Review visuals + timing | Builds chapters + runs audio pipeline |
+| Audio synthesis | Confirm before running | TTS + compress + subtitles |
+
+---
+
 ## Course Structure
 
 Every course-forge project follows a three-tier hierarchy:
