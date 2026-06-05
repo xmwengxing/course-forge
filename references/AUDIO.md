@@ -104,6 +104,13 @@ npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 合成串行（避免 rate limit），**自动跳过已存在文件**（断点续合，不烧
 重复 token）。
 
+> **限时处理指定章节**：用 `--chapters` 参数只合成指定 ID 的章节，
+> 跳过其他章节。用于开发中只合成新增章节，避免遍历全部已有文件：
+>
+> ```bash
+> npm run synthesize-audio -- --chapters=a1-role-models,a1-coding-in-life,a1-first-project
+> ```
+
 #### 2.B 用内置 openai 合成
 
 ```bash

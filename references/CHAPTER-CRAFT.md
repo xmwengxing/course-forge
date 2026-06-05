@@ -161,6 +161,13 @@ AI 生成的网页有几种共有的"视觉指纹"，**全部不要**：
 
 ### 其它工程红线
 
+- **JSX 文本内容禁止 `\u` 转义** — JSX 将标签之间（`<span>...</span>`）的内容按 HTML 文本解析，`\u` 不会被解释为 Unicode，而是逐字渲染为 `\u00B7` 等乱码。
+  - 正确：`<span>·</span>`（直接写实际 UTF-8 字符）
+  - 正确：`<span>{'\u00B7'}</span>`（花括号包裹的 JS 表达式）
+  - 错误：`<span>\u00B7</span>`（渲染为文本）
+  - 注：引号内的 JS 字符串不受此限，如 `const s = "\u00B7"` 正常工作
+  - 注：`\u` 在 `.narrations.ts` 的字符串中也可正常使用（那是 JS 字符串，非 JSX 文本）
+
 - 不用 `setTimeout` / `setInterval` 驱动动画 —— 用 CSS keyframes
 - 章节内的可交互元素（按钮 / 自定义控件）加 `data-no-advance`，
   否则点了会被舞台误推进 step

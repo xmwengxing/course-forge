@@ -507,6 +507,7 @@ CREATE TABLE IF NOT EXISTS courses (
 6. **逐章手写，禁止脚本批量生成** — TSX + CSS + narrations 每章独立手写，不得用循环脚本一次性生成
 7. **最小字号 14px** — 除装饰性标签外，任何 font-size 不得低于 14px
 8. **底部留空 60-80px** — layout 底部必须预留字幕空间
+9. **JSX 文本内容禁止 `\u` 转义** — JSX 标签间的文本按 HTML 解析，`\u` 无效。直接写实际 UTF-8 字符或用 `{'\u...'}` 表达式。引号内 JS 字符串不受限。
 
 ---
 

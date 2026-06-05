@@ -24,6 +24,9 @@
 #   PRESENTATION_TTS_VOICE=<id>   env var
 #   --voice=<id>                  CLI flag (overrides env)
 #
+# Filtering (skip only these chapters — much faster with large projects):
+#   --chapters=<id1,id2,...>      only process specified chapter IDs
+#
 # Other flags:
 #   --force                       re-synthesize even if mp3 exists
 #
@@ -38,6 +41,7 @@
 #   npm run synthesize-audio -- --force
 #   PRESENTATION_TTS=openai npm run synthesize-audio
 #   npm run synthesize-audio -- --provider=elevenlabs --voice=Rachel
+#   npm run synthesize-audio -- --chapters=t5-black-truck,t5-not-photo
 # ────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -50,12 +54,14 @@ PROVIDERS_DIR="$SCRIPT_DIR/tts-providers"
 PROVIDER="${PRESENTATION_TTS:-minimax}"
 VOICE="${PRESENTATION_TTS_VOICE:-}"
 FORCE=false
+CHAPTERS=""
 
 for arg in "$@"; do
   case "$arg" in
     --force)         FORCE=true ;;
     --voice=*)       VOICE="${arg#--voice=}" ;;
     --provider=*)    PROVIDER="${arg#--provider=}" ;;
+    --chapters=*)    CHAPTERS="${arg#--chapters=}" ;;
     -h|--help)
       sed -n '2,46p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
@@ -106,6 +112,17 @@ if declare -F tts_check >/dev/null; then
     fi
     exit 1
   fi
+fi
+
+# ── Filter by chapters (if specified) ────────────────────────────────
+if [[ -n "$CHAPTERS" ]]; then
+  tmp=$(mktemp)
+  jq --arg ch "$CHAPTERS" \
+    '[.[] | select(.chapter as $c | $ch | split(",") | index($c))]' \
+    "$SEGMENTS" > "$tmp"
+  SEGMENTS="$tmp"
+  ch_count=$(jq 'length' "$SEGMENTS")
+  echo "  Filtered to chapters: $CHAPTERS ($ch_count segments)"
 fi
 
 # ── Main loop ─────────────────────────────────────────────────────────

@@ -1,0 +1,155 @@
+.api-scene {
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+.api-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--good);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  align-self: flex-start;
+}
+
+.api-title {
+  font-family: var(--font-display-cn);
+  font-size: var(--t-h1);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0;
+  max-width: 16ch;
+}
+
+.api-demo {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.api-req-card {
+  background: var(--surface-2);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 18px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.api-method {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.api-url {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--text);
+  word-break: break-all;
+}
+
+.api-send-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  background: var(--accent);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  cursor: default;
+  align-self: flex-start;
+}
+
+.api-arrow {
+  font-size: 36px;
+  color: var(--text-mute);
+  font-family: var(--font-display-en);
+  font-style: italic;
+  flex-shrink: 0;
+}
+
+.api-resp-card {
+  background: var(--surface-3);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 18px 24px;
+  min-width: 300px;
+}
+
+.api-resp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.api-resp-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+
+.api-resp-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--good);
+}
+
+.api-json {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  margin: 0;
+  white-space: pre;
+}
+
+.api-json .key {
+  color: var(--accent-tech);
+}
+.api-json .str {
+  color: var(--good);
+}
+.api-json .num {
+  color: var(--warn);
+}
+.api-json .bool {
+  color: var(--deep);
+}
+
+.api-tagline {
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.6;
+  color: var(--text-2);
+  font-style: italic;
+}
+
+.api-props {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.api-prop-item {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+}
