@@ -79,7 +79,7 @@
 随时列出可用主题：
 
 ```bash
-bash <path-to-web-video-presentation>/scripts/scaffold.sh --list-themes
+bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 ```
 
 ---
@@ -104,7 +104,7 @@ bash scripts/scaffold.sh ./talk --theme=newsroom
 切换 = 一次文件覆盖：
 
 ```bash
-cp <path-to-web-video-presentation>/themes/newsroom/tokens.css \
+cp <path-to-course-forge>/themes/newsroom/tokens.css \
    presentation/src/styles/tokens.css
 ```
 
@@ -244,7 +244,7 @@ CSS"领域 —— 在那里解决，别扩主题契约。
 | 瑞士国际主义 / Helvetica / 信息驱动设计 | `swiss-ikb`           |
 
 ```bash
-cd <path-to-web-video-presentation>/themes
+cd <path-to-course-forge>/themes
 cp -r monochrome-print my-theme
 ```
 

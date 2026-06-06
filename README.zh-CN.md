@@ -44,17 +44,17 @@ bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk
 
 ---
 
-## 与原技能的差异
+## 核心能力
 
-| 能力 | web-video-presentation | course-forge |
-|---|---|---|
-| 产出物 | 单个视频 | **多章节完整课程 (S1-S5)** |
-| 交互能力 | 无 | **选择题、简答题、CSS 3D 探索** |
-| 章节管理 | 手动 chapters.ts | **course.json 三级架构 + 自动生成脚本** |
-| 字幕系统 | 简单切分 | **字数占比分配 ms、60字阈值、0-indexed 对齐** |
-| 评估体系 | 无 | **柯氏四级评估 (L1-L4 嵌入每个 S5)** |
-| 嵌入方案 | 无 | **5 种 Web 应用集成策略** |
-| 画布优化 | 默认内边距 | **缩小 stage-pad/margin，可用面积提升 18%** |
+| 能力 | course-forge |
+|:--|:--|
+| 产出物 | **多章节完整课程 (S1-S5)** |
+| 交互能力 | **选择题、简答题、CSS 3D 探索** |
+| 章节管理 | **course.json 三级架构 + 自动生成脚本** |
+| 字幕系统 | 字数占比分配 ms、60字阈值、0-indexed 对齐 |
+| 评估体系 | **柯氏四级评估 (L1-L4 嵌入每个 S5)** |
+| 嵌入方案 | **5 种 Web 应用集成策略** |
+| 画布优化 | 缩小 stage-pad/margin，可用面积提升 18% |
 
 ---
 
@@ -132,7 +132,7 @@ course/
 
 ## 主题
 
-继承 web-video-presentation 的 23 个内置主题，每个有独立的设计签名、字体和动效风格。[查看完整主题画廊 →](https://github.com/ConardLi/garden-skills/blob/main/skills/web-video-presentation/README.md#theme-gallery)
+23 个内置主题，每个有独立的设计签名、字体和动效风格。`references/THEMES.md` 包含完整 token 契约。
 
 ---
 
@@ -170,7 +170,7 @@ course/
 | 新课程概念快速验证 | **AI 交互式课件** — 数小时内开发并迭代 |
 | 高风险认证考试备考 | **混合模式** — AI 交互课件承载内容 + 人工监考 |
 
-基于 [**web-video-presentation**](https://github.com/ConardLi/garden-skills) 项目构建，原作者 [ConardLi](https://github.com/ConardLi) 开创了 16:9 固定舞台 Web 演示范式。`course-forge` 将其从单视频制作扩展为完整课程开发，增加了互动评估、3D 探索和多模态数据处理能力。
+course-forge — 45-60 分钟互动课件开发工具，支持互动评估、3D 探索和多模态数据处理。
 
 ---
 

@@ -30,19 +30,19 @@
 
 ## What Makes It Different
 
-`course-forge` is a **fork and total rewrite** of [web-video-presentation](https://github.com/ConardLi/garden-skills#web-video-presentation), reimagined for full-course development rather than single-video production. Key additions:
+`course-forge` is designed for full-course development with interactive assessments. Compared to single-video tools, it adds:
 
-| Capability | web-video-presentation | course-forge |
-|---|---|---|
-| Output | Single video | **Multi-section course (S1-S5)** |
-| Source intake | Article/script | Knowledge doc + teaching design plan |
-| Interaction | None | **Choice quizzes, short-answer questions, CSS 3D exploration** |
-| Chapter management | Manual `chapters.ts` | **`course.json` 3-tier architecture + auto-generation script** |
-| Subtitle system | Simple split | **Character-proportional ms allocation, 60-char threshold, 0-indexed alignment** |
-| Assessment framework | None | **Kirkpatrick 4-level evaluation (L1-L4 embedded per S5)** |
-| Embedding guide | None | **5 integration strategies (new-tab, iframe, React/Vue, DB-driven)** |
-| Canvas optimization | Default padding | **Reduced stage padding + margin for 18% more usable area** |
-| Teaching design | None | **3-method pedagogy: visual demo, edge-case deduction, incident review** |
+| Capability | course-forge |
+|:--|:--|
+| Output | **Multi-section course (S1-S5)** |
+| Source intake | Knowledge doc + teaching design plan |
+| Interaction | **Choice quizzes, short-answer questions, CSS 3D exploration** |
+| Chapter management | **`course.json` 3-tier architecture + auto-generation script** |
+| Subtitle system | Character-proportional ms allocation, 60-char threshold, 0-indexed alignment |
+| Assessment framework | **Kirkpatrick 4-level evaluation (L1-L4 embedded per S5)** |
+| Embedding guide | **5 integration strategies (new-tab, iframe, React/Vue, DB-driven)** |
+| Canvas optimization | Reduced stage padding + margin for 18% more usable area |
+| Teaching design | **3-method pedagogy: visual demo, edge-case deduction, incident review** |
 
 ### Course Layout
 
@@ -216,7 +216,7 @@ Select a theme during checkpoint phase, or browse all 23:
 |:--:|:--:|:--:|:--:|
 | creative talks | tech architecture | data reports | popular science |
 
-> **Full 23-theme gallery with live 16:9 previews, design signatures, and best-for tags:** [open in original project](https://github.com/ConardLi/garden-skills/blob/main/skills/web-video-presentation/README.md#theme-gallery)
+> **Full 23-theme gallery with live 16:9 previews, design signatures, and best-for tags:** [open in REAMDE.md](https://github.com/xmwengxing/course-forge#theme-gallery)
 
 ---
 
@@ -311,7 +311,7 @@ A side-by-side comparison across key dimensions, based on 280+ chapters of produ
 | Quick MVP for a new course concept | **AI Interactive** — develop and iterate in hours |
 | High-stakes certification exam prep | **Hybrid** — AI interactive for content + human proctoring |
 
-Built on the foundation of [**web-video-presentation**](https://github.com/ConardLi/garden-skills) by [ConardLi](https://github.com/ConardLi) — the original skill that pioneered the 16:9 fixed-stage web presentation paradigm. `course-forge` extends it from single-video production to full-course development with interactive assessments, 3D exploration, and multi-modal data processing.
+`course-forge` — interactive courseware builder for 45-60 minute courses with assessments, 3D exploration, and multi-modal data processing.
 
 ---
 

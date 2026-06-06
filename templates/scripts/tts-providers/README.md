@@ -236,7 +236,7 @@ tts_synthesize() {
     -H "Ocp-Apim-Subscription-Key: $AZURE_SPEECH_KEY" \
     -H "Content-Type: application/ssml+xml" \
     -H "X-Microsoft-OutputFormat: audio-24khz-48kbitrate-mono-mp3" \
-    -H "User-Agent: web-video-presentation" \
+    -H "User-Agent: course-forge" \
     --data-binary "$ssml"
 }
 ```
