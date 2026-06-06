@@ -425,7 +425,102 @@ import { TabSwitcher } from "../../components/TabSwitcher";
 
 ---
 
-## 附录 D：验收时长统计脚本
+## 附录 D：画面构图与布局模式库
+
+> **关键规则**：任何章节开发前，**必须先根据内容类型选定布局模式**，不得无脑套用居中垂直列。
+
+画布为 1920×1080 固定舞台，外层 transform scale 缩到任意视口。**16:9 全部区域都是你可以使用的空间**，不要自我限制在居中的 800px 窄带内。
+
+### D.1 8 种基础布局模式
+
+#### 模式 1：全版式（Full-Bleed）
+左右撑满，无居中容器。适合架构图、流程图、大图。
+
+```css
+.scene { width:100%; }
+.layout { width:100%; display:flex; flex-direction:row; justify-content:space-between;padding:40px 80px; }
+```
+
+#### 模式 2：左右分栏（Split Panel）
+左内容右内容并排。适合对比、AB 选型、正误对照。
+
+```css
+.split { display:flex; flex-direction:row; gap:48px; width:100%; }
+.split-left, .split-right { flex:1; }
+```
+
+#### 模式 3：网格卡片（Grid Cards）
+多项并列。适合概念列表、武器库、工具集、案例展示。
+
+```css
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+.grid-2col { display:grid; grid-template-columns:repeat(2,1fr); gap:24px; }
+```
+
+#### 模式 4：表格矩阵（Table/Matrix）
+参数对照、SOP 步骤、采集方案。可用 CSS Grid 模拟或原生 `<table>`。
+
+```css
+.table { display:grid; grid-template-columns:120px repeat(4,1fr); gap:1px; }
+```
+
+#### 模式 5：非对称分栏（Asymmetric Split）
+主内容占大比例（60-70%），侧边信息栏（30-40%）。
+
+```css
+.asym { display:grid; grid-template-columns:3fr 2fr; gap:32px; }
+```
+
+#### 模式 6：Z 字形 / 对角线（Staggered/Z-pattern）
+元素交替左右排列，形成视觉流动线。适合时间线、处理流程。
+
+```css
+.z-row:nth-child(odd) { flex-direction:row; }
+.z-row:nth-child(even) { flex-direction:row-reverse; }
+```
+
+#### 模式 7：放射/焦点（Radial/Center-out）
+核心概念居中，外围元素环绕。适合知识图谱、能力雷达。
+
+```css
+.center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+.orbit { position:absolute; top:50%; left:50%; }
+.orbit:nth-child(1){transform:translate(200px,-120px)}
+.orbit:nth-child(2){transform:translate(-180px,-100px)}
+/* …依此类推 */
+```
+
+#### 模式 8：沉浸全屏（Immersive）
+元素铺满画布作为视觉主体，文字叠加其上。适合案例现场、场景图。
+
+```css
+.full { position:absolute; inset:0; object-fit:cover; }
+.overlay { position:absolute; bottom:80px; left:80px; }
+```
+
+### D.2 内容类型 → 布局速查
+
+| 内容 | 推荐布局 | 禁止 |
+|:--|:--|:--|
+| 概念列表（3~8 项） | 网格卡片 或 表格矩阵 | 居中垂直列 |
+| 对比/对照（2 项） | 左右分栏 或 非对称分栏 | 垂直卡片堆叠 |
+| 流程图/架构 | 全版式 或 Z 字形 | 居中 800px |
+| 数值/参数对照 | 表格矩阵 | 卡片堆叠 |
+| 案例/场景 | 沉浸全屏 或 非对称分栏 | 居中卡片 |
+| 步骤流程 | Z 字形 或 全版式 | 垂直列 |
+| 知识总结 | 放射/焦点 或 网格卡片 | 居中列 |
+
+### D.3 强制规则
+
+1. **连续两章禁止同一布局模式** — 开发前必须回顾前一章用了哪种模式
+2. **每段（S1-S6）至少使用 3 种不同布局模式**
+3. **翻看同课程下已有章节的 CSS 文件** — 了解设计风格（色彩、间距、卡片圆角），**保持课程内风格一致**
+4. **大留白不意味只能居中** — 留白是构图元素，不是把内容挤到中央的借口
+5. **画布 1920×1080 全部可以用** — 左右边缘、四角、对角线都是合法位置
+
+---
+
+## 附录 E：验收时长统计脚本
 
 `scripts/chapter-stats.py` 自动从 `audio-segments.json` 算出每章 / 每段时长。**每次验收前必跑**。
 
