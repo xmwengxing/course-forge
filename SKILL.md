@@ -21,12 +21,6 @@ description: 把知识点或口播稿做成带旁白配音、互动测验和嵌�
 | "合成音频" "生成字幕" "部署课件" | 课件开发后期步骤 |
 | "优化这节课的画面" "重设计 XX 章节" | 课件视觉改进 |
 
-### 何时不用
-
-- 纯视频制作 (无课程评估需求、无章节规划)
-- 不需要互动交互
-- 不需要嵌入 Web 应用
-
 ---
 
 ## 工作流总览
@@ -134,12 +128,9 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 
 每章结构：`{NN}-{prefix}-{id}/` 含 `index.tsx` + `index.css` + `narrations.ts`。
 
-**每章开发前必须读**——`references/CHAPTER-CRAFT.md`，包含：
-- 十条原则
-- 画面表现力原则（技巧服务于内容）
-- 8 种布局模式速查表
-- 步内动态策略
-- 代码红线 + 完工自检清单
+**每章开发前必须读两份**：
+- `references/CHAPTER-CRAFT.md` — 原则 / 表现力 / 布局速查 / 步策略 / 自检
+- `references/DESIGN-SYSTEM.md` — 字体栈 / 色彩约束 / 反 AI slop 底线
 
 **关键规则**：
 - step >= N 渐进揭示，每步演一步
@@ -254,6 +245,7 @@ ls {编号}-*/ | sort
 | `references/COURSE-MODE.md` | S1-S5/互动测验/评估/嵌入/编号方案 | 课程模式专属 |
 | `references/SCRIPT-STYLE.md` | 口播稿风格指南 | Phase 1 |
 | `references/AUDIO.md` | 音频合成 + --chapters 过滤 | Phase 3 |
+| `references/DESIGN-SYSTEM.md` | 字体栈/色彩约束/反 AI slop 底线 | **Phase 2 每次写章必读** |
 | `references/INTERACTIVE-PATTERNS.md` | 10 类交互模式详解 | 设计交互时 |
 | `references/THEMES.md` | 主题系统 + token 契约 | 选主题时 |
 | `scripts/subtitle-timing.py` | 字幕时序生成 | Phase 3 |
