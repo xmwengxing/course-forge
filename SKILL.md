@@ -212,7 +212,7 @@ bash scripts/record.sh --headless  # 无头模式 (CI/server)
 5. **STORAGE_KEY bump** — 章节结构变化时 bump 版本号
 6. **逐章手写，禁止脚本批量生成**
 7. **最小字号 14px**
-8. **顶部留空 50-70px + 底部留空 60-80px** — 禁 `padding` 缩写覆盖 scene-pad
+8. **上下留空 + 垂直居中** — 顶部最小 50-70px，底部最小 60-80px（字幕空间）。内容需在可用空间内垂直居中（`justify-content: center`），不得贴顶部排列致下半画布空白。禁 `padding` 缩写覆盖 scene-pad
 9. **JSX 文本禁 `\u` 转义** — 直接写 UTF-8 字符
 10. **禁止全部章节同一种布局** — 连续两章禁同模式，每段至少 3 种
 

@@ -161,8 +161,9 @@
 
 ### 边距规范
 
-- 顶部留空 50-70px，底部留空 60-80px（字幕空间）
-- 禁止用 `padding` 缩写覆盖 scene-pad，如需增减用独立属性
+- 顶部最小留空 50-70px，底部最小留空 60-80px（字幕空间）
+- 内容在舞台内**垂直居中**（`.scene-pad` 已设 `display:flex;flex-direction:column`，root 追加 `justify-content:center;`），不得贴顶部排列
+- 禁止用 `padding` 缩写覆盖 scene-pad，如需增减用独立 `padding-left/right` 属性
 - 卡片内边距：水平 32-40px，垂直 28-36px
 
 ### narrations.ts 强制约束
