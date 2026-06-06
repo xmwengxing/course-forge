@@ -59,7 +59,7 @@ if (url) {
 } else if (process.env.RECORD_URL) {
   url = process.env.RECORD_URL;
 } else if (devMode) {
-  url = `http://localhost:5173/?auto=1&chapter=${chapter}`;
+  url = `http://localhost:5173/?auto=1&recording=1&chapter=${chapter}`;
   // Start dev server if needed
   try {
     const resp = await fetch(url);
@@ -113,9 +113,6 @@ const context = await browser.newContext({
 
 const page = await context.newPage();
 await page.goto(url, { waitUntil: 'networkidle' });
-
-// Click once to start auto mode (browser autoplay policy)
-await page.click('body');
 console.log('  ▶ 录制开始...');
 
 // Wait for duration
