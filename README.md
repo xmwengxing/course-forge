@@ -9,7 +9,7 @@
 
 ---
 
-`course-forge` builds record-ready Vite + React + TypeScript interactive courseware that behaves like a professional e-learning production surface. Start from a single knowledge document or prepared narration script, and the skill guides you through section planning, interactive chapter development, TTS audio synthesis, subtitle timing, and deployment — all with hard checkpoints for human approval.
+`course-forge` builds record-ready Vite + React + TypeScript interactive courseware that behaves like a professional e-learning production surface. From 5-minute micro-tutorials to full courses, start from a single knowledge document or prepared narration script, and the skill guides you through segment planning, interactive chapter development, TTS audio synthesis, subtitle timing, and deployment — all with hard checkpoints for human approval. Completed courses can be embedded into web apps or recorded as standalone video files.
 
 **Born from 280+ chapters of production courseware** across text, video, speech, and point-cloud data processing domains.
 
@@ -30,19 +30,17 @@
 
 ## What Makes It Different
 
-`course-forge` is designed for full-course development with interactive assessments. Compared to single-video tools, it adds:
+`course-forge` combines the interactive power of CSS+HTML+React with structured pedagogy. Every chapter is a programmable canvas:
 
-| Capability | course-forge |
+| Capability | Description |
 |:--|:--|
-| Output | **Multi-section course (S1-S5)** |
-| Source intake | Knowledge doc + teaching design plan |
-| Interaction | **Choice quizzes, short-answer questions, CSS 3D exploration** |
-| Chapter management | **`course.json` 3-tier architecture + auto-generation script** |
-| Subtitle system | Character-proportional ms allocation, 60-char threshold, 0-indexed alignment |
-| Assessment framework | **Kirkpatrick 4-level evaluation (L1-L4 embedded per S5)** |
-| Embedding guide | **5 integration strategies (new-tab, iframe, React/Vue, DB-driven)** |
-| Canvas optimization | Reduced stage padding + margin for 18% more usable area |
-| Teaching design | **3-method pedagogy: visual demo, edge-case deduction, incident review** |
+| **Interaction** | **Unbounded** — drag, click, type, toggle, 3D rotate, real-time preview. CSS+HTML+React means any interaction the web can express, the course can embody — not limited to predefined question types |
+| **Adaptable length** | **5 min micro-tutorials to full-length courses** — shorter segments amplify interaction density; a well-written script with dynamic visuals teaches faster than passive video |
+| **Course architecture** | **Lesson → Segment (S1-S5) → Chapter** 3-tier `course.json` structure with auto-generation |
+| **Assessment framework** | **Kirkpatrick 4-level evaluation** (L1-L4) embedded naturally into the course flow |
+| **Subtitle system** | Character-proportional ms allocation, 60-char threshold, 0-indexed alignment |
+| **Deploy & distribute** | Embed into web apps (new-tab / iframe / DB-driven) **or** record as standalone video via the built-in auto-record script |
+| **Teaching methodology** | Visual demo, edge-case deduction, incident review — 3-method pedagogy |
 
 ### Course Layout
 
@@ -158,10 +156,10 @@ The skill follows a structured pipeline with human checkpoints at critical decis
   └──────────────┬──────────────┘
                  ▼
   ┌──────────────┴──────────────┐
-  │ Phase 4 — Deploy & Embed    │
-  │  4.1  Deploy standalone     │    Nginx / CDN / Docker / GitHub Pages
-  │  4.2  Embed in web app      │    new-tab / iframe / DB-driven
-  └─────────────────────────────┘
+   │ Phase 4 — Deploy / Record   │
+   │  4.1  Embed in web app       │    new-tab / iframe / DB-driven
+   │  4.2  Record as video        │    bash scripts/record.sh → auto-play MP4
+   └─────────────────────────────┘
 ```
 
 ### Imperative: What You Control
@@ -173,16 +171,17 @@ The skill follows a structured pipeline with human checkpoints at critical decis
 | Theme | Choose (chalk-garden recommended) | Shows theme options |
 | Each segment (S1-S5) | Review visuals + timing | Builds chapters + runs audio pipeline |
 | Audio synthesis | Confirm before running | TTS + compress + subtitles |
+| Distribution | Embed in app or record as video | Deploy files or produce recording script |
 
 ---
 
 ## Course Structure
 
-Every course-forge project follows a three-tier hierarchy:
+Every course-forge project uses a **Lesson (课) → Segment (段) → Chapter (章)** hierarchy:
 
 ```
 course/
-├── course.json              # 3-tier structure (section > segment > chapter)
+├── course.json              # Lesson > Segments(S1-S5) > Chapters
 ├── presentation/
 │   ├── src/chapters/        # One folder per chapter
 │   │   ├── 01-opening/      # TSX + CSS + narrations.ts
@@ -191,20 +190,21 @@ course/
 │   │   ├── audio/           # Synthesized TTS audio (gitignored)
 │   │   └── subtitle-timing.json
 │   └── scripts/
-│       └── tts-providers/   # Pluggable TTS backends
-└── regenerate-course-json.py  # Auto-generates valid course.json
+│       ├── tts-providers/   # Pluggable TTS backends
+│       └── record.sh        # Auto-record course as video
+└── regenerate-course-json.py
 ```
 
-### Section Split Threshold
+### Segment Split Guide
 
-| Document Size | Recommended Split | Chapters | Target Duration |
-|---|---|---|---|
-| ≤ 2,000 chars | No split, direct build | 4-6 | ~10-15 min |
-| 2,000-5,000 chars | 3 segments | 12-18 | ~25-35 min |
-| 5,000-8,000 chars | 5 segments (S1-S5) | 20-30 | ~45 min |
-| > 8,000 chars | Suggest condensing first | — | — |
+| Narration Chars | Recommended Split | Chapters | Duration |
+|:--|:--|:--|:--|
+| ≤ 2,000 | 2-3 segments | 6-12 | 10-20 min |
+| 2,000-5,000 | 3-5 segments (S1-S3/S5) | 12-25 | 20-40 min |
+| 5,000-8,000 | 5 segments (S1-S5) | 20-35 | 40-60 min |
+| > 8,000 | Consider splitting into separate lessons | — | — |
 
-> 8,000 chars is the golden duration — roughly 45 minutes of expanded narration, the optimal length for recorded courseware.
+> Shorter segments with well-crafted scripts and interactive visuals achieve higher engagement density.
 
 ---
 
@@ -222,13 +222,24 @@ Select a theme during checkpoint phase, or browse all 23:
 
 ## Key Features
 
-### Section-Based Development
-Large knowledge documents are automatically split into 5 segments (S1 Import → S2 Lecture → S3 Case Study → S4 Deep Dive → S5 Assessment). Each segment is developed and reviewed independently before proceeding.
+### Segment-Based Development
+Large knowledge documents are split into 3-5 segments (S1 Import → S2 Lecture → S3 Case Study → S4 Deep Dive → S5 Assessment → S6+ Extensions). Each segment is developed and reviewed independently — 5-minute micro-tutorials can be a single segment.
 
-### Interactive Components
-- **Choice Quiz**: `{step >= N && <Quiz options={[...]} correct={0} />}` — auto-pauses narration
-- **Short Answer**: Textarea with validation (described in QUIZ-CRAFT.md)
-- **3D Exploration**: Pure CSS 3D transforms + pointer events — zero dependencies, ~200 lines
+### Unbounded Interactivity
+CSS + HTML + React means the course is a programmable canvas, not limited to preset question types:
+- **Click-to-reveal**: Hidden annotations, expandable details, toggle switches
+- **Drag manipulation**: 3D rotation, slider inputs, sortable lists, connect-the-dots
+- **Real-time simulation**: Process animations, physics demonstrations, terminal emulation
+- **State comparison**: Side-by-side before/after panels, color-mode switching, parameter sliders
+- **Assessment**: Quizzes, text input, path-following challenges — naturally embedded in flow
+- **CSS 3D exploration**: Pure CSS transforms + pointer events, zero external dependencies
+
+### Output & Distribution
+Two paths — pick one or both:
+| Path | Method | Output |
+|:--|:--|:--|
+| **Embed** | `embed.html` → iframe / new-tab / DB-driven navigation | Integrated into web app |
+| **Record** | `bash scripts/record.sh` → auto-play via `?auto=1` | Standalone video file (MP4) |
 
 ### Kirkpatrick 4-Level Evaluation
 Every course S5 embeds L1-L4 assessment:

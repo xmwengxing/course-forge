@@ -5,7 +5,7 @@ description: 把知识点或口播稿做成带旁白配音、互动测验和嵌�
 
 # Course Forge — Interactive Courseware Builder
 
-把知识点或口播稿，做成带旁白配音、互动测验的分段式互动课件。
+把知识点或口播稿，做成带旁白配音、全场景交互的分段式互动课件。支持 5 分钟微课到完整课程。
 
 ---
 
@@ -23,10 +23,9 @@ description: 把知识点或口播稿做成带旁白配音、互动测验和嵌�
 
 ### 何时不用
 
-- 目标 <15 分钟的单视频（无课程评估需求）
-- 不需要互动测验
+- 纯视频制作 (无课程评估需求、无章节规划)
+- 不需要互动交互
 - 不需要嵌入 Web 应用
-- 不需要 S1-S5 课程段体系
 
 ---
 
@@ -47,7 +46,7 @@ Phase 2   逐段开发（S1→S2→S3→S4→S5）
    ▼
 Phase 3   音频合成与字幕（可选）
    ▼
-Phase 4   部署与嵌入
+Phase 4   部署嵌入 / 录制成视频
 ```
 
 工作目录结构：
@@ -188,21 +187,28 @@ python3 scripts/subtitle-timing.py    # → 字幕时序
 
 ---
 
-## Phase 4 —— 部署与嵌入
+## Phase 4 —— 部署嵌入 / 录制成视频
 
-课件 `dist/` 是纯静态文件，可部署到任意静态服务器。
+课件 `dist/` 是纯静态文件。两种分发方式任选其一或同时使用：
 
-### 嵌入已有 Web 应用
+### 嵌入 Web 应用
 
 ```tsx
 window.open(`/courses/ai-trainer/embed.html?auto=1&chapter=0`, '_blank');
 ```
 
+### 录制为 MP4 视频
+
+```bash
+bash scripts/record.sh             # 默认录制。依赖: ffmpeg + Chrome/Chromium
+bash scripts/record.sh --headless  # 无头模式 (CI/server)
+```
+
+自动开启 `?auto=1` 自动播放模式，无需手动点击推进。详见 `references/COURSE-MODE.md`。
+
 ### DB 集成模式
 
 通过 `course_param` 列区分课程，启用 discoverCourses 自动发现新课件。
-
-详见 `references/COURSE-MODE.md`。
 
 ---
 
