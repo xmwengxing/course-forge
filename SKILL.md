@@ -146,22 +146,26 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 # course.json 记录 S1-S5 分段结构
 ```
 
-### 2.4 互动组件
+### 2.4 交互模式速查表
 
-内置通用交互组件，位于 `src/components/interactive/`：
+纯 React + CSS 可实现以下 10 类交互。每章至少使用 1 种（步进揭示 G 为默认基础，不单独计数）。**连续两章不得使用同一交互模式。**
 
-| 组件 | 用途 |
-|:--|:--|
-| Quiz | 选择题测验（选项点击 + 对错反馈） |
-| Accordion | 逐层展开/收起卡片 |
-| ComparisonPanel | 双面板对比 + VS 裁决 |
-| StaggeredList | 逐行动画列表 |
+| 类别 | 核心做法 | key |
+|:--|:--|:--|
+| A. 点击揭示 | `useState` → 点击元素显示/隐藏注解 | `onClick + conditional render` |
+| B. 状态切换 | 多状态循环切换（着色/视角/路径） | `useState(mode)` + data-attr |
+| C. 对比裁决 | 双面板并排 + VS 按钮 | `flex-direction:row` + `useState` |
+| D. 可展开链 | 逐层 accordion 展开 → 递进 | `max-height` transition |
+| E. 拖拽操控 | 指针拖拽 → 实时变换（旋转/排序） | `onPointerDown/Move` + `transform` |
+| F. 交互测验 | 选项点击 + 即时对错反馈 | `data-no-advance` + `correct` 标记 |
+| G. 步进揭示 | step >= N 逐步展示 | 所有章节的基础，不单独计数 |
+| H. 表格动画 | 逐行 stagger 入场 + 条件高亮 | `animation-delay` + `nth-child` |
+| I. 脉冲动画 | 周期性 pulse 引导注意 | `@keyframes pulse` + infinite |
+| J. 过程模拟 | CSS keyframes 模拟物理/流程 | 多阶段 `@keyframes` |
 
-选择题(type A)：选项按钮带 `data-no-advance`，1 个 `correct` 标记。
-简答题(type B)：`textarea` + submit，关键词匹配或 LLM-as-judge。
-CSS 3D 探索(type C)：`transform-style:preserve-3d` + pointer events。
+> **tab-switch（标签页切换）不计入以上 10 类**——太容易实现，不足以满足交互多样性要求。
 
-详见 `references/COURSE-MODE.md`。
+详见 `references/INTERACTIVE-PATTERNS.md`。
 
 ---
 
@@ -225,6 +229,8 @@ bash scripts/record.sh --headless  # 无头模式 (CI/server)
 8. **上下留空 + 垂直居中** — 顶部最小 50-70px，底部最小 60-80px（字幕空间）。内容需在可用空间内垂直居中（`justify-content: center`），不得贴顶部排列致下半画布空白。禁 `padding` 缩写覆盖 scene-pad
 9. **JSX 文本禁 `\u` 转义** — 直接写 UTF-8 字符
 10. **禁止全部章节同一种布局** — 连续两章禁同模式，每段至少 3 种
+11. **禁止连续两章使用同一交互模式** — 开发前声明本章交互模式（A~J），
+    tab-switch 不计入。与布局约束 #10 共同构成"双墙"，偷懒成本 > 设计新交互
 
 ---
 

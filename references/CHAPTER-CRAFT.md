@@ -129,6 +129,25 @@
 
 ---
 
+## 10 类交互模式速查表
+
+纯 React + CSS 可实现。每章至少 1 种（步进揭示 G 为基础，不单独计数），**连续两章不得同模式**，tab-switch 不计入。
+
+| 类 | 名称 | 核心做法 | 关键词 |
+|:--|:--|:--|:--|
+| A | 点击揭示 | click → show/hide 注解 | `useState + conditional render` |
+| B | 状态切换 | 多状态循环（着色/视角） | `useState(mode) + data-attr` |
+| C | 对比裁决 | 双面板 + VS 按钮 | `flex row + useState` |
+| D | 可展开链 | accordion 逐层展开 | `max-height transition` |
+| E | 拖拽操控 | pointer 拖拽 → 实时变换 | `onPointerDown/Move + transform` |
+| F | 交互测验 | 选项点击 + 对错反馈 | `data-no-advance + correct` |
+| G | 步进揭示 | step >= N | 基础 · 不单独计数 |
+| H | 表格动画 | 逐行 stagger 入场 | `animation-delay + nth-child` |
+| I | 脉冲动画 | 周期性 pulse 引导 | `@keyframes pulse infinite` |
+| J | 过程模拟 | CSS keyframes 模拟过程 | 多阶段 `@keyframes` |
+
+---
+
 ## 单步口播 > 10s 时的步内策略
 
 当某 step 口播超过 150 字(~10s)时，仅靠入场动画不够。步内叠加以下技巧：
@@ -193,6 +212,9 @@
 - [ ] 连续两章未使用同一布局模式
 - [ ] 口播 >150 字的 step 用了 ≥1 种步内动态策略
 - [ ] 画面中有 ≥1 处发光/强调/动态驱动的文字或数字效果
+- [ ] 本章交互模式与前一章不同？（相同 = 回去改）
+- [ ] 使用了除 tab-switch 外的至少 1 种交互模式（A~J）
+- [ ] 是否有 ≥1 个非入场动画的内容驱动动态元素？
 
 ---
 
@@ -202,6 +224,7 @@
 |:--|:--|:--|
 | "没有动态效果" | 视觉 | 加 CSS 关键帧动画 / 交互元素 / 数字滚动 |
 | "全是居中列排布" | 布局 | 换一种构图模式(分栏/网格/全版/Z字形) |
+| "每章交互都一样" | 交互 | 换一种交互模式(A~J)，tab-switch 不算 |
 | "画面太挤" | 间距 | 增 padding/gap，删多余元素 |
 | "信息太少" | 内容 | 回原文章抽细节挂到画面 |
 | "风格和前章不一样" | 一致性 | 参考前章 CSS 的间距/圆角/字号 |
