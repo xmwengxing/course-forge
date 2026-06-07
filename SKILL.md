@@ -168,11 +168,15 @@ CSS 3D 探索(type C)：`transform-style:preserve-3d` + pointer events。
 ## Phase 3 —— 音频合成与字幕（可选）
 
 ```bash
-npm run extract-narrations           # → audio-segments.json
-npm run synthesize-audio              # 默认 minimax，增量
-npm run synthesize-audio -- --chapters=id1,id2  # 仅合成指定章节
-python3 scripts/subtitle-timing.py    # → 字幕时序
+npm run extract-narrations                           # → audio-segments.json
+npm run synthesize-audio                              # 默认 minimax，增量
+npm run synthesize-audio -- --chapters=id1,id2        # 仅合成指定章节
+# 字幕 — 双模式：
+python3 scripts/subtitle-timing.py                    # 默认：ffprobe 实测时长
+python3 scripts/subtitle-timing.py --mode minimax     # ★ 推荐：MiniMax 逐词 ms 对齐
 ```
+
+> ★ `--mode minimax` 依赖 MiniMax TTS 合成时自动返回的逐词时间戳（`subtitle_type: "word"`），精度 ⭐⭐⭐⭐⭐。默认模式按 55 字句界均分，精度 ⭐⭐⭐。
 
 按 provider 文档配置 TTS（MiniMax/OpenAI/edge-tts 等），详见 `references/AUDIO.md`。
 

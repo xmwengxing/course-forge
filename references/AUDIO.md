@@ -111,6 +111,28 @@ npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 > npm run synthesize-audio -- --chapters=a1-role-models,a1-coding-in-life,a1-first-project
 > ```
 
+#### 2.5 MiniMax 词级时间戳（字幕精准对齐）
+
+当使用 minimax provider 合成音频时，API 请求中已内置
+`subtitle_enable: True, subtitle_type: "word"`。MiniMax 返回每个字的起止
+毫秒时间戳，自动保存到 `public/minimax-word-timing/<chapter>/<step-N>.json`。
+
+合成完成后用 `--mode minimax` 生成字幕——逐词 ms 对齐，精度远超默认的
+55 字句界均分 + ffprobe：
+
+```bash
+# 默认模式（存量章节 · ffprobe 实测时长）
+python3 scripts/subtitle-timing.py
+
+# Minimax 词级精确模式（新合成章节 · 逐词 ms 对齐）
+python3 scripts/subtitle-timing.py --mode minimax
+```
+
+| 模式 | 切分方式 | 步级时长来源 | 精度 |
+|:--|:--|:--|:--:|
+| default | 55 字句界均分 | ffprobe 实测 mp3 | ⭐⭐⭐ |
+| minimax | 按词级 ms 聚合 | MiniMax API 逐词时间戳 | ⭐⭐⭐⭐⭐ |
+
 #### 2.B 用内置 openai 合成
 
 ```bash
