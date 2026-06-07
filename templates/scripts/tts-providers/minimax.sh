@@ -81,8 +81,7 @@ if subtitles:
     with open(word_file, 'w') as f:
         json.dump(word_data, f, ensure_ascii=False)
 else:
-    print('No word timing in response', file=sys.stderr)
-    sys.exit(1)
+    print('No word timing in response (audio OK, subtitle will fall back to default mode)', file=sys.stderr)
 "
     rm -f "$tmp_resp"
   else

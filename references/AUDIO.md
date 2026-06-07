@@ -126,6 +126,9 @@ python3 scripts/subtitle-timing.py
 
 # Minimax 词级精确模式（新合成章节 · 逐词 ms 对齐）
 python3 scripts/subtitle-timing.py --mode minimax
+
+# 仅处理指定章节（跳过全量扫描，大幅提速）
+python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2
 ```
 
 | 模式 | 切分方式 | 步级时长来源 | 精度 |

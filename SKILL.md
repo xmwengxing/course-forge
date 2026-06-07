@@ -172,8 +172,9 @@ npm run extract-narrations                           # → audio-segments.json
 npm run synthesize-audio                              # 默认 minimax，增量
 npm run synthesize-audio -- --chapters=id1,id2        # 仅合成指定章节
 # 字幕 — 双模式：
-python3 scripts/subtitle-timing.py                    # 默认：ffprobe 实测时长
-python3 scripts/subtitle-timing.py --mode minimax     # ★ 推荐：MiniMax 逐词 ms 对齐
+python3 scripts/subtitle-timing.py                                          # 默认：全量 ffprobe
+python3 scripts/subtitle-timing.py --mode minimax                           # ★ 推荐：MiniMax 逐词 ms
+python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2        # 仅处理指定章节
 ```
 
 > ★ `--mode minimax` 依赖 MiniMax TTS 合成时自动返回的逐词时间戳（`subtitle_type: "word"`），精度 ⭐⭐⭐⭐⭐。默认模式按 55 字句界均分，精度 ⭐⭐⭐。
