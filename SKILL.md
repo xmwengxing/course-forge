@@ -242,7 +242,7 @@ ls {编号}-*/ | sort
 | 文件 | 内容 | 何时读 |
 |:--|:--|:--|
 | `references/CHAPTER-CRAFT.md` | **每章单一必读**：原则/表现力/布局速查/步策略/自检 | Phase 2 每次写章 |
-| `references/COURSE-MODE.md` | S1-S5/互动测验/评估/嵌入/编号方案 | 课程模式专属 |
+| `references/COURSE-MODE.md` | 课程模式：S1-S5/互动测验/评估/嵌入/编号方案/多课程管理 | 课程模式专属 |
 | `references/SCRIPT-STYLE.md` | 口播稿风格指南 | Phase 1 |
 | `references/AUDIO.md` | 音频合成 + --chapters 过滤 | Phase 3 |
 | `references/DESIGN-SYSTEM.md` | 字体栈/色彩约束/反 AI slop 底线 | **Phase 2 每次写章必读** |
