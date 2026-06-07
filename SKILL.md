@@ -171,13 +171,18 @@ CSS 3D 探索(type C)：`transform-style:preserve-3d` + pointer events。
 npm run extract-narrations                           # → audio-segments.json
 npm run synthesize-audio                              # 默认 minimax，增量
 npm run synthesize-audio -- --chapters=id1,id2        # 仅合成指定章节
-# 字幕 — 双模式：
-python3 scripts/subtitle-timing.py                                          # 默认：全量 ffprobe
-python3 scripts/subtitle-timing.py --mode minimax                           # ★ 推荐：MiniMax 逐词 ms
+# 字幕 — 三种模式（2 种现用 + 1 种未来可选）：
+python3 scripts/subtitle-timing.py                                          # 默认：80字句界 + 字数占比分配 + ffprobe
+python3 scripts/subtitle-timing.py --mode minimax                           # ★ 推荐：MiniMax 逐词 ms 对齐
 python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2        # 仅处理指定章节
 ```
 
-> ★ `--mode minimax` 依赖 MiniMax TTS 合成时自动返回的逐词时间戳（`subtitle_type: "word"`），精度 ⭐⭐⭐⭐⭐。默认模式按 55 字句界均分，精度 ⭐⭐⭐。
+| 模式 | 原理 | 精度 | 何时用 |
+|:--|:--|:--:|:--|
+| default | 80 字句界切分 → 块时长 = mp3总时长 × (块字数 / 步总字数) → ffprobe 测总长 | ⭐⭐⭐ | 存量音频 / minimax 无词级数据时 |
+| minimax | MiniMax API 逐词 ms 时间戳聚合 | ⭐⭐⭐⭐⭐ | 新合成章节（默认推荐） |
+
+> ★ `--mode minimax` 依赖 MiniMax TTS 合成时自动返回的逐词时间戳（`subtitle_enable: True, subtitle_type: "word"`）。若 MiniMax 未返回词级数据（`speech-2.8-hd` 偶发），脚本降级为 warning 而非报错——此时回退到 default 模式即可。
 
 按 provider 文档配置 TTS（MiniMax/OpenAI/edge-tts 等），详见 `references/AUDIO.md`。
 

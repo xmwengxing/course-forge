@@ -111,30 +111,44 @@ npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 > npm run synthesize-audio -- --chapters=a1-role-models,a1-coding-in-life,a1-first-project
 > ```
 
-#### 2.5 MiniMax 词级时间戳（字幕精准对齐）
+#### 2.5 字幕时序（三种模式）
 
-当使用 minimax provider 合成音频时，API 请求中已内置
-`subtitle_enable: True, subtitle_type: "word"`。MiniMax 返回每个字的起止
-毫秒时间戳，自动保存到 `public/minimax-word-timing/<chapter>/<step-N>.json`。
+合成音频后需生成字幕时序文件 `public/subtitle-timing.json`：
 
-合成完成后用 `--mode minimax` 生成字幕——逐词 ms 对齐，精度远超默认的
-55 字句界均分 + ffprobe：
+**模式 1 · default（80字句界 + 字数占比分配 + ffprobe）**
+
+- 将每步口播文本按 80 字句界切分为多个字幕块
+- 每个字幕块的显示时长 = mp3 总时长 × (该块字数 / 该步总字数)
+- mp3 总时长由 ffprobe 实测
+- 精度 ⭐⭐⭐，**零成本、始终可用**
+
+**模式 2 · minimax（MiniMax 逐词时间戳）**
+
+- MiniMax TTS 合成时已请求 `subtitle_type: "word"`，每个字的起止 ms 自动存入 `public/minimax-word-timing/<chapter>/<step-N>.json`
+- `--mode minimax` 按词级 ms 聚合生成字幕块，字级精准对齐
+- 精度 ⭐⭐⭐⭐⭐，**新合成章节推荐**
+
+**模式 3 · whisper（未来可选）**
+
+- `whisper --word_timestamps True audio.mp3` 离线转写 + 对齐任意音频
+- 适用于非 MiniMax 合成的音频，或 minimax 模式无词级数据时的兜底增强
 
 ```bash
-# 默认模式（存量章节 · ffprobe 实测时长）
+# 模式 1 — 默认（字数占比 + ffprobe）
 python3 scripts/subtitle-timing.py
 
-# Minimax 词级精确模式（新合成章节 · 逐词 ms 对齐）
+# 模式 2 — MiniMax 词级 ms（推荐）
 python3 scripts/subtitle-timing.py --mode minimax
 
-# 仅处理指定章节（跳过全量扫描，大幅提速）
+# 任一模式都可加 --chapters 过滤（避免全量扫描超时）
 python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2
 ```
 
-| 模式 | 切分方式 | 步级时长来源 | 精度 |
-|:--|:--|:--|:--:|
-| default | 55 字句界均分 | ffprobe 实测 mp3 | ⭐⭐⭐ |
-| minimax | 按词级 ms 聚合 | MiniMax API 逐词时间戳 | ⭐⭐⭐⭐⭐ |
+| 模式 | 时长分配方式 | 总时长来源 | 精度 | 适用 |
+|:--|:--|:--|:--:|:--|
+| default | 每块时长 = 总时长 × (块字数 / 步总字数) | ffprobe 实测 mp3 | ⭐⭐⭐ | 存量音频 / 兜底 |
+| minimax | 按 API 逐词 ms 聚合到块 | MiniMax API | ⭐⭐⭐⭐⭐ | 新合成章节 |
+| whisper | 按 ASR 逐词 ms 聚合到块 | Whisper 转写 | ⭐⭐⭐⭐ | 未来可选 |
 
 #### 2.B 用内置 openai 合成
 
