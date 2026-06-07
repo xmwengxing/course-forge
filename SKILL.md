@@ -108,8 +108,8 @@ my-course/
   1. 口播稿要改吗？
   2. 拆分方案 OK？
   3. 选哪个主题？(chalk-garden/blueprint/newsroom 等)
-  4. 素材来源？
-  5. 开发模式？A 逐章验收 / B 顺序 / C 并行
+   4. 素材来源？课件里提到哪些真实场景/截图/模板？请放 `docs/materials/` 目录下
+   5. 开发模式？A 逐章验收 / B 顺序 / C 并行
 ```
 
 ---
@@ -163,9 +163,7 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 | I. 脉冲动画 | 周期性 pulse 引导注意 | `@keyframes pulse` + infinite |
 | J. 过程模拟 | CSS keyframes 模拟物理/流程 | 多阶段 `@keyframes` |
 
-> **tab-switch（标签页切换）不计入以上 10 类**——太容易实现，不足以满足交互多样性要求。
-
-详见 `references/INTERACTIVE-PATTERNS.md`。
+> 详见 `references/INTERACTIVE-PATTERNS.md`。
 
 ---
 
@@ -230,7 +228,7 @@ bash scripts/record.sh --headless  # 无头模式 (CI/server)
 9. **JSX 文本禁 `\u` 转义** — 直接写 UTF-8 字符
 10. **禁止全部章节同一种布局** — 连续两章禁同模式，每段至少 3 种
 11. **禁止连续两章使用同一交互模式** — 开发前声明本章交互模式（A~J），
-    tab-switch 不计入。与布局约束 #10 共同构成"双墙"，偷懒成本 > 设计新交互
+    与布局约束 #10 共同构成"双墙"
 
 ---
 
