@@ -38,7 +38,7 @@
 | **Adaptable length** | **5 min micro-tutorials to full-length courses** — shorter segments amplify interaction density; a well-written script with dynamic visuals teaches faster than passive video |
 | **Course architecture** | **Lesson → Segment (S1-S5) → Chapter** 3-tier `course.json` structure with auto-generation |
 | **Assessment framework** | **Kirkpatrick 4-level evaluation** (L1-L4) embedded naturally into the course flow |
-| **Subtitle system** | Character-proportional ms allocation, 60-char threshold, 0-indexed alignment |
+| **Subtitle system** | Character-proportional ms allocation per step, 80-char chunk boundary, 0-indexed alignment. **Dual-mode**: default (ffprobe + proportional) and MiniMax word-level (ms-precise) |
 | **Deploy & distribute** | Embed into web apps (new-tab / iframe / DB-driven) **or** record as standalone video via the built-in auto-record script |
 | **Teaching methodology** | Visual demo, edge-case deduction, incident review — 3-method pedagogy |
 
@@ -225,6 +225,9 @@ Select a theme during checkpoint phase, or browse all 23:
 ### Segment-Based Development
 Large knowledge documents are split into 3-5 segments (S1 Import → S2 Lecture → S3 Case Study → S4 Deep Dive → S5 Assessment → S6+ Extensions). Each segment is developed and reviewed independently — 5-minute micro-tutorials can be a single segment.
 
+### Design System
+Built-in design constraints prevent AI-slop: font stack specificity (Noto Sans SC / Inter), color token enforcement, no pure black/white, spatial choreography across the 1920×1080 stage canvas, 8 layout modes, and 10 interaction modes with enforced diversity rules (no two consecutive chapters use the same layout or interaction pattern).
+
 ### Unbounded Interactivity
 CSS + HTML + React means the course is a programmable canvas, not limited to preset question types:
 - **Click-to-reveal**: Hidden annotations, expandable details, toggle switches
@@ -249,10 +252,9 @@ Every course S5 embeds L1-L4 assessment:
 - **L4 Results**: Business metric tracking (e.g., Bad Case reduction rate)
 
 ### Chunk-Based Subtitle System
-Subtitle timing is computed by character-count proportion, not hardcoded. Each chunk ≤ 60 Chinese characters, 300ms per character at instructor speech pace. Keys are 0-indexed to match the stepper component. A standalone Python script (`subtitle-timing.py`) handles regeneration after audio synthesis.
+Dual-mode timing: default proportional distribution (80-char chunks × ffprobe-measured duration) with 0-indexed keys matching the stepper. For Max accuracy, MiniMax word-level mode uses API-returned per-character millisecond timestamps for frame-precise alignment. A standalone Python script (`subtitle-timing.py`) regenerates timing after audio synthesis.
 
 ### Embedding in Web Applications
-Five verified integration strategies documented in [EMBEDDING.md](./references/EMBEDDING.md):
 1. **Standalone new-tab** (recommended, best compatibility)
 2. `<iframe>` with X-Frame-Options override
 3. React lazy-load with dynamic import
