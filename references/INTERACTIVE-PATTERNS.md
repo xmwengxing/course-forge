@@ -1,6 +1,5 @@
 # 交互模式分类与设计指南 (Interactive Pattern Catalog)
 
-> 基于 182 章生产级课件（ExamMaster ai-trainer-course）验证的交互设计模式。
 > 本文档供 AI 课件开发时选用，分类汇总各种交互形式的设计理念、技术方案和使用场景。
 
 ---

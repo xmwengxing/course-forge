@@ -24,20 +24,6 @@ export interface StepperState {
 const clamp = (n: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, n));
 
-/** Read ?chapter=N&step=M from URL — takes priority over localStorage. */
-function readURLParams(): Cursor | null {
-  if (typeof window === "undefined") return null;
-  const q = new URLSearchParams(window.location.search);
-  const ch = q.get("chapter");
-  if (ch !== null) {
-    return {
-      chapter: parseInt(ch) || 0,
-      step: parseInt(q.get("step") || "0") || 0,
-    };
-  }
-  return null;
-}
-
 /**
  * Clamp a (possibly stale) cursor to the current chapter list. Persisted
  * cursors can outlive structural changes — fewer chapters, fewer steps,
@@ -57,8 +43,6 @@ export function useStepper(chapters: ChapterDef[]): StepperState {
     const fallback = { chapter: 0, step: 0 };
     if (typeof window === "undefined") return fallback;
     try {
-      const urlCursor = readURLParams();
-      if (urlCursor) return sanitize(urlCursor, chapters);
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) return sanitize(JSON.parse(raw), chapters);
     } catch {
