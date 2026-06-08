@@ -160,17 +160,6 @@
 
 **两种模式可在同一章内混合。**
 
-### 画布分区
-
-元素可以分布在画布的不同区域：
-
-| 区域 | CSS 做法 | 适合放什么 |
-|:--|:--|:--|
-| 中心焦点 | `position:absolute; top:50%; left:50%; translate(-50%,-50%)` | 当前核心知识点 |
-| 四条边栏 | `position:absolute; top/left/right/bottom: 80px` | 标题 / 辅助说明 |
-| 四个角落 | `position:absolute; top:0; right:0` 等 | 标签 / 编号 / 徽标 |
-| 背景层 | `position:absolute; inset:0; z-index:-1` | 大图 / 渐变 / 装饰 |
-
 ### 字体参照画布
 
 不要被 `max-width` 容器限制字号。参照画布实际尺寸——标题在 1920 宽的
@@ -181,13 +170,6 @@
 - `position: absolute` + `transition: all 0.6s` 实现步间位移
 - `transform: translate()` + `scale()` 同时位移和缩放
 - 积累模式：元素通过 CSS class 切换改变位置/大小
-
-### 反面示例
-
-- ❌ 全部章节用居中竖列（8 种布局模式只用了 1 种）
-- ❌ 所有 step 元素都在原地 fade-in，从未位移
-- ❌ 字体被 `max-width: 1200px` 容器压制为 16px，在 1920×1080 上像蚂蚁
-- ❌ 画布四角和边栏从未使用
 
 ---
 
