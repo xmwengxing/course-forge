@@ -372,4 +372,45 @@ const rows = [/* data */];
 
 ---
 
+## K. 直接操控演示（Direct Manipulation Demo）
+
+**设计理念**：学员通过按钮/控件直接驱动画面元素的行为，实时看到操控结果。不是"看演示"，而是"亲手操控演示"——通过体验式操作建立对抽象概念的直觉理解。儿童编程课程优先使用此模式。
+
+**技术方案**：
+```tsx
+const [pos, setPos] = useState({ x: 0, y: 0 });
+const [speed, setSpeed] = useState(1);
+
+// D-pad 式 — 增量操控（每次 ±固定值）
+<button onClick={()=>setPos(p=>({...p, x: p.x+10}))} data-no-advance>→ 向右</button>
+
+// 预设按钮式 — 离散跳转（直接到指定值）
+{[0, 100, -100, 200, -200].map(v =>
+  <button onClick={()=>setPos({x:v, y:0})} data-no-advance>X: {v}</button>
+)}
+
+// 滑块式 — 连续调参
+<input type="range" min={0} max={7} value={speed} onChange={e=>setSpeed(+e.target.value)} data-no-advance />
+
+// 视觉反馈 — 元素实时跟随 state
+<div style={{ left: pos.x, top: pos.y, transition:'all .4s var(--ease-overshoot)' }}>🐱</div>
+```
+
+**关键约束**：
+- 操控按钮/滑块必须加 `data-no-advance`，防止误触推进 step
+- 操作结果**即时可见**（CSS transition 或 instant update）
+- 每种操控只绑定一个核心概念（坐标 / 颜色 / 方向 / 速度），不堆砌
+- 可选：加数值显示面板，让学员看到"操控动作 → 数值变化 → 视觉反馈"的量化链路
+
+**已验证案例**：
+- 坐标网格 + D-pad 方向按钮 → 理解坐标与指令的对应关系
+- 预设坐标按钮 → 小猫瞬移到指定位置 → 理解绝对坐标
+- 速度滑块 → 猫的走路动画速度实时变化 → 理解 CPU 速度差异
+- 钢琴键盘按钮 → 按下键即发音 → 理解键盘事件与音符播放
+
+**适用场景**：抽象概念需要"亲手操控才能建立直觉"时使用——坐标系统、
+参数调谐、速度变化、颜色合成、物理过程演示。
+
+---
+
 *初代版本 v1.0 — 基于 ExamMaster 182 章课件验证。持续开发中积累新模式后改进。*
