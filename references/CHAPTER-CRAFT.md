@@ -220,6 +220,7 @@
 - 禁 `setTimeout/setInterval`，用 CSS keyframes
 - 交互元素加 `data-no-advance`
 - JSX 文本禁 `\u` 转义，直接写 UTF-8 字符
+- 超过 50 章时 Component 使用 `React.lazy(() => import(...))`，按需加载避免首屏下载全量 bundle。narration 文本保持静态 import（体积小）
 
 ### 边距规范
 

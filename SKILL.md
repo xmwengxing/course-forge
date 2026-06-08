@@ -143,6 +143,7 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 
 ```python
 # 自动注册脚本：扫描 src/chapters/ → 生成 chapters.ts
+# 超过 50 章时 Component 使用 React.lazy 按需加载
 # course.json 记录 S1-S5 分段结构
 ```
 
