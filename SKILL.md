@@ -147,24 +147,9 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 # course.json 记录 S1-S5 分段结构
 ```
 
-### 2.4 交互模式速查表
+### 2.4 交互
 
-纯 React + CSS 可实现以下 10 类交互。每章至少使用 1 种（步进揭示 G 为默认基础，不单独计数）。**连续两章不得使用同一交互模式。**
-
-| 类别 | 核心做法 | key |
-|:--|:--|:--|
-| A. 点击揭示 | `useState` → 点击元素显示/隐藏注解 | `onClick + conditional render` |
-| B. 状态切换 | 多状态循环切换（着色/视角/路径） | `useState(mode)` + data-attr |
-| C. 对比裁决 | 双面板并排 + VS 按钮 | `flex-direction:row` + `useState` |
-| D. 可展开链 | 逐层 accordion 展开 → 递进 | `max-height` transition |
-| E. 拖拽操控 | 指针拖拽 → 实时变换（旋转/排序） | `onPointerDown/Move` + `transform` |
-| F. 交互测验 | 选项点击 + 即时对错反馈 | `data-no-advance` + `correct` 标记 |
-| G. 步进揭示 | step >= N 逐步展示 | 所有章节的基础，不单独计数 |
-| H. 表格动画 | 逐行 stagger 入场 + 条件高亮 | `animation-delay` + `nth-child` |
-| I. 脉冲动画 | 周期性 pulse 引导注意 | `@keyframes pulse` + infinite |
-| J. 过程模拟 | CSS keyframes 模拟物理/流程 | 多阶段 `@keyframes` |
-
-> 详见 `references/INTERACTIVE-PATTERNS.md`。
+每章在动画完成后提供可交互元素（点击/拖拽/切换等），详见 `references/CHAPTER-CRAFT.md` 底线节。更多交互模式参考 `references/INTERACTIVE-PATTERNS.md`。
 
 ---
 
