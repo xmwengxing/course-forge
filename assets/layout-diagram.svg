@@ -31,7 +31,7 @@
   <text x="820" y="206" fill="#d4d4d8" font-size="12" font-family="monospace" text-anchor="middle">C. Event-triggered</text>
   <!-- Subtitle bar -->
   <rect x="216" y="437" width="728" height="42" rx="8" fill="rgba(0,0,0,.7)"/>
-  <text x="580" y="464" fill="#fff" font-size="16" font-family="monospace" text-anchor="middle" opacity=".9">屏幕前的各位同仁，大家好，我是翁老师。欢迎来到人工智能训练师三级的课堂。</text>
+  <text x="580" y="464" fill="#fff" font-size="16" font-family="monospace" text-anchor="middle" opacity=".9">屏幕前的各位同仁，大家好，我是主讲人。欢迎来到本期课程。</text>
   <!-- Controls bar -->
   <rect x="216" y="493" width="728" height="32" rx="8" fill="rgba(0,0,0,.5)"/>
   <circle cx="560" cy="509" r="8" fill="rgba(255,255,255,.3)"/>

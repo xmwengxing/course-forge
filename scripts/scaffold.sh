@@ -159,6 +159,8 @@ mkdir -p scripts/tts-providers
 cp "$TEMPLATES/scripts/tts-providers/README.md"   scripts/tts-providers/README.md
 cp "$TEMPLATES/scripts/tts-providers/minimax.sh"  scripts/tts-providers/minimax.sh
 cp "$TEMPLATES/scripts/tts-providers/openai.sh"   scripts/tts-providers/openai.sh
+cp "$TEMPLATES/scripts/compress-audio.sh"     scripts/compress-audio.sh
+chmod +x scripts/compress-audio.sh
 
 # Wire the audio scripts into npm so contributors don't have to remember
 # the exact command. Uses node to merge into the existing package.json.
@@ -168,6 +170,7 @@ const p = JSON.parse(fs.readFileSync("package.json", "utf8"));
 p.scripts = Object.assign({}, p.scripts, {
   "extract-narrations": "tsx scripts/extract-narrations.ts",
   "synthesize-audio":   "bash scripts/synthesize-audio.sh",
+  "compress-audio":     "bash scripts/compress-audio.sh",
 });
 fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
 '

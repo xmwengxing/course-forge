@@ -22,7 +22,7 @@ S1-S5 课程结构、互动评估、部署嵌入、编号方案。
 
 ```json
 {
-  "courseId": "l4",
+  "courseId": "my-course",
   "sections": [{
     "id": "1.1",
     "title": "章节标题",
@@ -90,7 +90,7 @@ S1-S5 课程结构、互动评估、部署嵌入、编号方案。
 ### 方案 A：新窗口打开（推荐）
 
 ```tsx
-window.open(`/courses/ai-trainer/embed.html?auto=1&chapter=0`, '_blank');
+window.open(`/courses/<your-project>/embed.html?auto=1&chapter=0`, '_blank');
 ```
 
 零兼容性问题，全屏体验最佳。
@@ -98,30 +98,15 @@ window.open(`/courses/ai-trainer/embed.html?auto=1&chapter=0`, '_blank');
 ### 方案 B：iframe 嵌入
 
 ```html
-<iframe src="/courses/ai-trainer/embed.html?auto=1&chapter=30"
+<iframe src="/courses/<your-project>/embed.html?auto=1&chapter=30"
   style="width:100%;height:100%;border:none" allowFullScreen />
 ```
 
 需 nginx 配置：`location /courses/ { add_header X-Frame-Options "SAMEORIGIN"; }`
 
-### 方案 C：DB 驱动路由
+### 方案 C：宿主应用部署脚本
 
-```sql
--- 课程表
-courses(id, title, base_path, start_chapter, course_param, status)
--- course_param: 区分同课件下不同课程 (e.g. 'l4', 'kids')
-```
-
-前端通过 `InteractiveCourseViewer` 读取 `course_param`，构建带 `?course=l4` 的 embed URL。
-
-### 方案 D：deploy-courses.sh 脚本
-
-```bash
-python3 deploy-courses.sh --course ai-trainer        # 增量部署
-python3 deploy-courses.sh --course ai-trainer --full-sync  # 全量
-```
-
-自动执行：构建 → 复制到 dist/ → rsync 上传到生产服务器。
+遵循宿主应用自身的构建→部署流程，将课件 dist/ 部署到 Web 服务器即可。
 
 ---
 
@@ -163,7 +148,7 @@ ls {编号}-*/ | sort
 - **`chapters.ts`** — 全局平铺的章节注册表。所有课程的章节按目录名字母序排列，`course-*.json` 通过章节 ID 引用其中的条目。**这是什么？** 一个巨大的线性列表。
 - **`course-*.json`** — 结构化课程目录。定义每门课的 `课 → 段 → 章` 层级，驱动导航菜单。**这是什么？** 课程的大纲/目录。
 
-> **关键**：新增/删除章节 → 两个地方都要一致。章节目录创建后自动注册到 `chapters.ts`，但 `course-*.json` 需要手工或脚本添加对应条目。
+> **关键**：新增/删除章节 → 两个地方都要一致。章节目录创建后自动注册到 `chapters.ts`，`course-*.json` 需手工添加对应条目。`course.json` 不可删除——导航菜单依赖它渲染。
 
 ### App.tsx 中的路由规则
 
@@ -202,7 +187,7 @@ ls {编号}-*/ | sort
 - `course.json` 是项目的默认课程文件，不要删除
 - 不同课程的章节 ID 前缀必须互斥——通过 `filterChapters` 的过滤规则保证菜单不混淆
 - 音频目录基于章节 ID（非编号），重编号无需移动音频文件
-- `deploy-courses.sh` 部署脚本需知道课程目录名以复制对应的 course JSON 文件
+
 
 ---
 

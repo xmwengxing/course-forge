@@ -14,7 +14,7 @@ chapter-stats.py — 验收时统计课件时长
   python3 scripts/chapter-stats.py --section <prefix>       # 只看某 section (如 t6)
   python3 scripts/chapter-stats.py --json                  # 输出 JSON (供其他脚本消费)
 
-翁老师语速参考: 350-400ms/字 (录屏时通常 300ms/字 → 视频比纯朗读短)
+音频语速参考: 350-400ms/字 (录屏时通常 300ms/字 → 视频比纯朗读短)
 """
 import argparse
 import json
@@ -23,7 +23,7 @@ from collections import defaultdict
 from pathlib import Path
 
 # 默认参数
-DEFAULT_MS_PER_CHAR = 380       # 纯朗读（翁老师录音）
+DEFAULT_MS_PER_CHAR = 380       # 纯朗读（朗读录音）
 DEFAULT_STEP_VISUAL_S = 1.5     # 每步视觉过渡 + 元素入场
 
 # 章节 → 段 (S1-S5) 的映射（基于 1.6 课件的命名约定）
@@ -161,7 +161,7 @@ def print_report(segments, ms_per_char, step_visual_s, only_section=None):
     print(f"{'总计':<6} {len(by_chapter):>6} {total_steps:>4} {fmt_int(total_chars):>6} "
           f"{fmt_duration(total_audio_s):>10} {fmt_duration(total_video_s):>10}")
     print()
-    print(f"💡 翁老师录屏语速通常 300ms/字 → 视频时长估 {fmt_duration(total_chars * 0.3):>10}")
+    print(f"💡 录屏语速通常 300ms/字 → 视频时长估 {fmt_duration(total_chars * 0.3):>10}")
     print("=" * 80)
 
 

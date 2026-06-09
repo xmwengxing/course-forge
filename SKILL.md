@@ -43,9 +43,9 @@ Phase 2   网页开发
    ▼
 [Checkpoint Audio]     ← 必须停。是否合成音频
    ▼
-Phase 3   音频合成（可选）
+Phase 3   音频合成与字幕（可选）
    ▼
-Phase 4   录屏 + 后期
+Phase 4   部署嵌入 / 录屏 + 后期
 ```
 
 工作目录约定（agent 在用户当前目录下创建 / 编辑）：
@@ -114,7 +114,7 @@ Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束
 | 阶段 | 必读（每次都看） | 一次性看完 / 按需查 |
 |---|---|---|
 | Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | —— |
-| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`（用户想了解主题系统时） |
+| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`（用户想了解主题系统时）；`references/COURSE-MODE.md`（课程结构 S1-S5 / 互动测验 / 多课程管理 —— 当开发场景为课程而非单视频时必读） |
 | Phase 2.1 脚手架 | —— | SKILL.md 本节看一次 |
 | **Phase 2.4 实现单章（×N 次，被 2.2 / 2.3 调用）** | **`references/CHAPTER-CRAFT.md`** 单一入口 —— Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 / Part 3 视觉工具箱 / Part 4 时长参考 / Part 5 反 AI 味反模式 / Part 6 代码硬规则（**含 narrations.ts 强制约束**）/ Part 7 完工自检 / Part 8 反馈速查 + 当前主题的 `themes/<id>/theme.json` + 当前章节的 outline.md 段落 + **`article.md` 本章对应段落** + 素材清单 | `references/EXAMPLES/`（结构示意，不是抄袭模板）；`references/THEMES.md` 完整 token 契约 |
 | Phase 3 音频合成 | `references/AUDIO.md`（含 narrations.ts → segments.json → 任意 provider 流程，内置 minimax + openai） | `templates/scripts/tts-providers/README.md`（换 provider / 自带 TTS 时） |
@@ -239,11 +239,11 @@ Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束
 ### 2.1 脚手架
 
 ```bash
-bash <path-to-web-video-presentation>/scripts/scaffold.sh \
+bash <path-to-course-forge>/scripts/scaffold.sh \
   ./presentation \
   --theme=<用户选的主题 id>
 
-bash <path-to-web-video-presentation>/scripts/scaffold.sh --list-themes
+bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 ```
 
 > 自定义主题 → 先按 [`references/THEMES.md`](references/THEMES.md)
@@ -404,7 +404,31 @@ python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2        # �
 按 provider 文档配置 TTS（MiniMax/OpenAI/edge-tts 等），详见 `references/AUDIO.md`。
 
 合成完告诉用户：输出位置 / 总段数 / 哪些段时长异常（太长 = 该 step 拆
-分；太短 = 文案太薄）—— 给最后一次校准节奏的机会。然后进入 Phase 4。
+分；太短 = 文案太薄）—— 给最后一次校准节奏的机会。
+
+### 音频压缩（可选）
+
+课件 TTS 音频通常 128–256 kbps 立体声，可大幅压缩为单声道低码率口播。
+合成完成后运行压缩脚本，交互式选择级别：
+
+```bash
+bash scripts/compress-audio.sh                  # 交互：扫描 → 展示选项 → 确认执行
+bash scripts/compress-audio.sh --level 2        # 非交互：直接以推荐级别压缩
+bash scripts/compress-audio.sh --dry-run        # 预览：不执行，看预估省多少
+```
+
+| 级别 | 比特率 | 采样率 | 预估压缩比 | 音质 |
+|:--:|:--|:--|:--:|:--|
+| L1 | 128 kbps CBR | 24 kHz mono | ~1.5× | 无损感，与原始 API 输出几乎无区别 |
+| **L2 ★** | **64 kbps CBR** | **24 kHz mono** | **~3×** | **口播清晰度无损，适合录屏成品** |
+| L3 | 48 kbps CBR | 22 kHz mono | ~4× | 类似播客/有声书品质 |
+| L4 | 32 kbps CBR | 22 kHz mono | ~6× | 极致紧凑，有轻微质感损失 |
+
+> 口播是单声道人声，无需立体声高码率。L2 对 99% 场景听感无差异，
+> 可将 600+ MB 课件压至 ~80 MB。脚本会自动检测需要 `ffmpeg`。
+> 加 `--backup` 可在压缩前备份原文件。
+
+然后进入 Phase 4。
 
 ---
 
@@ -415,7 +439,7 @@ python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2        # �
 ### 嵌入 Web 应用
 
 ```tsx
-window.open(`/courses/ai-trainer/embed.html?auto=1&chapter=0`, '_blank');
+window.open(`/courses/<your-project>/embed.html?auto=1&chapter=0`, '_blank');
 ```
 
 ### 录制为 MP4 视频

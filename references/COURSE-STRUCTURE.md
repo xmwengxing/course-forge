@@ -6,8 +6,8 @@
 
 ```json
 {
-  "courseId": "ai-trainer-3",
-  "title": "人工智能训练师三级课件",
+  "courseId": "my-first-course",
+  "title": "示例课程",
   "sections": [
     {
       "id": "1.1",
@@ -18,7 +18,7 @@
           "id": "S1",
           "title": "导入",
           "chapters": [
-            { "id": "opening", "title": "开幕：翁老师问候" },
+            { "id": "opening", "title": "开幕：讲师问候" },
             ...
           ]
         },
@@ -48,7 +48,9 @@
 
 ## course.json 维护
 
-**禁止手工编辑 course.json 追加 JSON**。每次新增章节后：
+> **首次使用**：参照上方 JSON 结构手工创建 `course.json`。后续不要删除此文件——导航菜单依赖它渲染。
+
+每次新增/调整章节后：
 
 1. 编辑 `course.json`（在对应 segment 的 chapters 数组中添加条目）
 2. 运行 `python3 regenerate-course-json.py` 自动验证 + 格式化 + 同步到 `presentation/public/course.json`
