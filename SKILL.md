@@ -114,17 +114,6 @@ my-course/
 不同阶段读不同的文件。**长会话里 agent 容易遗忘原则**，特别是
 Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束。
 
-### 模式判定（先决定模式再读文件）
-
-**主模式是单视频**。COURSE-MODE.md 的所有内容**默认不加载**。
-
-- 用户**明确**说"做一门课/课件/课程/多段/课件项目" → 走**课程模式**，读 COURSE-MODE.md
-- 用户**默认**给一篇文章 / 一段口播稿 / "做段视频" → 走**单视频模式**，**不**读 COURSE-MODE.md
-- 两可 → agent **先**走单视频模式（默认），**章末**问用户"要不要展开成多门课/多段课件"
-
-**为什么这样设计**：COURSE-MODE.md 涉及多课程 json、菜单结构、S1-S5 段等概念，
-对**单视频任务**来说是噪声。让 agent **主动选择**何时进入课程模式，避免主模式被次模式污染。
-
 | 阶段 | 必读（每次都看） | 一次性看完 / 按需查 |
 |---|---|---|
 | Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | —— |
@@ -530,7 +519,7 @@ Part 8「常见反馈速查」。**关键**：先定位是哪一层（节奏 / �
 
 | 文件 | 何时读 | 内容 |
 |---|---|---|
-| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式（明确要求时）：S1-S5 灵活骨架 / 课程结构文档 spec / 互动测验 / 柯氏四级评估 / 章节编号 / 多课程管理 / 增补 / 验收报告 / 素材目录 / 故障自检 | 课程模式专属 · 默认**不读**（见「模式判定」段） |
+| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式（明确要求时）：S1-S5 灵活骨架 / 课程结构文档 spec / 互动测验 / 柯氏四级评估 / 章节编号 / 多课程管理 / 增补 / 验收报告 / 素材目录 / 故障自检 | 课程模式专属 |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1.2 必读 | 文章 → 口播稿规则、平台变体 |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1.2 必读 | outline.md 字段 spec、命名约定、章节切分、信息池 |
 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | **Phase 2.4 每章单一必读入口** | Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 / Part 3 视觉工具箱 / Part 4 时长 / Part 5 反 AI 味反模式 / Part 6 代码硬规则 / Part 7 完工自检 / Part 8 反馈速查 |
