@@ -61,11 +61,14 @@ my-course/
     │   ├── <Chapter>.css
     │   └── narrations.ts     # ★ step 数 + 口播文本的唯一真相源
     ├── src/registry/chapters.ts    # 章节注册
-    ├── course.json                 # 课程模式专属课程结构（Section → Segment → Chapter）
+    ├── course.json                 # 课程模式专属菜单（单视频模式可删）
+    ├── course-<id>.json            # 多课程时多份（每门课一个）
+    ├── public/course*.json         # vite 服务的副本（由 sync-course-json.sh 软链）
     ├── scripts/
     │   ├── extract-narrations.ts   # 扫所有 narrations.ts → audio-segments.json
     │   ├── synthesize-audio.sh     # provider-agnostic runner（循环 segments）
     │   ├── subtitle-timing.py      # --chapters 可过滤
+    │   ├── sync-course-json.sh     # 多课程 json 软链同步（课程模式才用）
     │   └── tts-providers/          # 每 provider 一个 .sh（内置 2 个）
     │       ├── README.md           # 三函数契约 + 5 段现成代码片段（11labs / edge-tts / say / azure / gcloud）
     │       ├── minimax.sh          # 默认 provider，用 mmx-cli
@@ -110,6 +113,17 @@ my-course/
 
 不同阶段读不同的文件。**长会话里 agent 容易遗忘原则**，特别是
 Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束。
+
+### 模式判定（先决定模式再读文件）
+
+**主模式是单视频**。COURSE-MODE.md 的所有内容**默认不加载**。
+
+- 用户**明确**说"做一门课/课件/课程/多段/课件项目" → 走**课程模式**，读 COURSE-MODE.md
+- 用户**默认**给一篇文章 / 一段口播稿 / "做段视频" → 走**单视频模式**，**不**读 COURSE-MODE.md
+- 两可 → agent **先**走单视频模式（默认），**章末**问用户"要不要展开成多门课/多段课件"
+
+**为什么这样设计**：COURSE-MODE.md 涉及多课程 json、菜单结构、S1-S5 段等概念，
+对**单视频任务**来说是噪声。让 agent **主动选择**何时进入课程模式，避免主模式被次模式污染。
 
 | 阶段 | 必读（每次都看） | 一次性看完 / 按需查 |
 |---|---|---|
@@ -187,6 +201,16 @@ Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束
   📄 article.md     {若用户给原文则保留}
   📄 script.md      {X} 字 / ~{T} 分钟
   📄 outline.md     {N} 章 / {M} 步 + 每章信息池 + 末尾素材清单
+
+验收链接（dev server 跑起来后告诉用户怎么验证菜单结构）：
+  • 默认课程（无 ?course=）：     http://localhost:5174/
+  • 多课程时按 ID 切换：        http://localhost:5174/?course=<course-id>
+  • 例（仅作通用范式参考）：   http://localhost:5174/?course=l4
+
+启动方式提示：
+  • 标准：`npm run dev`（vite 默认端口 5174）
+  • 暴露给其他设备：`npm run dev -- --host 0.0.0.0 --port 5174`
+  • 守护进程（推荐用于多设备验收）：`pm2 start npm -- run dev -- --host 0.0.0.0 --port 5174`
 
 章节速览：
   1. <id>     <章节标题>    <S> 步 ~<T>s
@@ -277,12 +301,21 @@ rm -rf presentation/src/chapters/01-example
 ```
 第 1 章 <id> 做完了，dev server 在 localhost:5174 运行。
 
+验收链接（按课件选择对应 ?course= 参数）：
+  • 默认课程（无 ?course=）：http://localhost:5174/
+  • 多课程时按课程 ID 切换，如：
+      http://localhost:5174/?course=<course-id>
+  • 自动播放录屏模式（+&auto=1）：
+      http://localhost:5174/?course=<course-id>&auto=1
+  • 跳到指定章节锚点：&chapter=<chapter-index>
+
 验收重点：
   □ 视觉气质对不对？符合 <theme nameZh> 的预期吗？
   □ 节奏对不对？某些步太快 / 太慢 / 信息太薄？
   □ 内容驱动动画是否到位？还是有几步是无脑入场动画？
   □ 双源原则：屏幕画面有没有"口播没念但 article 能挂"的细节？
   □ 反 AI 味检查：紫粉渐变 / 圆角彩色边框 / 假插画 / emoji 是否有？
+  □ **DevTools Responsive 切 1920×1080 / 1280×720 两个视口看**：内容完整不被裁切
 
 问题告诉我，我针对性改。OK 了告诉我"继续"，我按选定模式做第 2 章及之后。
 ```
@@ -360,15 +393,20 @@ Phase 2 结束后必须停下来，问用户：
 ```
 网页做完，{N} 章 {M} 步，dev server 在 localhost:5174 跑着。
 
+验收链接：
+  • 默认课程：http://localhost:5174/
+  • 多课程时：http://localhost:5174/?course=<course-id>
+  • 录屏模式：http://localhost:5174/?course=<course-id>&auto=1
+
 要不要合成音频做"自动播放录屏"？
   ✓ 合成 → 扫所有章节的 narrations.ts 出 audio-segments.json，
-           调 TTS provider 合成每步一个 mp3 到 public/audio/。
-           合成完后用 ?auto=1 模式可以一镜到底录屏（音视频天然同步）。
-           内置两个 provider：
-             • minimax (mmx-cli)    —— 默认，中文音色稳
-             • openai  (OPENAI_API_KEY) —— curl-based，多数已有 key
-           其它后端 (ElevenLabs / edge-tts 免费 / macOS say 离线 /
-           Azure / Google) 见 scripts/tts-providers/README.md 的现成片段。
+            调 TTS provider 合成每步一个 mp3 到 public/audio/。
+            合成完后用 ?auto=1 模式可以一镜到底录屏（音视频天然同步）。
+            内置两个 provider：
+              • minimax (mmx-cli)    —— 默认，中文音色稳
+              • openai  (OPENAI_API_KEY) —— curl-based，多数已有 key
+            其它后端 (ElevenLabs / edge-tts 免费 / macOS say 离线 /
+            Azure / Google) 见 scripts/tts-providers/README.md 的现成片段。
   ✗ 不合成 → 跳过 Phase 3，直接 Phase 4 用手动录屏 + 后期配音。
 ```
 
@@ -449,7 +487,7 @@ bash scripts/record.sh             # 默认录制。依赖: ffmpeg + Chrome/Chro
 bash scripts/record.sh --headless  # 无头模式 (CI/server)
 ```
 
-自动开启 `?auto=1` 自动播放模式，无需手动点击推进。详见 `references/COURSE-MODE.md`。
+自动开启 `?auto=1` 自动播放模式，无需手动点击推进。
 
 ### DB 集成模式
 
@@ -491,7 +529,7 @@ Part 8「常见反馈速查」。**关键**：先定位是哪一层（节奏 / �
 
 | 文件 | 何时读 | 内容 |
 |---|---|---|
-| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式：S1-S5/互动测验/评估/嵌入/编号方案/多课程管理 | 课程模式专属 |
+| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式（明确要求时）：S1-S5 灵活骨架 / 课程结构文档 spec / 互动测验 / 柯氏四级评估 / 章节编号 / 多课程管理 / 增补 / 验收报告 / 素材目录 / 故障自检 | 课程模式专属 · 默认**不读**（见「模式判定」段） |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1.2 必读 | 文章 → 口播稿规则、平台变体 |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1.2 必读 | outline.md 字段 spec、命名约定、章节切分、信息池 |
 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | **Phase 2.4 每章单一必读入口** | Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 / Part 3 视觉工具箱 / Part 4 时长 / Part 5 反 AI 味反模式 / Part 6 代码硬规则 / Part 7 完工自检 / Part 8 反馈速查 |
@@ -500,6 +538,7 @@ Part 8「常见反馈速查」。**关键**：先定位是哪一层（节奏 / �
 | [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 才读 | provider-agnostic 音频合成流程、内置 minimax 用法、换 provider 路径、故障排查 |
 | [`scripts/subtitle-timing.py`](scripts/subtitle-timing.py) | 字幕时序生成 | Phase 3 |
 | [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 才读 | 录屏工具 + 后期合成 |
+| [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md) | Phase 4 才读 | 部署嵌入决策树 + 7 方案精简范本（静态托管 / iframe / 宿主挂载 / 录屏 / PWA / Docker / CDN） |
 | [`themes/`](themes) | Checkpoint Plan / Phase 1.2 时翻 | 内置主题（每个含 `theme.json` + `tokens.css`） |
 | [`scripts/scaffold.sh`](scripts/scaffold.sh) | Phase 2.1 跑一次 | 一键项目脚手架 |
 Base directory for this skill: `~/.agents/skills/course-forge`

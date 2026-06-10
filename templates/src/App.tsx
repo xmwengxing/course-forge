@@ -14,6 +14,20 @@ import { useStepper } from "./hooks/useStepper";
 import { CHAPTERS } from "./registry/chapters";
 
 /**
+ * 多课程支持（可选）：
+ * 模板默认只支持单 course.json。如需多门课程：
+ *   1. 创建 course-<id>.json（如 course-l4.json, course-kids.json）
+ *   2. 在本文件加：
+ *        function readCourse(): string {
+ *          if (typeof window === "undefined") return "<default-id>";
+ *          return new URLSearchParams(window.location.search).get("course") || "<default-id>";
+ *        }
+ *        function filterChapters(all, courseId) { /* 按 ID 前缀过滤 */ }
+ *   3. 跑 `bash scripts/sync-course-json.sh` 自动建软链
+ *   4. 详见 references/COURSE-MODE.md「多课程管理」段
+ */
+
+/**
  * Estimate spoken duration of a Chinese narration string. Native pace
  * ≈ 4 char/s → 250ms per char. Used as Auto-mode fallback ONLY when the
  * audio file is missing / fails / the narration is empty. When audio plays

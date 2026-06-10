@@ -14,12 +14,20 @@
 - 章节代码做完，每章都有 `narrations.ts`
 - 已经跑过 `npm run extract-narrations` + `npm run synthesize-audio`，
   `public/audio/<id>/<step>.mp3` 全部就位
-- `npm run dev` 跑着，浏览器能打开页面
+- `npm run dev` 跑着，浏览器能打开页面（dev server 默认端口 `5174`，
+  可能在某些项目下用 `5173` —— 看 vite 启动日志）
 
 ### 录制步骤
 
-1. **浏览器全屏**（F11 / Ctrl+Cmd+F），URL 改成
-   `http://localhost:5173/?auto=1`
+1. **浏览器全屏**（F11 / Ctrl+Cmd+F），URL 改成对应课程的 Auto 模式：
+
+   ```
+   单课程（默认）：           http://localhost:5174/?auto=1
+   多课程（按 ID 切换）：    http://localhost:5174/?course=<course-id>&auto=1
+   例：L3 课程：             http://localhost:5174/?course=l3&auto=1
+   例：Kids 课程：           http://localhost:5174/?course=kids&auto=1
+   ```
+
 2. 看到 "Press SPACE to start" 蒙层 = Auto 模式就绪
 3. **打开屏幕录制**（QuickTime / OBS / Cmd+Shift+5），开始录
 4. **按一次 Space** → 蒙层消失 → step 0 出现，1.mp3 自动播 →
@@ -28,6 +36,13 @@
    成品
 
 整个过程**完全不用点鼠标**。音视频天然同步，不需要后期对轨。
+
+> **常见录屏坑**：
+> - 用错 `?course=` 参数 → 录到的不是你想录的课程。**录前先在浏览器
+>   不带 `&auto=1` 验证一下菜单显示对不对**。
+> - 端口不是 `5174`（如老模板用 `5173`，或 `vite.config.ts` 自定义）→
+>   录的 URL 跟着改。
+> - `?auto=1` 拼错大小写或漏写 → 录到的是 Manual 模式，每步要手动点。
 
 > **Auto 模式严格按音频结束推进**（+ 200ms 缓冲），没有"等动画跑完"
 > 的兜底。如果你看到某步动画被切了一半 → 说明该 step 动画长于口播，
