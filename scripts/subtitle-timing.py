@@ -2,14 +2,17 @@
 """
 Generate subtitle-timing.json from audio-segments.json.
 
-Modes:
-  default  — split text by sentence boundaries, get real audio duration via ffprobe
-  minimax  — read word-level timing from public/minimax-word-timing/ (exact alignment)
+Modes (default behavior):
+  minimax  — read word-level timing from public/minimax-word-timing/ (exact alignment).
+             Auto-fallback to default for any chapter without minimax-word-timing data.
+  default  — split text by sentence boundaries, use ffprobe for real duration.
+             Use as explicit fallback when minimax data is unavailable.
 
 Usage:
-  python3 scripts/subtitle-timing.py                    # default mode (ffprobe)
-  python3 scripts/subtitle-timing.py --mode minimax     # MiniMax word-level timing
-  python3 scripts/subtitle-timing.py --mode minimax --chapters t6-bill-gate,t6-role-shift  # specific chapters only
+  python3 scripts/subtitle-timing.py                              # ★ DEFAULT: try minimax, auto-fallback
+  python3 scripts/subtitle-timing.py --mode minimax               # Force minimax (skip default entirely)
+  python3 scripts/subtitle-timing.py --mode default               # Force default only
+  python3 scripts/subtitle-timing.py --chapters id1 id2           # Only process specific chapters
 """
 import json, os, sys, subprocess, argparse
 
@@ -54,36 +57,34 @@ def get_audio_duration(chapter: str, step: int) -> float:
         return duration_cache[key]
     except: return 0
 
+
+def fill_with_default(timing: dict, segs: list, chapters: list[str]) -> int:
+    """Fill timing[ch][step] using default mode for chapters. Returns count filled."""
+    count = 0
+    for ch in chapters:
+        if ch not in timing: timing[ch] = {}
+        for s in segs:
+            if s['chapter'] != ch: continue
+            step0 = str(s['step'] - 1)
+            chunks = split_text(s['text'])
+            real_dur = get_audio_duration(ch, s['step'])
+            total_ms = int(real_dur * 1000) if real_dur > 0 else max(4000, int(len(s['text']) * 300))
+            total_chars = sum(len(c) for c in chunks)
+            timing[ch][step0] = [{'text': c, 'ms': max(MIN_MS_CHUNK, int(total_ms * len(c) / total_chars))} for c in chunks]
+            count += 1
+    return count
+
+
 def generate_default(chapters_filter: list[str] | None = None):
-    """Split text by sentence boundaries, use ffprobe for real duration"""
+    """Force default mode for all chapters."""
     with open(SEGMENTS_FILE) as f: segs = json.load(f)
     try:
         with open(TIMING_FILE) as f: timing = json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
         timing = {}
 
-    targets = set(chapters_filter) if chapters_filter else {s['chapter'] for s in segs}
-
-    used_ffprobe = used_estimate = 0
-
-    for ch in targets:
-        timing[ch] = {}
-        for s in segs:
-            if s['chapter'] != ch: continue
-            step0 = str(s['step'] - 1)
-            chunks = split_text(s['text'])
-            real_dur = get_audio_duration(ch, s['step'])
-            if real_dur > 0:
-                total_ms = int(real_dur * 1000)
-                used_ffprobe += 1
-            else:
-                total_ms = max(4000, int(len(s['text']) * 300))
-                used_estimate += 1
-            total_chars = sum(len(c) for c in chunks)
-            timing[ch][step0] = []
-            for c in chunks:
-                ms = max(MIN_MS_CHUNK, int(total_ms * len(c) / total_chars))
-                timing[ch][step0].append({'text': c, 'ms': ms})
+    targets = list(chapters_filter) if chapters_filter else list({s['chapter'] for s in segs})
+    filled = fill_with_default(timing, segs, targets)
 
     os.makedirs(os.path.dirname(TIMING_FILE), exist_ok=True)
     with open(TIMING_FILE, 'w') as f:
@@ -92,15 +93,20 @@ def generate_default(chapters_filter: list[str] | None = None):
     steps = sum(len(v) for v in timing.values())
     chunks_count = sum(len(c) for v in timing.values() for c in v.values())
     print(f"✓ Default mode: {len(timing)} chapters, {steps} steps, {chunks_count} chunks")
-    print(f"  ffprobe: {used_ffprobe}, estimate: {used_estimate}")
 
 
-def generate_minimax(chapters_filter: list[str] | None = None):
-    """Use MiniMax word-level timing data for exact alignment"""
+def generate_minimax(chapters_filter: list[str] | None = None, auto_fallback: bool = True):
+    """Use MiniMax word-level timing data for exact alignment.
+    If auto_fallback=True, chapters without minimax-word-timing data fall back to default mode."""
     if not os.path.isdir(WORD_TIMING_DIR):
-        print(f"✗ Word timing directory not found: {WORD_TIMING_DIR}")
-        print("  Run synthesize-audio first to generate word-level timing data.")
-        sys.exit(1)
+        if auto_fallback:
+            print(f"⚠ Word timing directory not found: {WORD_TIMING_DIR}")
+            print("  Falling back to default mode for all chapters.")
+            generate_default(chapters_filter)
+            return
+        else:
+            print(f"✗ Word timing directory not found: {WORD_TIMING_DIR}")
+            sys.exit(1)
 
     with open(SEGMENTS_FILE) as f: segs = json.load(f)
     try:
@@ -109,58 +115,43 @@ def generate_minimax(chapters_filter: list[str] | None = None):
         timing = {}
 
     available_chapters = set(os.listdir(WORD_TIMING_DIR))
-    targets = set(chapters_filter) if chapters_filter else available_chapters
+    if auto_fallback:
+        # targets = all chapters in segs; minimax handles those with word data; rest fall back
+        targets = list(chapters_filter) if chapters_filter else list({s['chapter'] for s in segs})
+    else:
+        targets = list(chapters_filter) if chapters_filter else list(available_chapters)
 
-    used_minimax = used_default = 0
+    used_minimax = 0
+    fallback_chapters: list[str] = []
 
     for ch in targets:
-        timing[ch] = {}
         word_ch_dir = os.path.join(WORD_TIMING_DIR, ch)
         if not os.path.isdir(word_ch_dir):
-            # Fallback to default for this chapter
-            for s in segs:
-                if s['chapter'] != ch: continue
-                step0 = str(s['step'] - 1)
-                chunks = split_text(s['text'])
-                real_dur = get_audio_duration(ch, s['step'])
-                total_ms = int(real_dur * 1000) if real_dur > 0 else max(4000, int(len(s['text']) * 300))
-                total_chars = sum(len(c) for c in chunks)
-                timing[ch][step0] = [{'text': c, 'ms': max(MIN_MS_CHUNK, int(total_ms * len(c) / total_chars))} for c in chunks]
-                used_default += 1
-            continue
+            # Chapter has no minimax word-timing data
+            if auto_fallback:
+                fallback_chapters.append(ch)
+                continue
+            else:
+                print(f"✗ No word timing for chapter '{ch}'")
+                sys.exit(1)
 
+        timing[ch] = {}
         for s in segs:
             if s['chapter'] != ch: continue
             step0 = str(s['step'] - 1)
             word_file = os.path.join(word_ch_dir, f"{s['step']}.json")
             if not os.path.isfile(word_file):
-                # Fallback
-                chunks = split_text(s['text'])
-                real_dur = get_audio_duration(ch, s['step'])
-                total_ms = int(real_dur * 1000) if real_dur > 0 else max(4000, int(len(s['text']) * 300))
-                total_chars = sum(len(c) for c in chunks)
-                timing[ch][step0] = [{'text': c, 'ms': max(MIN_MS_CHUNK, int(total_ms * len(c) / total_chars))} for c in chunks]
-                used_default += 1
-                continue
+                if auto_fallback:
+                    # Skip this step — will be handled by fallback pass
+                    continue
+                else:
+                    print(f"✗ Missing word file: {word_file}")
+                    sys.exit(1)
 
             with open(word_file) as f:
                 word_data = json.load(f)
 
-            # Group words into subtitle chunks (~MAX_CHARS each)
-            chunks = []
-            cur_text = ""
-            cur_ms = 0
-            for w in word_data:
-                candidate = cur_text + w['text']
-                if len(candidate) > MAX_CHARS and cur_text:
-                    chunks.append({'text': cur_text, 'ms': max(MIN_MS_CHUNK, cur_ms)})
-                    cur_text = w['text']
-                    cur_ms = w['end_ms'] - w['start_ms']
-                else:
-                    cur_text = candidate
-                    cur_ms = w['end_ms'] - (word_data[0]['start_ms'] if cur_text == w['text'] else 0)
-
-            # Recalculate each chunk's ms from word boundaries
+            # Group words into subtitle chunks (~MAX_CHARS each), preferring punctuation boundaries
             chunks = []
             word_idx = 0
             while word_idx < len(word_data):
@@ -180,6 +171,14 @@ def generate_minimax(chapters_filter: list[str] | None = None):
             timing[ch][step0] = chunks
             used_minimax += 1
 
+    # Auto-fallback: chapters without word-timing data fall back to default
+    if auto_fallback and fallback_chapters:
+        print(f"⚠ {len(fallback_chapters)} chapter(s) lack minimax word-timing: {fallback_chapters[:5]}{'...' if len(fallback_chapters) > 5 else ''}")
+        print(f"  Falling back to default mode for these.")
+        used_default = fill_with_default(timing, segs, fallback_chapters)
+    else:
+        used_default = 0
+
     os.makedirs(os.path.dirname(TIMING_FILE), exist_ok=True)
     with open(TIMING_FILE, 'w') as f:
         json.dump(timing, f, ensure_ascii=False, indent=2)
@@ -191,12 +190,15 @@ def generate_minimax(chapters_filter: list[str] | None = None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate subtitle-timing.json")
-    parser.add_argument("--mode", choices=["default", "minimax"], default="default")
+    parser = argparse.ArgumentParser(description="Generate subtitle-timing.json (default: minimax with auto-fallback)")
+    parser.add_argument("--mode", choices=["default", "minimax"], default="minimax",
+                        help="default: minimax (auto-fallback). Use 'default' to force ffprobe-only.")
     parser.add_argument("--chapters", nargs="*", help="Only process specific chapters")
     args = parser.parse_args()
 
     if args.mode == "minimax":
-        generate_minimax(args.chapters)
+        # If --mode minimax explicitly: NO fallback, strict
+        generate_minimax(args.chapters, auto_fallback=False)
     else:
+        # If --mode default: force default
         generate_default(args.chapters)

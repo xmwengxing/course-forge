@@ -115,40 +115,48 @@ npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 
 合成音频后需生成字幕时序文件 `public/subtitle-timing.json`：
 
-**模式 1 · default（80字句界 + 字数占比分配 + ffprobe）**
+**默认：minimax（MiniMax 逐词时间戳）**
+
+- MiniMax TTS 合成时已请求 `subtitle_type: "word"`，每个字的起止 ms 自动存入 `public/minimax-word-timing/<chapter>/<step-N>.json`
+- `--mode minimax` 按词级 ms 聚合生成字幕块，字级精准对齐
+- 精度 ⭐⭐⭐⭐⭐，**新合成章节首选**
+- 适用：所有用内置 MiniMax provider 合成的章节
+
+**fallback 1：default（80字句界 + 字数占比分配 + ffprobe）**
 
 - 将每步口播文本按 80 字句界切分为多个字幕块
 - 每个字幕块的显示时长 = mp3 总时长 × (该块字数 / 该步总字数)
 - mp3 总时长由 ffprobe 实测
 - 精度 ⭐⭐⭐，**零成本、始终可用**
+- 适用：minimax 模式无词级数据时（`speech-2.8-hd` 偶发），或非 MiniMax provider 合成的章节
 
-**模式 2 · minimax（MiniMax 逐词时间戳）**
-
-- MiniMax TTS 合成时已请求 `subtitle_type: "word"`，每个字的起止 ms 自动存入 `public/minimax-word-timing/<chapter>/<step-N>.json`
-- `--mode minimax` 按词级 ms 聚合生成字幕块，字级精准对齐
-- 精度 ⭐⭐⭐⭐⭐，**新合成章节推荐**
-
-**模式 3 · whisper（未来可选）**
+**fallback 2：whisper（未来可选）**
 
 - `whisper --word_timestamps True audio.mp3` 离线转写 + 对齐任意音频
 - 适用于非 MiniMax 合成的音频，或 minimax 模式无词级数据时的兜底增强
 
 ```bash
-# 模式 1 — 默认（字数占比 + ffprobe）
+# 默认（★ 推荐）— MiniMax 词级 ms，自动 fallback 到 default
 python3 scripts/subtitle-timing.py
 
-# 模式 2 — MiniMax 词级 ms（推荐）
+# 显式指定 minimax（行为同上）
 python3 scripts/subtitle-timing.py --mode minimax
 
-# 任一模式都可加 --chapters 过滤（避免全量扫描超时）
-python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2
+# 显式指定 default（字数占比 + ffprobe）
+python3 scripts/subtitle-timing.py --mode default
+
+# 加 --chapters 过滤（避免全量扫描超时）
+python3 scripts/subtitle-timing.py --chapters id1 id2
 ```
+
+> **行为**：脚本默认尝试 minimax；遇到某章节无 `minimax-word-timing/` 数据时
+> 自动降级为 default 并打印 warning，**不会报错中断**——一次跑完全部章节。
 
 | 模式 | 时长分配方式 | 总时长来源 | 精度 | 适用 |
 |:--|:--|:--|:--:|:--|
-| default | 每块时长 = 总时长 × (块字数 / 步总字数) | ffprobe 实测 mp3 | ⭐⭐⭐ | 存量音频 / 兜底 |
-| minimax | 按 API 逐词 ms 聚合到块 | MiniMax API | ⭐⭐⭐⭐⭐ | 新合成章节 |
-| whisper | 按 ASR 逐词 ms 聚合到块 | Whisper 转写 | ⭐⭐⭐⭐ | 未来可选 |
+| minimax（默认） | 按 API 逐词 ms 聚合到块 | MiniMax API | ⭐⭐⭐⭐⭐ | MiniMax 合成章节 |
+| default（fallback） | 每块时长 = 总时长 × (块字数 / 步总字数) | ffprobe 实测 mp3 | ⭐⭐⭐ | 非 MiniMax / 兜底 |
+| whisper（未来可选） | 按 ASR 逐词 ms 聚合到块 | Whisper 转写 | ⭐⭐⭐⭐ | 未来可选 |
 
 #### 2.B 用内置 openai 合成
 

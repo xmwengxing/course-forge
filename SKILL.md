@@ -427,10 +427,11 @@ npm run synthesize-audio                       # 默认 minimax provider，增�
 PRESENTATION_TTS=openai npm run synthesize-audio
 # 或自定义：写一个 scripts/tts-providers/<name>.sh，见该目录的 README.md
 npm run synthesize-audio -- --chapters=id1,id2        # 仅合成指定章节
-# 字幕 — 三种模式（2 种现用 + 1 种未来可选）：
-python3 scripts/subtitle-timing.py                                          # 默认：80字句界 + 字数占比分配 + ffprobe
-python3 scripts/subtitle-timing.py --mode minimax                           # ★ 推荐：MiniMax 逐词 ms 对齐
-python3 scripts/subtitle-timing.py --mode minimax --chapters id1 id2        # 仅处理指定章节
+# 字幕 — 默认 MiniMax 词级 ms（★ 推荐），自动 fallback 到 default：
+python3 scripts/subtitle-timing.py                                          # 默认 MiniMax 词级 ms，无数据时自动 fallback 到 default
+python3 scripts/subtitle-timing.py --mode minimax                           # 显式指定 minimax
+python3 scripts/subtitle-timing.py --mode default                           # 显式指定 default（80字句界 + 字数占比 + ffprobe）
+python3 scripts/subtitle-timing.py --chapters id1 id2                       # 仅处理指定章节
 ```
 | 模式 | 原理 | 精度 | 何时用 |
 |:--|:--|:--:|:--|
