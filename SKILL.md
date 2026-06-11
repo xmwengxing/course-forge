@@ -60,15 +60,14 @@ my-course/
     │   ├── <Chapter>.tsx     # 视觉实现
     │   ├── <Chapter>.css
     │   └── narrations.ts     # ★ step 数 + 口播文本的唯一真相源
-    ├── src/registry/chapters.ts    # 章节注册
+    ├── src/registry/chapters.ts    # 章节注册（chapters.ts 沿用单视频模式历史命名；平铺注册的是"章"= 30-60s 屏 = SKILL 主体"章"）
     ├── course.json                 # 课程模式专属菜单（单视频模式可删）
     ├── course-<id>.json            # 多课程时多份（每门课一个）
-    ├── public/course*.json         # vite 服务的副本（由 sync-course-json.sh 软链）
+    ├── public/course*.json         # vite 服务的副本（dev 期用 sync-course-json.sh 软链根目录的 course.json；build 期 vite 自动展开软链为真实文件，不影响生产部署）
     ├── scripts/
     │   ├── extract-narrations.ts   # 扫所有 narrations.ts → audio-segments.json
     │   ├── synthesize-audio.sh     # provider-agnostic runner（循环 segments）
     │   ├── subtitle-timing.py      # --chapters 可过滤
-    │   ├── sync-course-json.sh     # 多课程 json 软链同步（课程模式才用）
     │   └── tts-providers/          # 每 provider 一个 .sh（内置 2 个）
     │       ├── README.md           # 三函数契约 + 5 段现成代码片段（11labs / edge-tts / say / azure / gcloud）
     │       ├── minimax.sh          # 默认 provider，用 mmx-cli
@@ -190,16 +189,6 @@ Phase 2.4 的"实现单章"会重复 N 次 —— 每次都要回看核心约束
   📄 article.md     {若用户给原文则保留}
   📄 script.md      {X} 字 / ~{T} 分钟
   📄 outline.md     {N} 章 / {M} 步 + 每章信息池 + 末尾素材清单
-
-验收链接（dev server 跑起来后告诉用户怎么验证菜单结构）：
-  • 默认课程（无 ?course=）：     http://localhost:5174/
-  • 多课程时按 ID 切换：        http://localhost:5174/?course=<course-id>
-  • 例（仅作通用范式参考）：   http://localhost:5174/?course=l4
-
-启动方式提示：
-  • 标准：`npm run dev`（vite 默认端口 5174）
-  • 暴露给其他设备：`npm run dev -- --host 0.0.0.0 --port 5174`
-  • 守护进程（推荐用于多设备验收）：`pm2 start npm -- run dev -- --host 0.0.0.0 --port 5174`
 
 章节速览：
   1. <id>     <章节标题>    <S> 步 ~<T>s

@@ -3,14 +3,20 @@
 本文件记录 Course Forge **相较于单视频模式的增量能力**：
 课程结构 / 课程结构文档 / 互动评估 / 多课程管理 / 故障自检。
 **主模式是单视频**，本文件**默认不读**——只有当用户**明确**说"做课件/课程/多段"时
-才加载（详见 SKILL.md「模式判定」段）。
+才加载。
 
-> **核心原则**：段数、章节数、段标题**完全由内容驱动**。本文件**只描述
-> 课程模式的特殊约束**（多段组织 / 互动测验 / 多课程 json），不规划内容本身。
+> **课程模式 5 级术语**（与 SKILL 主体"章"对齐，避免歧义）：
+> - **课 (Section)** = 整节课件（如 5.4 / 5.3 ...），JSON 字段 `sections`
+> - **段 (Segment)** = 课内主题分块（S1~S5），JSON 字段 `segments`
+> - **小节 (Lesson)** = 段下内容编排单位（agent 切分时的人为分组，**不进入 JSON**）
+> - **章 (Chapter)** = 30-60s 画面 = N 步 = **SKILL 主体"章"**（JSON 字段 `chapters`）
+> - 步 (Step) = 最小口播节拍（与 SKILL 主体同义）
+>
+> JSON 数据结构 4 级：`course → sections[] → segments[] → chapters[]`，每章含 N 步。
 
 ---
 
-## S1-S5 灵活骨架（**参考，不是模板**）
+## S1-S5 段数灵活骨架（**参考，不是固定模板**）
 
 课程课件**至少**包含：
 - **1 段导入类**（案例 / 冲突 / 角色定位）—— 钩住观众 + 定位
@@ -25,11 +31,9 @@
 | 难点攻克 | 边界案例 / 常见陷阱 | 启发式设问 | 中后段 |
 | 收官 | 复盘 / 作业 / 模块收官 | 柯氏四级评估 | 末段 |
 
-> **别硬套 5 段**。3 段精简课件 / 7 段大课都合法。5.4 实际只用了 5 段且章节数
-> 不均——AI 应根据内容灵活切分。
+> 应根据内容灵活切分
 >
-> **段标题由内容自取**（"导入：框偏一像素，模型撞车十万里" 这种），
-> **不要套固定模板**。章节数 3-5 不等、时长 8-12 分钟不等。
+> **段标题由内容自取**
 
 ---
 
@@ -44,7 +48,7 @@
   "sections": [
     {
       "id": "1.1",
-      "title": "章节标题",
+      "title": "section 标题",
       "source": "1.1业务流程设计.md",
       "segments": [
         { "id": "S1", "title": "导入", "chapters": [{"id":"xx","title":"xx"},...] },
@@ -68,7 +72,7 @@
 | Section | `segments` | ✓ | Segment 数组 |
 | Segment | `id` | ✓ | "S1"~"S5"（或 S6+） |
 | Segment | `title` | ✓ | 内容驱动命名 |
-| Segment | `chapters` | ✓ | 章节 ID+Title 数组 |
+| Segment | `chapters` | ✓ | **章** ID+Title 数组（`chapters` 字段名沿用单视频模式历史命名，不要改；课程模式下其内部条目实际语义 = 30-60s 屏 = SKILL 主体"章"） |
 | Chapter | `id` | ✓ | 必须在 chapters.ts 中注册 |
 | Chapter | `title` | ✓ | 显示在 ChapterMenu 中 |
 
@@ -102,20 +106,20 @@
 | `course.json` | 默认课程的结构化目录 | 始终存在（课程模式） |
 | `course-<id>.json` | 某门特定课程的结构化目录 | 每新增一门课就多一个 |
 | `public/course-<id>.json` | vite 真正服务的副本 | 由 `scripts/sync-course-json.sh` 自动同步 |
-| `src/registry/chapters.ts` | **全部课程的章节平铺注册表** | 始终存在 · 目录名自动生成 |
+| `src/registry/chapters.ts` | **全部课程的章平铺注册表**（文件名沿用 SKILL 主体约定；课程模式沿用此目录命名） | 始终存在 · 目录名自动生成 |
 
 ### 两套注册机制
 
-- **`chapters.ts`** — 全局平铺的章节注册表。所有课程的章节按目录名字母序排列，`course-*.json` 通过章节 ID 引用其中的条目。**这是什么？** 一个巨大的线性列表。
-- **`course-*.json`** — 结构化课程目录。定义每门课的 `课 → 段 → 章` 层级，驱动导航菜单。**这是什么？** 课程的大纲/目录。
+- **`chapters.ts`** — 全局平铺的章注册表。所有课程的章按目录名字母序排列，`course-*.json` 通过章 ID 引用其中的条目。**这是什么？** 一个巨大的线性列表。
+- **`course-*.json`** — 结构化课程目录。定义每门课的 `课 → 段 → 章` 层级（"小节"作为 agent 切分概念不进 JSON），驱动导航菜单。**这是什么？** 课程的大纲/目录。
 
-> **关键**：新增/删除章节 → 两个地方都要一致。章节目录创建后自动注册到 `chapters.ts`，`course-*.json` 需手工添加对应条目。`course.json` 不可删除——导航菜单依赖它渲染。
+> **关键**：新增/删除章 → 两个地方都要一致。章目录创建后自动注册到 `chapters.ts`，`course-*.json` 需手工添加对应条目。`course.json` 不可删除——导航菜单依赖它渲染。
 
 ### App.tsx 中的路由规则
 
-前端通过两层过滤决定展示哪些章节：
+前端通过两层过滤决定展示哪些章：
 
-1. **`filterChapters`** — 按章节 ID 前缀筛选，只把属于当前课程的章节从 `chapters.ts` 中挑出来
+1. **`filterChapters`** — 按章 ID 前缀筛选，只把属于当前课程的章从 `chapters.ts` 中挑出来
 2. **`jsonMap`** — `?course=<id>` 映射到对应的 `course-<id>.json` 文件，提供结构化菜单
 
 ### 静态文件的双源问题（**最容易踩的坑**）
@@ -130,6 +134,13 @@ vite dev server **只从 `public/` 目录**服务静态资源，**不会读根�
 > **解决方案**：在 `public/` 下用 `ln -sf` 软链把每个 `course-*.json` 指向根目录的对应文件。
 > 一处修改，两处生效（dev 阶段实时）。
 > `npm run build` 阶段会展开软链为真实文件，**生产 dist/ 不受影响**。
+
+> **为什么根目录 + 软链，而不是直接放 `public/`？** 因为 `public/` 是 vite dev server 服务区；根目录放 `course.json` 是为了**与 `course-l4.json` 等多课程文件平级管理**——编辑器一次打开 / git diff 一目了然。软链 = 鱼与熊掌兼得（dev 同步 + 编辑器友好）。
+
+> **修改根目录 `course-*.json` 后不需要再跑 `sync-course-json.sh`** —— 软链已建立，改完即生效（HMR 实时更新）。脚本只在 **3 种场景** 跑：
+> 1. 首次创建软链
+> 2. 新增 `course-<id>.json`（多了一门课要建立新软链）
+> 3. 软链断了（`ls -la public/course*.json` 看是否有 `->` 箭头；或 `sync-course-json.sh` 报错）
 
 ### 同步多课程 JSON（一键操作）
 
@@ -151,11 +162,11 @@ bash scripts/sync-course-json.sh
 
 ### 新增一门课程
 
-1. 创建 `course-<id>.json`，定义各课/段/章的层级
-2. 在 `App.tsx` 的 `filterChapters` 中追加新课程的章节 ID 前缀过滤规则
+1. 创建 `course-<id>.json`，定义各课/段/章的层级（"小节"作为 agent 切分概念不进 JSON）
+2. 在 `App.tsx` 的 `filterChapters` 中追加新课程的章 ID 前缀过滤规则
 3. 在 `App.tsx` 的 `jsonMap` 中追加 `"{id}": "course-<id>.json"` 映射
 4. 跑 `bash scripts/sync-course-json.sh` 自动建软链
-5. 章节目录按字母后缀法分配编号，避免与已有课程的编号区间重叠
+5. 章目录按字母后缀法分配编号，避免与已有课程的编号区间重叠
 6. 验证：访问 `?course=<id>`，确认导航菜单正常显示
 
 ---
@@ -177,7 +188,7 @@ bash scripts/sync-course-json.sh
 
 - 在 `chapters.ts` 中标记 `interactiveSteps: [1, 2]`
 - Auto 模式在 interactiveSteps 步骤自动暂停，等用户点击
-- 多题章节：Q1 在 step 1、Q2 在 step 2
+- 多题章：Q1 在 step 1、Q2 在 step 2
 
 ### 简答题（类型 B）
 
@@ -208,11 +219,11 @@ bash scripts/sync-course-json.sh
 
 ---
 
-## 章节编号方案
+## 章编号方案
 
-章节目录 `src/chapters/{编号}-{前缀}-{id}/`，排序由目录名字母序决定。
+章目录 `src/chapters/{编号}-{前缀}-{id}/`，排序由目录名字母序决定。
 
-### 插入章节时避免编号冲突
+### 插入章时避免编号冲突
 
 | 方案 | 方法 | 用于 |
 |:--|:--|:--|
@@ -225,11 +236,11 @@ bash scripts/sync-course-json.sh
 ls {编号}-*/ | sort
 ```
 
-> 音频目录基于章节 ID（非编号），重编号无需移动音频。
+> 音频目录基于章 ID（非编号），重编号无需移动音频。
 
 ---
 
-## 增补/插入章节到已有课程
+## 增补/插入章到已有课程
 
 | 方案 | 方法 | 示例 |
 |:--|:--|:--|
@@ -244,22 +255,8 @@ ls {编号}-*/ | sort
 ### 注意事项
 
 - `course.json` 是课程的默认菜单文件，**课程模式不可删**
-- 不同课程的章节 ID 前缀必须互斥——通过 `filterChapters` 的过滤规则保证菜单不混淆
-- 音频目录基于章节 ID（非编号），重编号无需移动音频文件
-
----
-
-## 逐段验收报告模板
-
-```
-S{X} 开发完成：
-  - {N} 章 / {M} 步 / {C} 字 / ~{T} 秒 (~{Tmin} 分钟)
-  - 累计 S1~S{X}: {total} 字 / ~{total_min} 分钟
-
-本段使用的布局模式：{mode1}, {mode2}, ...
-交互元素数：{count}
-步内动态策略使用率：{pct}%
-```
+- 不同课程的章 ID 前缀必须互斥——通过 `filterChapters` 的过滤规则保证菜单不混淆
+- 音频目录基于章 ID（非编号），重编号无需移动音频文件
 
 ---
 
@@ -270,7 +267,7 @@ S{X} 开发完成：
 
 ### 开发时调用
 
-Checkpoint Plan 阶段向用户确认素材文件名后，在章节 TSX 中以
+Checkpoint Plan 阶段向用户确认素材文件名后，在章 TSX 中以
 相对路径引用：
 
 ```html
@@ -283,6 +280,14 @@ Checkpoint Plan 阶段向用户确认素材文件名后，在章节 TSX 中以
 传给模型识别内容，再将识别结果融入画面设计。
 此时 `docs/materials/` 即为多模态模型的图片输入源。
 
+### 验收链接（dev server 跑起来后告诉用户怎么验证菜单结构）
+
+- 默认课程（无 ?course=）：     http://localhost:5174/
+- 多课程时按 ID 切换：        http://localhost:5174/?course=<course-id>
+- 例（仅作通用范式参考）：   http://localhost:5174/?course=l4
+
+启动方式提示：标准：`npm run dev`（vite 默认端口 5174）
+  
 ---
 
 ## 故障自检（菜单空白排查）
