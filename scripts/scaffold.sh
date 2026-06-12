@@ -99,6 +99,9 @@ npm install >/dev/null 2>&1
 echo "▸ 安装 tsx（用于 extract-narrations 脚本）..."
 npm install --save-dev tsx >/dev/null 2>&1
 
+echo "▸ 安装 animejs v4（真正动画与物理级拖拽,详见 references/ANIMEJS-GUIDE.md）..."
+npm install animejs >/dev/null 2>&1
+
 echo "▸ 用演示骨架替换默认 boilerplate"
 
 # 干掉我们不要的 Vite 默认 boilerplate

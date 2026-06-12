@@ -251,3 +251,36 @@ AI 生成的网页有几种共有的"视觉指纹"，**全部不要**：
 任一未过 → 回去改。**不要**"先放着以后修"。
 
 ---
+
+## L. 动画升级（animejs v4 实战）
+
+> **什么时候读这一节**：章节需要"真正 CSS keyframe 动画"或"物理级拖拽"时。基础步进揭示（`step >= N`）仍是主机制，本节讲的是升级选项。
+
+如果你的章节只是"步进揭示 + 静态 SVG"，**不需要** animejs——按本文件 Part 3 视觉工具箱的 CSS / SVG 写法即可。
+
+如果章节需要以下**真正动画 / 物理级交互**，**用 animejs v4 替代手写 keyframes + 手写 Pointer Events**：
+
+| 场景 | 手写代码 | animejs 替代 |
+|---|---|---|
+| 50 个节点依次揭示 | 50 行 `nth-child` 错开 delay | 1 行 `delay: stagger(50)` |
+| 柱状图 grow | 10 行 `transform: scaleY` + keyframe | 1 行 `el.animate([{height:'0%'},{height:'100%'}], {fill:'forwards'})` |
+| SVG 路径描线 | 10 行 `stroke-dashoffset` + keyframe | 1 行 `svg.createDrawable()` |
+| 闪烁循环（红 X 提醒）| 5 行 `@keyframes` | 1 行 `animate(..., {loop: true})` |
+| 拖拽节点到 drop zone | 80 行 Pointer Events | 1 行 `draggable()` |
+| 拖拽排序（4 张卡片）| 90 行 Pointer Events | 1 行 `draggable({ snap: 200 })` |
+| 拖拽 spring 回弹 | 手算物理公式 | 1 行 `releaseEase: 'outElastic(1, .8)'` |
+
+**完整指南**：[`ANIMEJS-GUIDE.md`](ANIMEJS-GUIDE.md)（animejs v4 实战指南，5 大常用封装 + step 驱动配合 + token 主题 + 性能与可访问性 + 故障排查）
+
+**完整章节 anchor**：[`EXAMPLES/example-anime/`](EXAMPLES/example-anime/)（30 步 + 3 处真视觉演示 + 2 处互动，全部用 animejs 替代手写 keyframes）
+
+**5.4 课件实战对照**（已完成 21 章不重做，但可参考落地范式）：
+- `presentation/src/chapters/840-i4-node-explode/` — 节点滚动 + 柱状图 grow + 剃须刀刮动（**手写 keyframes 4 个，可全改 animejs**）
+- `presentation/src/chapters/841-i4-bg-mislabel/` — 陷阱图揭示 + 红 X 闪烁 + 激光穿透（**手写 keyframes 5 个**）
+- `presentation/src/chapters/842-i4-recap-mission/` — 铁律卡片 + 时间线 + 5.4 全段地图 + 拖拽排序（**手写 keyframes 5 个 + 拖拽自写 90 行**）
+
+→ 5.4 S5 段 14 个手写 keyframes + 6 处自写互动，**全部可用 animejs 1-3 行替代**（约 200+ 行 → 约 30 行）。**未来新章节优先用 animejs**。
+
+---
+
+*文档版本 v1.1 — Part 0-7 + Part 8 反馈速查 + Part L 动画升级覆盖单章开发全流程。*

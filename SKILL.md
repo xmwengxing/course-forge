@@ -511,7 +511,9 @@ Part 8「常见反馈速查」。**关键**：先定位是哪一层（节奏 / �
 | [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式（明确要求时）：S1-S5 灵活骨架 / 课程结构文档 spec / 互动测验 / 柯氏四级评估 / 章节编号 / 多课程管理 / 增补 / 验收报告 / 素材目录 / 故障自检 | 课程模式专属 |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1.2 必读 | 文章 → 口播稿规则、平台变体 |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1.2 必读 | outline.md 字段 spec、命名约定、章节切分、信息池 |
-| [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | **Phase 2.4 每章单一必读入口** | Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 / Part 3 视觉工具箱 / Part 4 时长 / Part 5 反 AI 味反模式 / Part 6 代码硬规则 / Part 7 完工自检 / Part 8 反馈速查 |
+| [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | **Phase 2.4 每章单一必读入口** | Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 / Part 3 视觉工具箱 / Part 4 时长 / Part 5 反 AI 味反模式 / Part 6 代码硬规则 / Part 7 完工自检 / Part 8 反馈速查 / **Part L 动画升级（animejs v4）** |
+| [`references/ANIMEJS-GUIDE.md`](references/ANIMEJS-GUIDE.md) | 写章节需要"真正动画"或"物理级拖拽"时 | animejs v4 实战封装、helpers、与 step 驱动配合、与 token 主题配合、subagent prompt 模板、故障排查 |
+| [`references/EXAMPLES/example-anime/`](references/EXAMPLES/example-anime/) | 写 animejs 章节时 | 30 步 + 3 处真视觉演示 + 2 处互动（拖拽节点 + 拖拽排序） |
 | [`references/EXAMPLES/`](references/EXAMPLES/) | **可选** —— 看结构 | 章节结构示意（hook / list-reveal / case-tech-review）；**不是抄袭模板** |
 | [`references/THEMES.md`](references/THEMES.md) | 选 / 造 / 切主题时 | 完整 token 契约 + 内置主题清单 + 创作流程 |
 | [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 才读 | provider-agnostic 音频合成流程、内置 minimax 用法、换 provider 路径、故障排查 |
