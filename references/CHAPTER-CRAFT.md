@@ -25,7 +25,7 @@
 - 流程节点依次点亮 / 连线自绘
 - 对比被一刀切开 / 聚光灯扫过 / 形状在变形
 - 粒子聚拢成形 / 噪声背景流动 / 字符雨下落
-- 模拟终端交互
+- 模拟终端交互 / 模拟真实物体
 - 模拟 AI 对话窗口
 - 模拟文件目录树
 
@@ -274,13 +274,8 @@ AI 生成的网页有几种共有的"视觉指纹"，**全部不要**：
 
 **完整章节 anchor**：[`EXAMPLES/example-anime/`](EXAMPLES/example-anime/)（30 步 + 3 处真视觉演示 + 2 处互动，全部用 animejs 替代手写 keyframes）
 
-**5.4 课件实战对照**（已完成 21 章不重做，但可参考落地范式）：
-- `presentation/src/chapters/840-i4-node-explode/` — 节点滚动 + 柱状图 grow + 剃须刀刮动（**手写 keyframes 4 个，可全改 animejs**）
-- `presentation/src/chapters/841-i4-bg-mislabel/` — 陷阱图揭示 + 红 X 闪烁 + 激光穿透（**手写 keyframes 5 个**）
-- `presentation/src/chapters/842-i4-recap-mission/` — 铁律卡片 + 时间线 + 5.4 全段地图 + 拖拽排序（**手写 keyframes 5 个 + 拖拽自写 90 行**）
-
-→ 5.4 S5 段 14 个手写 keyframes + 6 处自写互动，**全部可用 animejs 1-3 行替代**（约 200+ 行 → 约 30 行）。**未来新章节优先用 animejs**。
+> ⚠️ **警告**: anchor 中的动画设计（节点滚动 / 柱状图 grow / SVG 描线 / 拖拽排序）只是"animejs API 用法的最小示范"，**不是"标准答案"**。按你自己的内容自由设计——曾有项目因照抄"线条+形状+物体"套路导致所有章节动画风格固化，实际效果很差。**参考 API 用法，参考 step 驱动 + useEffect revert 的清理模式，参考 token 主题隔离原则**——其他都按内容现编。
 
 ---
 
-*文档版本 v1.1 — Part 0-7 + Part 8 反馈速查 + Part L 动画升级覆盖单章开发全流程。*
+*文档版本 v1.2 — Part 0-7 + Part 8 反馈速查 + Part L 动画升级覆盖单章开发全流程。删除"实战对照"段（避免风格污染）。*

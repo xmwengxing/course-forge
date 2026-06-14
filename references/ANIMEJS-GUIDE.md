@@ -1,15 +1,15 @@
-# Anime.js v4 实战指南（Course Forge 动画库）
+# Anime.js v4 基本应用技巧
 
 > **什么时候读**：你准备给章节加"真正动画"或"物理级拖拽"时
 > **适用版本**：`animejs ^4.4.1`
-> **替代**：手写 CSS `@keyframes`（繁琐）、手写 Pointer Events（容易出 bug）
-> **状态**：v1.0（基于 5.4 课件 S1-S5 段 14 个 CSS keyframes + 6 处互动的实战落地总结）
+> **本文档性质**：animejs v4 API 用法 + step 驱动清理模式 + token 主题隔离 + 性能与可访问性
+> **不包含**：具体动画设计套路（"节点滚动 / 柱状图 grow / 描线排序" 等是某一项目的设计选择，**不构成标准答案**；按你的内容自由设计）
 
 ---
 
 ## 1. 为什么用 animejs
 
-| 痛点 | 手写 CSS keyframes | animejs |
+| 痛点 | 手写 CSS keyframes / Pointer Events | animejs |
 |---|---|---|
 | 50 个节点依次揭示 | 50 行 `nth-child` 错开 delay | 1 行 `delay: stagger(50)` |
 | SVG 路径描线 | 手算 `stroke-dashoffset` + keyframe | 1 行 `createDrawable()` |
@@ -52,67 +52,56 @@ animejs v4 自带完整 TypeScript 类型。无需 `@types/animejs`。
 import { animate } from 'animejs';
 
 // 单个元素：透明度 0→1 渐显
-animate('.i4xxx-elem', { opacity: [0, 1], duration: 400 });
+animate('.chapter-elem', { opacity: [0, 1], duration: 400 });
 
-// 50 个节点错开揭示（替代 50 行 nth-child）
-animate('.i4xxx-nodes', {
+// 多个节点错开揭示（替代 50 行 nth-child）
+animate('.chapter-nodes', {
   opacity: [0, 1],
   scale: [0, 1],
-  delay: stagger(50),                 // 每个错开 50ms
+  delay: stagger(50),
   duration: 300,
-  ease: 'outBack',                    // 带回弹的缓动
-});
-
-// 循环闪烁（红 X 提醒）
-animate('.i4xxx-trap-x', {
-  opacity: [1, 0.3, 1],
-  scale: [1, 0.85, 1],
-  duration: 1500,
-  loop: true,
-  ease: 'inOutSine',
+  ease: 'outBack',
 });
 ```
 
-### 3.2 时间线 — `timeline()`
+### 3.2 时间线编排 — `timeline()`
 
 ```ts
-import { timeline } from 'animejs';
+import { animate, createTimeline } from 'animejs';
 
-const tl = timeline({ loop: false });
-tl.add('.i4xxx-trap-1', { opacity: [0, 1], translateY: [20, 0] }, 0)
-  .add('.i4xxx-trap-2', { opacity: [0, 1], translateY: [20, 0] }, 300)
-  .add('.i4xxx-trap-3', { opacity: [0, 1], translateY: [20, 0] }, 600);
+const tl = createTimeline({ defaults: { duration: 600 } });
+tl.add('.chapter-a', { x: [-100, 0], opacity: [0, 1] });
+tl.add('.chapter-b', { x: [-100, 0], opacity: [0, 1] }, '-=300');  // 提前 300ms 接续
+tl.add('.chapter-c', { x: [-100, 0], opacity: [0, 1] }, '-=300');
 ```
 
-### 3.3 物理级拖拽 — `draggable()`
+### 3.3 拖拽 — `draggable()`
 
 ```ts
-import { draggable } from 'animejs';
+import { Draggable } from 'animejs';
 
-const drag = draggable('.i4xxx-card', {
-  container: '.i4xxx-stage',              // 拖拽范围
-  releaseEase: 'outElastic(1, .8)',       // 释放后 spring 回弹
-  dragSpeed: 1,
-  onDrag: () => { /* 拖动中回调 */ },
-  onRelease: () => { /* 释放回调(可判定 drop zone) */ },
+const drag = Draggable.create('.chapter-card', {
+  container: '.chapter-stage',
+  releaseEase: 'outElastic(1, .8)',   // 松手 spring 回弹
+  onRelease: (self) => { /* 落到正确位置判定 */ },
 });
 
 // 离开 step 时清理
-drag.disable();
+drag[0].disable();
 ```
 
-### 3.4 SVG 路径动画 — `createDrawable()` / `createMotionPath()`
+### 3.4 SVG 路径动画 — `svg.createDrawable()` / `svg.createMotionPath()`
 
 ```ts
-import { svg } from 'animejs';
+import { animate, svg } from 'animejs';
 
-// 路径描线（5.4 全段地图连线、雷达扫描、对勾绿都用这个）
-const drawable = svg.createDrawable('.i4xxx-line', 0, 600);
+// 路径描线（任何"线"动画的通用解法）
+const drawable = svg.createDrawable('.chapter-line', 0, 600);
 drawable.draw(0, '100%');  // 0ms 起点 → 600ms 终点
 
-// 沿路径运动（激光穿透、3D 旋转）
-const mp = svg.createMotionPath('.i4xxx-path');
-animate('.i4xxx-laser', {
+// 沿路径运动（任何"沿轨道动"动画的通用解法）
+const mp = svg.createMotionPath('.chapter-path');
+animate('.chapter-mover', {
   ...mp,
   duration: 1500,
   loop: true,
@@ -123,9 +112,9 @@ animate('.i4xxx-laser', {
 ### 3.5 错开延迟 — `stagger()`
 
 ```ts
-import { stagger } from 'animejs';
+import { animate, stagger } from 'animejs';
 
-animate('.i4xxx-list > *', {
+animate('.chapter-list > *', {
   y: [20, 0],
   opacity: [0, 1],
   delay: stagger(100),                // 100ms 错开
@@ -133,13 +122,13 @@ animate('.i4xxx-list > *', {
 });
 
 // 从中心向外错开
-animate('.i4xxx-radial', {
+animate('.chapter-radial', {
   scale: [0, 1],
   delay: stagger(50, { from: 'center' }),
 });
 
 // 反向错开
-animate('.i4xxx-list', {
+animate('.chapter-list', {
   y: [0, -20],
   delay: stagger(80, { from: 'last' }),
 });
@@ -155,16 +144,16 @@ animejs 是**命令式库**（调用 `animate()` 即播放），但 course-forge
 
 ```tsx
 import { useEffect, useRef } from 'react';
-import { animate, stagger } from 'animejs';
+import { animate, stagger, svg, Draggable } from 'animejs';
 import { useChapterProgress } from '../../hooks/useChapterProgress';
 
 export default function MyChapter({ step }: { step: number }) {
   useChapterProgress(step, 30);
-  
+
   // ★ 节点滚动：步 8-13 期间启动，离开时 revert
   useEffect(() => {
     if (step >= 8 && step <= 13) {
-      const anim = animate('.i4xxx-nodes', {
+      const anim = animate('.chapter-nodes', {
         opacity: [0, 1],
         scale: [0, 1],
         delay: stagger(50),
@@ -174,27 +163,27 @@ export default function MyChapter({ step }: { step: number }) {
       return () => anim.revert();  // ★ 关键：离开 step 时清理
     }
   }, [step]);
-  
+
   // ★ SVG 描线：步 14 触发
   useEffect(() => {
     if (step === 14) {
-      svg.createDrawable('.i4xxx-line', 0, 1500);
+      svg.createDrawable('.chapter-line', 0, 1500);
     }
   }, [step]);
-  
+
   // ★ 拖拽：步 20-26 期间挂载，离开时 disable
   useEffect(() => {
     if (step === 20) {
-      const drag = draggable('.i4xxx-card', {
-        container: '.i4xxx-stage',
+      const drag = Draggable.create('.chapter-card', {
+        container: '.chapter-stage',
         releaseEase: 'outElastic(1, .8)',
       });
-      return () => drag.disable();
+      return () => drag[0].disable();
     }
   }, [step]);
-  
+
   return (
-    <div className="i4xxx-root">
+    <div className="chapter-root">
       {step === 0 && <Screen0Masthead />}
       {step >= 8 && step <= 13 && <ScreenNodes />}
       {/* ... */}
@@ -213,7 +202,7 @@ animejs 动画可以用 CSS 变量名，**但要保证变量在动画启动时�
 
 ```ts
 // 方式 1：JS 读取 token（稳）
-animate('.i4xxx-bar', {
+animate('.chapter-bar', {
   height: '100%',
   backgroundColor: getComputedStyle(document.documentElement)
     .getPropertyValue('--accent').trim(),
@@ -221,33 +210,30 @@ animate('.i4xxx-bar', {
 
 // 方式 2：CSS 写样式，animejs 只动 transform / opacity / scale（最稳）
 // CSS:
-//   .i4xxx-bar { background: var(--accent); height: 0; }
-//   .i4xxx-bar.grew { height: 100%; }
+//   .chapter-bar { background: var(--accent); height: 0; }
+//   .chapter-bar.grew { height: 100%; }
 // TS:
-//   animate('.i4xxx-bar', { height: [0, '100%'] });
+//   animate('.chapter-bar', { height: [0, '100%'] });
 ```
 
 **推荐方式 2**：主题切换时动画不崩溃，token 永远从 CSS 来。
 
 ---
 
-## 6. subagent prompt 模板
+## 6. 性能与可访问性
 
-章节 subagent 接到任务时，prompt 里加这一段（已自动注入到 5.4 课件 S5 段 subagent prompt）：
-
-```
-【动画升级选项】
-本章如需"真正 CSS keyframe 动画"（节点滚动、柱状图 grow、闪烁、SVG 描线等），
-用 animejs v4（已装）替代手写 @keyframes：
-  - import { animate, stagger, createDrawable, draggable, svg, utils } from 'animejs'
-  - 在 useEffect([step]) 里启动动画，离开 step 时 revert（不累积）
-  - 复杂时序用 timeline() 链式
-  - 拖拽用 draggable() 替代手写 Pointer Events
-  - SVG 描线用 svg.createDrawable() 替代手算 stroke-dashoffset
-  - 不破坏 .i4xxx- 独立 CSS 前缀
-  - 仍保留 token 主题 + newsroom 风格
-【/动画升级选项】
-```
+- **性能**：animejs v4 用 WAAPI 后端，比手写 CSS 动画更省 CPU；批量 stagger 时浏览器自动合并图层
+- **可访问性**：尊重 `prefers-reduced-motion`：
+  ```ts
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) {
+    // 直接设为终态，不放动画
+    document.querySelectorAll('.chapter-nodes').forEach(el => el.style.opacity = '1');
+  } else {
+    animate('.chapter-nodes', { opacity: [0, 1], delay: stagger(50) });
+  }
+  ```
+- **录制模式**：`?auto=1` 录屏时 animejs 动画照常播放（动画时长与 TTS 时长自动协调：口播结束 → step++ → 动画到一半就跳，但 reveal 不强制等动画跑完）
 
 ---
 
@@ -259,69 +245,11 @@ animate('.i4xxx-bar', {
 - ❌ **不要把 animejs 引入 SSR**（Vite 已配 client-only，但 React `useEffect` 里要确认）
 - ❌ **不要用 `loop: true` 永久循环**（除闪烁/激光等视觉演示外，长时间循环动画会喧宾夺主）
 - ❌ **不要在每章都用 animejs**（小章节 / 纯文字章节不需要，留给有视觉演示的章节）
+- ❌ **不要照抄"线条 + 形状 + 物体"的固定套路**（节点滚动 / 柱状图 / 描线 / 排序只是某一项目的设计选择；按你的内容设计最贴切的视觉原语——"视频感最强的来源"是"动作语义匹配内容"，不是"线条 + 描线" 模板）
 
 ---
 
-## 8. 与现有模式对应
-
-| 原 INTERACTIVE-PATTERNS 分类 | animejs 替代 | 备注 |
-|---|---|---|
-| G. 步进揭示 | **保留** | 仍用 `step >= N`，animejs 不替代基础机制 |
-| C. 对比裁决 | animate + scale 动画 | 替代纯 CSS 切换 |
-| D. 可展开链 | animate + height transition | 替代纯 CSS 高度 |
-| E. 拖拽操纵 | **draggable()** | 替代手写 Pointer Events，**最值得用** |
-| I. 脉冲动画 | animate + loop | 替代 `@keyframes pulse` |
-| K. 直接操控演示 | draggable + range input | 替代 input range |
-| **新：批量错开** | **stagger()** | animejs 独家 |
-| **新：SVG 描线** | **createDrawable()** | animejs 独家，5.4 地图连线已用 |
-| **新：物理回弹** | **releaseEase: 'outElastic'** | animejs 独家，5.4 拖拽已用 |
-| **新：路径运动** | **createMotionPath()** | 激光穿透 / 3D 旋转 |
-| **新：时间线** | **timeline()** | 多元素时序编排 |
-
----
-
-## 9. 性能与可访问性
-
-- **性能**：animejs v4 用 WAAPI 后端，比手写 CSS 动画更省 CPU；批量 stagger 时浏览器自动合并图层
-- **可访问性**：尊重 `prefers-reduced-motion`：
-  ```ts
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduced) {
-    // 直接设为终态，不放动画
-    document.querySelectorAll('.i4xxx-nodes').forEach(el => el.style.opacity = '1');
-  } else {
-    animate('.i4xxx-nodes', { opacity: [0, 1], delay: stagger(50) });
-  }
-  ```
-- **录制模式**：`?auto=1` 录屏时 animejs 动画照常播放（动画时长与 TTS 时长自动协调：口播结束 → step++ → 动画到一半就跳，但 reveal 不强制等动画跑完）
-
----
-
-## 10. 完整范例
-
-见 `references/EXAMPLES/example-anime.tsx`（30 步完整章节，3 处真视觉演示全部用 animejs）。
-
-也参考 5.4 课件 S5 段实际生产落地：
-- `presentation/src/chapters/840-i4-node-explode/` — 4 个 `@keyframes`（`nodeGrow` / `barGrow` / `shaveMove` / `show-in`）手写 + E. 拖拽自写；可用 animejs 完全替代
-- `presentation/src/chapters/841-i4-bg-mislabel/` — 5 个 `@keyframes`（`trapBlink` / `laserFire` / `trapReveal` / `bubblePop` / `show-in`）手写 + A. 点击热区自写
-- `presentation/src/chapters/842-i4-recap-mission/` — 5 个 `@keyframes`（`ruleCardIn` / `nodePop` / `lineDraw` / `checkmarkDraw` / `wrongShake`）手写 + F. 拖拽排序自写
-
-S5 段 14 个手写 keyframes + 6 处自写互动，**全部可用 animejs 1-3 行替代**（约 200+ 行代码 → 约 30 行）。**未来新章节优先用 animejs**。
-
----
-
-## 11. 升级路径（已上线 → 未来）
-
-| 状态 | 课件 | 处理 |
-|---|---|---|
-| 已完成 | 5.4 课件 S1-S5（21 章） | **不重做**（迁移 ROI 低 + 已 tsc 0 error + 已 TTS 同步） |
-| 未来 | 5.5 / 6.x 课件 | 优先用 animejs（subagent prompt 已加模板段） |
-| 模板 | `templates/package.json` | 加 `animejs: ^4.4.1` 依赖 |
-| Scaffold | `scripts/scaffold.sh` | 追加 `npm install animejs` |
-
----
-
-## 12. 故障排查
+## 8. 故障排查
 
 | 症状 | 原因 | 解决 |
 |---|---|---|
@@ -334,4 +262,4 @@ S5 段 14 个手写 keyframes + 6 处自写互动，**全部可用 animejs 1-3 �
 
 ---
 
-*文档版本 v1.0 — 基于 5.4 课件 S1-S5 段 14 个 CSS keyframes + 6 处互动的实战落地总结。如有 animejs v5 升级或新封装需求，PR 到此文档。*
+*文档版本 v1.0 — animejs v4 基本应用技巧（API + step 驱动 + token 主题 + 性能可访问性 + 故障排查）。不绑定任何具体项目的动画设计套路。*

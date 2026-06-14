@@ -47,7 +47,7 @@
 | 4-7 | 节点滚动揭示（替代 50 行 nth-child） | 1 行 `delay: stagger(50)` |
 | 8-11 | 柱状图 grow | SVG 描线 + CSS height transition 双保险 |
 | 12-17 | 拖拽节点到 drop zone | `draggable()` + `onDrop` 判定 |
-| 18-22 | SVG 描线（5.4 全段地图用这种） | `svg.createDrawable()` |
+| 18-22 | SVG 描线 | `svg.createDrawable()` |
 | 23-27 | 拖拽排序（4 张卡片按顺序） | `draggable()` + `releaseEase: 'outElastic'` |
 
 ## 为什么每屏都用 `useEffect([step])` 启动动画
@@ -57,7 +57,6 @@ animejs 是**命令式库**（`animate()` 即播放），但 course-forge 是 **
 **关键**：
 - 在 `useEffect([step])` 里启动，离开 step 时 `revert()`
 - 不 `revert()` → 动画**累积到下一屏**，导致"这一屏的图还没说完就接着动下一屏" = 灾难
-- 5.4 课件 S5 段 14 个手写 keyframes 没踩这个坑是因为 CSS keyframes 触发条件是 `className` 是否包含 `grew`，离开 step 时 `className` 切走，动画自动结束
 
 ## 文件结构
 
@@ -158,7 +157,7 @@ export default function ExampleAnime({ step }: { step: number }) {
         snap: 200,                              // 200px 网格吸附
         onDrop: (self) => {
           // 判定卡片落在哪个槽位
-          // ... (5.4 课件 842-i4-recap-mission 有完整实现可参考)
+          // ... (按你项目的内容自由判定)
         },
       });
       return () => drag.disable();
@@ -181,8 +180,7 @@ export default function ExampleAnime({ step }: { step: number }) {
   );
 }
 
-// 屏组件省略（同 5.4 课件其他章节）
-// 详见 5.4 课件 840-i4-node-explode（互动 1）和 842-i4-recap-mission（互动 2）实际生产代码
+// 屏组件省略（按你的内容自由设计；这是结构示意，不是模板）
 ```
 
 ## 关键手段（地板线）
@@ -202,20 +200,7 @@ export default function ExampleAnime({ step }: { step: number }) {
 - animejs 动画**只动 transform / opacity / scale / stroke-dashoffset**（不直接动颜色）
 - 主题切换时动画不崩溃
 
-## 与 5.4 实际生产对照
-
-5.4 课件 S5 段（840/841/842 三章）当前用**手写 CSS @keyframes**（共 14 个 keyframes）+ **手写 Pointer Events**（共 6 处自写互动）。**全部可用 animejs 1-3 行替代**。
-
-| 5.4 实际手写代码 | 替代后 animejs 代码 | 行数对比 |
-|---|---|---|
-| 840 `nodeGrow` keyframe (40 行) | `animate(..., { opacity: [0,1], scale: [0,1], delay: stagger(50) })` | 40 → 3 |
-| 841 `laserFire` SVG animate (15 行) | `svg.createMotionPath()` | 15 → 3 |
-| 842 `lineDraw` keyframe (12 行) | `svg.createDrawable()` | 12 → 1 |
-| 840 拖拽 5 节点到删除区 (80 行 Pointer Events) | `draggable()` (3 行) | 80 → 3 |
-| 842 拖拽排序 4 张卡 (90 行 Pointer Events) | `draggable({ snap: 200 })` (3 行) | 90 → 3 |
-| 842 `checkmarkDraw` keyframe (10 行) | `svg.createDrawable()` (1 行) | 10 → 1 |
-
-**5.4 S5 段 200+ 行手写代码可压缩到 14 行**。**未来新章节优先用 animejs**（5.4 已完成不重做，迁移 ROI 低）。
+> ⚠️ **警告**：本 anchor 中的"节点滚动 / 柱状图 grow / SVG 描线 / 拖拽排序"只是 animejs API 用法的最小示范，**不是设计标准**。按你的内容自由设计最贴切的视觉原语——"视频感最强的来源"是"动作语义匹配内容"，不是某一种线条 + 形状 + 物体的固定套路。
 
 ## 完工自检（在浏览器点完一遍后逐项过）
 
@@ -232,7 +217,7 @@ export default function ExampleAnime({ step }: { step: number }) {
 
 ## 不在 EXAMPLES 里出现的章节类型
 
-- 数字型 hero（"+47%" → "几乎快了一倍"）—— 5.4 已用 CSS keyframe 实现，无需 animejs
+- 数字型 hero（"+47%" → "几乎快了一倍"）—— 简单 CSS 即可
 - 对比型（前后对照 / 双柱图）—— 简单 CSS 切换即可
 - 链接卡片收尾—— 静态布局
 
