@@ -166,21 +166,119 @@
   border-radius: 4px;
 }
 
-/* === 屏 5: outro === */
+/* === 屏 5: outro — 5 大共性含材质综合 (质感 1 屏示范) === */
 .exa-outro {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
+  padding: 40px 20px;
+  position: relative;
+  min-height: 100%;
 }
 .exa-outro-h {
   font-family: var(--font-display-cn);
   font-size: 36px;
   color: var(--text);
   margin: 0;
+  text-align: center;
+  /* ★ 质感 #3: text-shadow 模拟光晕 (字符级 stagger 配合) */
+  text-shadow: 0 0 20px rgba(255, 200, 100, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.exa-outro-h span {
+  display: inline-block;
+  transform-origin: 50% 100% 0px;
+  will-change: transform;
 }
 .exa-outro-d {
   font-family: var(--font-body);
   font-size: 14px;
   color: var(--text-mute);
+  text-align: center;
+  max-width: 600px;
+}
+
+/* === 金属立方体展示 (★ 质感 1-5 叠加) === */
+.exa-cubes-row {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+  perspective-origin: 50% 30%;
+  padding: 40px 0;
+  transform-style: preserve-3d;
+}
+.exa-cube {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  transform-style: preserve-3d;
+  transform: scale(0) rotateY(45deg);
+  will-change: transform;
+}
+.exa-cube-face {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  /* ★ 质感 #1: linear-gradient 金属反光 (核心) */
+  background: linear-gradient(180deg, #fafafa 0%, #d8d8d8 50%, #c0c0c0 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  /* ★ 质感 #2: box-shadow 多层 (近 + 远 + 顶部高光) */
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+/* 各面单独样式 — 增加 3D 真实感 */
+.exa-cube-front  { transform: translateZ(40px); }
+.exa-cube-back   { transform: translateZ(-40px) rotateY(180deg); background: linear-gradient(180deg, #d0d0d0 0%, #b0b0b0 100%); }
+.exa-cube-left   { transform: translateX(-40px) rotateY(-90deg); }
+.exa-cube-right  { transform: translateX(40px) rotateY(90deg); background: linear-gradient(180deg, #f0f0f0 0%, #c0c0c0 100%); }
+.exa-cube-top    { transform: translateY(-40px) rotateX(90deg); background: linear-gradient(180deg, #ffffff 0%, #e0e0e0 100%); }
+.exa-cube-bottom { transform: translateY(40px) rotateX(-90deg); background: linear-gradient(180deg, #a0a0a0 0%, #888 100%); }
+
+/* === 灯泡光晕 (★ 质感 #4 + #5: radial-gradient + box-shadow 0 0 20px) === */
+.exa-glow {
+  position: absolute;
+  top: 60px;
+  right: 100px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(255, 200, 100, 0.8) 0%, rgba(255, 200, 100, 0) 70%);
+  box-shadow: 0 0 20px rgba(255, 200, 100, 0.6);
+  border-radius: 50%;
+  animation: exa-glow-pulse 2s ease-in-out infinite alternate;
+}
+@keyframes exa-glow-pulse {
+  0%   { opacity: 0.6; transform: scale(0.9); }
+  100% { opacity: 1;   transform: scale(1.1); }
+}
+
+/* === 毛玻璃提示卡 (★ 质感 #7: backdrop-filter blur + 半透明背景) === */
+.exa-glass-card {
+  position: relative;
+  padding: 16px 24px;
+  background: rgba(20, 20, 40, 0.85);
+  backdrop-filter: blur(8px);
+  border-left: 4px solid var(--accent);
+  border-radius: 4px;
+  color: var(--text);
+  max-width: 720px;
+  /* ★ 质感 #3: box-shadow 投影 (毛玻璃) */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+.exa-glass-card-l {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.exa-glass-card-h {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
 }

@@ -207,8 +207,50 @@
 | 我想做"3D 拖拽物理" | §1 `draggable-playground` |
 | 我想做"自动布局切换" | §6 `auto-layout/todo-list` |
 | 我想用 Three.js 做真 3D | **不要用, 改 §1 CSS 3D 替代** — 详见 ANIMEJS-GUIDE.md §6 |
+| **我想画有质感的物体 (车/立方体/卡片)** | **§10 质感技法索引** |
 
 ---
+
+## 10. 质感技法索引 (按"想要什么质感"反向查)
+
+> **何时用**: 你画任何具体物体 (车/立方体/卡片/人形), 需要"有光影/有金属感/有毛玻璃/有描边"。**至少 1-2 种质感手法叠加, 不做单色 flat**。
+> **完整指南**: 详见 ANIMEJS-GUIDE.md §X (5 大共性含材质) + §X.3 质感基础套件 (CSS 套件直接套)。
+
+**8 种质感手法** (按"想要什么"反向查):
+
+| 想要什么 | 用什么手法 | animejs 官方例 | 关键 CSS |
+|---|---|---|---|
+| **金属反光** (车体/工具/立方体) | `linear-gradient(180deg, 浅 → 中 → 深)` | `clock-playback-controls` | `background: linear-gradient(180deg, #fafafa 0%, #d8d8d8 50%, #c0c0c0 100%);` |
+| **光晕/灯泡发光** (尾灯/光点) | `radial-gradient` + `box-shadow: 0 0 20px` | `additive-creature` | `background: radial-gradient(circle, rgba(255,200,100,0.8) 0%, transparent 70%); box-shadow: 0 0 20px rgba(255,200,100,0.6);` |
+| **卡片投影** (3D 卡片/工具卡) | `box-shadow` 多层 (近 + 远) | `onscroll-sticky`, `auto-layout/periodic-table` | `box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 16px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.6);` |
+| **远景物体深度** (车/树/远景) | `filter: drop-shadow()` | `onscroll-sticky` | `filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));` |
+| **粒子光晕融合** (萤火虫/烟雾) | `mix-blend-mode: plus-lighter` | `additive-fireflies` | `mix-blend-mode: plus-lighter; background: var(--red);` |
+| **路径描线 + 渐变填充** (雷达扫描/对勾绿) | `stroke-dasharray` + `fill: url(#gradient)` | `layered-css-transforms`, `svg-graph` | `stroke-dasharray: 600;` + `<linearGradient id="g">` |
+| **毛玻璃** (提示卡/弹出卡) | `backdrop-filter: blur()` + 半透明背景 | `onscroll-responsive-scope` | `background: rgba(20, 20, 40, 0.85); backdrop-filter: blur(8px);` |
+| **3D 卡片翻转** (物理演示卡) | `backface-visibility: hidden` + `rotateY(180deg)` | `onscroll-sticky` | `.front { backface-visibility: hidden; } .back { backface-visibility: hidden; transform: rotateY(180deg); }` |
+
+**8 种手法 ↔ 8 个 animejs 官方例 反向查**:
+
+| 想要什么 | 看哪个示例 | 关键文件 |
+|---|---|---|
+| 我想画**金属车体** | `clock-playback-controls` (3D 钟面) | `index.html` 钟面金属 gradient |
+| 我想画**光晕/烟雾** | `additive-creature` (13×13 网格) | `index.html` mix-blend-mode + 径向渐变 |
+| 我想画**3D 卡片堆** | `onscroll-sticky` (17 张卡片) | `index.html` 多层 box-shadow + backface-visibility |
+| 我想画**3D 旋转物体** | `onscroll-responsive-scope` (12 卡片) | `index.html` 多层 box-shadow + backdrop-filter |
+| 我想画**粒子萤火虫** | `additive-fireflies` (60 粒子) | `index.js` + `index.html` mix-blend-mode |
+| 我想画**路径描线 + 渐变** | `svg-graph` (折线图) | `index.html` linearGradient + mask |
+| 我想画**粒子 3D 网格** | `auto-layout/periodic-table` (sphere/helix) | `index.js` 200 行 + CSS box-shadow + 圆角 |
+| 我想画**钟面指针/旋转** | `clock-playback-controls` (3D 钟) | `index.html` 3D rotate + 透视 |
+
+**核心原则**:
+- **≥ 2 种手法叠加 = 有质感** (硬约束 #7 lint 必查)
+- **≥ 3 种手法叠加 = 优秀** (范例级)
+- **0-1 种 = 警告, 课件美感单薄**
+- 详见 ANIMEJS-GUIDE.md §X 完整指南 (含基础套件 CSS 8 块)
+
+---
+
+## 11. License 与引用规范
 
 ## 10. License 与引用规范
 

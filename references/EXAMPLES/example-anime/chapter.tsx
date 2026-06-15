@@ -227,11 +227,91 @@ function ScreenInteract() {
   );
 }
 
+// ============================================================
+// 屏 5: outro — 5 大共性含材质综合 (★ 质感 1 屏示范)
+//   1. 字符级 stagger 标题 (text-shadow 光晕)
+//   2. 金属立方体: linear-gradient + box-shadow 多层 + drop-shadow 远景
+//   3. 立方体 6 个独立 stagger from center 翻转 (rotateY 0→360)
+//   4. 立方体持续旋转 alternate (持续循环)
+//   5. 加 1 个灯泡光晕 (radial-gradient + box-shadow 0 0 20px)
+//   6. 加 1 个毛玻璃提示卡 (backdrop-filter blur)
+//   LLM agent 看这一屏能学: 1 个物体怎么用 ≥ 3 种质感手法
+// ============================================================
 function ScreenOutro() {
+  // 标题字符级 stagger (★ 共性 #2 #3 #4)
+  useEffect(() => {
+    if (step < 14) return;
+    const target = document.querySelector(".exa-outro-h");
+    if (target) wrapInSpan(target as HTMLElement);
+    const anim = animate(".exa-outro-h span", {
+      translateY: [
+        { to: [35, -60], duration: 180, ease: "outQuad" },
+        { to: 4, duration: 120, delay: 20, ease: "inQuad" },
+        { to: 0, duration: 120, ease: "outQuad" },
+      ],
+      scaleX: [
+        { to: [.3, .85], duration: 180, ease: "outQuad" },
+        { to: 1.08, duration: 120, delay: 85, ease: "inOutSine" },
+        { to: 1, duration: 260, delay: 25, ease: "outQuad" },
+      ],
+      duration: 400,
+      ease: "outSine",
+      delay: stagger(50, { from: "center" }),
+    });
+    return () => anim.revert();
+  }, [step]);
+
+  // 6 个金属立方体独立 stagger 翻转入场 (★ 共性 #1 随机旋转 + #2 持续 + #4 stagger)
+  useEffect(() => {
+    if (step < 14) return;
+    // 入场
+    const introAnim = animate(".exa-cube", {
+      scale: [0, 1],
+      rotateY: () => utils.random(0, 360),  // ★ 共性 #1 随机
+      delay: stagger(80, { from: "center" }),  // ★ 共性 #4
+      duration: 800,
+      ease: "outBounce",
+    });
+    // 持续旋转 (★ 共性 #2 持续循环)
+    const loopAnim = animate(".exa-cube", {
+      rotateX: [0, 360],
+      duration: 4000,
+      loop: true,
+      ease: "linear",
+    });
+    return () => {
+      introAnim.revert();
+      loopAnim.revert();
+    };
+  }, [step]);
+
   return (
     <div className="exa-outro">
-      <h2 className="exa-outro-h">4 大共性全部应用</h2>
-      <p className="exa-outro-d">随机化 + 持续循环 + 多 keyframe + 独立 stagger</p>
+      <h2 className="exa-outro-h">5 大共性 · 含材质</h2>
+      <p className="exa-outro-d">金属立方体: linear-gradient + box-shadow 多层 + drop-shadow + 灯泡光晕 + 毛玻璃</p>
+
+      {/* 金属立方体展示 — 6 个立方体横向排列, 每个有完整质感 */}
+      <div className="exa-cubes-row">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="exa-cube" data-i={String(i)}>
+            <div className="exa-cube-face exa-cube-front" />
+            <div className="exa-cube-face exa-cube-back" />
+            <div className="exa-cube-face exa-cube-top" />
+            <div className="exa-cube-face exa-cube-bottom" />
+            <div className="exa-cube-face exa-cube-left" />
+            <div className="exa-cube-face exa-cube-right" />
+          </div>
+        ))}
+      </div>
+
+      {/* 灯泡光晕 (radial-gradient + box-shadow 0 0 20px) */}
+      <div className="exa-glow" />
+
+      {/* 毛玻璃提示卡 (backdrop-filter blur) */}
+      <div className="exa-glass-card">
+        <div className="exa-glass-card-l">质感 8 手法</div>
+        <div className="exa-glass-card-h">linear-gradient / radial-gradient / box-shadow 多层 / drop-shadow / mix-blend-mode / stroke-dasharray / backdrop-filter / backface-visibility</div>
+      </div>
     </div>
   );
 }

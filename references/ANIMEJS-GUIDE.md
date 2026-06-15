@@ -4,6 +4,7 @@
 > **面向读者**: LLM agent, 不是人。**结构按"先判断 → 再选模式 → 后实施"渐进式披露**; 代码块只放最小可运行片段, 不堆叙事; 每个原则单独可执行, 不依赖其他章节。
 > **适用版本**: `animejs ^4.4.1`
 > **包大小**: 80KB gzip, 一次性 cost; WAAPI 后端, 浏览器原生加速。
+> **读完这一份 LLM 应该能为**: 卡片堆/球面/钟面 3D 旋转 (§1); 标题/数字字符级入场 (§2); 装饰流体持续动 (§3); 简单入场/拖拽 (§4); **车/立方体/物体的有质感视觉 (§X 5 大共性含材质)**。
 
 ---
 
@@ -26,13 +27,215 @@ Q3: 你的画面是"批量元素 + 持续在动 (无固定终点)"?
 
 Q4: 你的画面是简单入场 / 出场 / 状态切换?
   → 走 §4 基础 5 封装 (animate / stagger / svg / Draggable / onScroll)
+  →  仍想做"有质感的物体" → 走 §X 5 大共性 (含材质) 单独看
 ```
 
+**Q5: 你的画面要画一个有质感的物体 (车/立方体/卡片/材质)?**
+  → YES: 走 §X 5 大共性 (含材质), 在 Q1/Q2/Q3/Q4 选定模式基础上, **加 §X.1 质感 8 手法** (linearGradient / box-shadow 多层 / drop-shadow / mix-blend-mode / 描边 / 毛玻璃等)
+  → NO: 你的物体是单色简单形状, 跳过 §X
+
 **禁止**: Q1 选 Three.js — animejs 官方未支持, 实测会触发内部 `str.includes is not a function`。详见 §6。
+
+**重要反思 (5.4 课件教训)**: 5.4 课件曾因照抄"线条+形状+物体"套路 (车辆 = rect+rect 拼图, 柱状图 = div 拉伸), 动画能跑但**美感差, 元素没质感, 不立体不柔和**。**灵魂动作 + 4 大共性解决"动得对", 材质叠加解决"画得好看"** — 5 大共性 (含材质) 缺一不可。详见 §X。
+
+---
+
+## X. 5 大共性 (含质感) — 让物体"画得好看" (Q5)
+
+> **读完这一段 LLM 应该能为**: 车/立方体/卡片/球面/钟面等任何物体, 写出"有质感、有立体感、有光影"的 chapter.tsx + chapter.css, **让 CSS 物体看起来像真物体, 不是 SVG 描线套路**。
+> **何时读**: 你画任何具体物体 (车/立方体/卡片/人形), 都要读这一段。**哪怕你只画一个小方块**, 至少加 1 个 box-shadow + 1 个 linearGradient, 避免单色 flat。
+> **何时不读**: 你的画面只是文字 + 简单几何 (比如章节报头), 不需要"物体"。
+
+### X.1 5 大共性完整版 (含材质)
+
+5 大共性 = 4 大共性 (动) + 1 大共性 (材质):
+
+| # | 共性 | 含义 | 关键手法 |
+|---|---|---|---|
+| 1 | 随机化 | 起始位置/旋转/缩放随机, 不全场统一 | `utils.random()` |
+| 2 | 持续循环 | `onComplete` 链式, 永远在动 | `createTimeline({ onComplete: () => animate() })` |
+| 3 | 多 keyframe | 5+ keyframe 弹入-回弹-就位 | `keyframes: [{to, duration, ease}, ...]` |
+| 4 | 独立 stagger | 每元素不同时间点入场 | `stagger(N, { from: 'center' | 'last' })` |
+| **5** | **材质叠加** | **物体有质感/光影/曲线, 不是单色 flat** | **linearGradient + box-shadow 多层 + drop-shadow + mix-blend-mode + 描边 + 毛玻璃** |
+
+**判定 (硬约束 #6 + #7)**:
+- 4 大共性 (1-4) 满足 ≥ 2 项 = 合格 (动得对)
+- 5 大共性 (1-5) 满足 ≥ 3 项 = 优秀 (动得对 + 画得好看)
+- 5 大共性 (1-5) 满足 4-5 项 = 范例级 (5.4 课件前车之鉴的反面)
+
+**反例 (5.4 课件前车之鉴)**:
+```tsx
+// ❌ 0 材质 — 车辆看起来像纸片
+<rect x="0" y={CAR_Y} width="80" height="32" fill="var(--text)" />
+<circle cx="18" cy={CAR_Y + 34} r="8" fill="var(--text)" />
+
+// ❌ 1 材质 (单 box-shadow) — 还是单薄
+<rect fill="var(--text)" style={{ boxShadow: "0 2px 4px #000" }} />
+```
+
+**正例 (质感叠加)**:
+```tsx
+// ✓ 3+ 材质叠加 — 车有金属感 + 投影 + 高光
+<div className="chapter-car">
+  {/* linearGradient 模拟金属反光 */}
+  <div className="chapter-car-body" />
+  {/* 多层 box-shadow 投影 (近距 1, 远距 2) */}
+  <div className="chapter-car-shadow" />
+  {/* filter: drop-shadow 远景 */}
+  <div className="chapter-car-far" />
+</div>
+```
+```css
+.chapter-car-body {
+  background: linear-gradient(180deg, #fafafa 0%, #d8d8d8 50%, #c0c0c0 100%);  /* 金属反光 */
+  border-radius: 8px 8px 4px 4px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),     /* 近距深阴影 */
+    0 8px 16px rgba(0, 0, 0, 0.15),   /* 远距浅阴影 */
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);  /* 顶部高光 (光照) */
+}
+.chapter-car-shadow {
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
+  filter: blur(4px);
+  transform: scaleY(0.3);  /* 压扁的椭圆投影 */
+}
+.chapter-car-far {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+```
+
+### X.2 质感 8 手法 (animejs 官方实战汇总)
+
+| # | 手法 | 适用 | animejs 官方例 | 范式代码片段 |
+|---|---|---|---|---|
+| 1 | **`linear-gradient`** | 模拟金属反光 / 天空 / 路面光照变化 | clock-playback-controls | `background: linear-gradient(180deg, #fafafa 0%, #d8d8d8 50%, #c0c0c0 100%);` |
+| 2 | **`radial-gradient`** | 阴影 / 光晕 / 灯泡发光 | additive-creature | `background: radial-gradient(circle, rgba(255,200,100,0.4) 0%, transparent 70%);` |
+| 3 | **`box-shadow` 多层** | 卡片立体 / 物体投影 | periodic-table (3-4 层叠加) | `box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 16px rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.6);` |
+| 4 | **`filter: drop-shadow()`** | 远景物体 / 整体深度 | onscroll-sticky | `filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));` |
+| 5 | **`mix-blend-mode: plus-lighter`** | 光晕 / 烟雾 / 萤火虫 | additive-creature, additive-fireflies | `mix-blend-mode: plus-lighter; background: var(--red);` |
+| 6 | **`stroke-dasharray` 描线 + `fill` 渐变** | 路径描线 (雷达扫描/对勾绿) | layered-css-transforms, svg-graph | `stroke-dasharray: 600; stroke-dashoffset: 600;` + `fill: url(#gradient-id);` |
+| 7 | **`backdrop-filter: blur()`** | 毛玻璃卡片 / 提示卡 | onscroll-responsive-scope | `backdrop-filter: blur(8px); background: rgba(20, 20, 40, 0.85);` |
+| 8 | **`backface-visibility: hidden`** | 3D 卡片翻转时不显示背面 | onscroll-sticky | `backface-visibility: hidden;` + `.back { transform: rotateY(180deg); }` |
+
+**核心原则**:
+- **≥ 2 种手法叠加 = 有质感** (硬约束 #7 lint 必查)
+- **≥ 3 种手法叠加 = 优秀** (范例级)
+- **0-1 种 = 警告, 课件美感单薄, 回退补**
+- 手法 1-5 (gradient + shadow) 是基础; 手法 6 (描线) 适合 SVG; 手法 7-8 (毛玻璃/3D) 适合卡片/立体
+
+### X.3 质感基础套件 (LLM agent 直接套用)
+
+```css
+/* ★ 质感基础套件 — 任何物体都至少套 1-2 个 */
+
+/* 1. 立体卡片 (3D 卡片堆/小方块/工具卡) */
+.chapter-card-3d {
+  background: linear-gradient(180deg, var(--surface-2) 0%, var(--surface-3) 100%);
+  border-radius: 8px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.3),     /* 近距 */
+    0 8px 16px rgba(0, 0, 0, 0.15),   /* 远距 */
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);  /* 顶部高光 */
+}
+
+/* 2. 金属物体 (车/立方体/工具) */
+.chapter-metal {
+  background: linear-gradient(180deg, #fafafa 0%, #d8d8d8 50%, #c0c0c0 100%);
+  border-radius: 4px;
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);  /* 顶部高光强 */
+}
+
+/* 3. 灯光物体 (灯泡/尾灯/光点) */
+.chapter-glow {
+  background: radial-gradient(circle, rgba(255, 200, 100, 0.8) 0%, rgba(255, 200, 100, 0) 70%);
+  box-shadow: 0 0 20px rgba(255, 200, 100, 0.6);
+}
+
+/* 4. 阴影 (车/物体投在地面) */
+.chapter-shadow {
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
+  filter: blur(4px);
+  transform: scaleY(0.3);  /* 压扁的椭圆 */
+}
+
+/* 5. 玻璃物体 (车窗/护目镜) */
+.chapter-glass {
+  background: linear-gradient(180deg, #aaccdd 0%, #88aabb 100%);
+  opacity: 0.6;
+  border-radius: 2px;
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.4);
+}
+
+/* 6. 描边 (线条/路径/印章边框) */
+.chapter-stroke {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;  /* 圆头, 软和 */
+  stroke-linejoin: round;
+}
+
+/* 7. 毛玻璃 (提示卡/弹出卡) */
+.chapter-glass-card {
+  background: rgba(20, 20, 40, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  border-left: 4px solid var(--accent);
+}
+
+/* 8. 3D 卡片翻转 (物理演示卡) */
+.chapter-flip-card-front {
+  backface-visibility: hidden;
+  background: var(--surface-2);
+}
+.chapter-flip-card-back {
+  backface-visibility: hidden;
+  background: var(--surface-3);
+  transform: rotateY(180deg);
+}
+```
+
+### X.4 真实参考源码 (animejs 官方)
+
+| 示例 | 用了哪些质感手法 | JS 行数 |
+|---|---|---|
+| `additive-creature` | #2 radial-gradient + #5 mix-blend-mode + #3 box-shadow 多层 | 104 |
+| `additive-fireflies` | #5 mix-blend-mode + #1 linear-gradient | 60 |
+| `layered-css-transforms` | #1 linear-gradient + #3 box-shadow + #6 stroke 描边 | 63 |
+| `onscroll-sticky` | #3 box-shadow 多层 + #8 backface-visibility + #7 backdrop-filter | 55 |
+| `clock-playback-controls` | #1 linear-gradient + #3 box-shadow + 透视 | 106 |
+| `auto-layout/periodic-table` | #3 box-shadow 多层 + #1 linear-gradient + 阴影 + 圆角 | 317 |
+| `onscroll-responsive-scope` | #3 box-shadow 多层 + #7 backdrop-filter + #8 backface-visibility | 49 |
+| `svg-graph` | #1 linear-gradient + #2 radial-gradient + mask | 39 |
+
+详见 `ANIMEJS-EXAMPLES-INDEX.md` §"质感技法索引"。
+
+### X.5 5.4 课件前车之鉴 (避免重蹈)
+
+| 5.4 错误做法 | 看起来 | 正确做法 | 看起来 |
+|---|---|---|---|
+| 车辆 = 4 个 `<rect>` 拼 (车身 + 车顶 + 2 车轮) | 像纸片剪纸 | 车身 linear-gradient (金属反光) + box-shadow (投影) + drop-shadow (远景) | 像真车 |
+| 柱状图 = `<div>` 高度拉伸 | 像扁平方块 | bar linear-gradient (底部深顶部浅) + box-shadow (3D 凸起) | 像真柱 |
+| 节点滚动 = `<div>` opacity 0→1 | 像 PPT 入场 | 节点 radial-gradient (径向光晕) + box-shadow (节点投影) + drop-shadow (远景) | 像真粒子 |
+| 路径描线 = `<path stroke>` | 简单线条 | 描线 + 渐变填充 + 流光动画 | 高级感 |
+
+**5.4 教训**: 4 大共性 (动) 满足 = "能跑"; 5 大共性 (动 + 材质) 满足 = "好看".
+
+### X.6 与其他 § 的关系
+
+- **Q1 走 §1 CSS 3D 路径** → 加 §X 质感 8 手法, **box-shadow + linear-gradient + drop-shadow 必加**, 卡片堆立刻有立体感
+- **Q2 走 §2 字符级 stagger 路径** → 加 §X 质感, 字符弹入时加 text-shadow 模拟光晕, 标题立刻有冲击感
+- **Q3 走 §3 流体循环路径** → 加 §X 质感, 流体元素用 radial-gradient + mix-blend-mode, 立刻"发光"
+- **Q4 走 §4 基础 5 封装** → 加 §X 质感, 简单入场元素加 box-shadow / linearGradient, 不再是 flat
+- **5.4 教训**: 跳过 §X 直接用 4 大共性 = 课件美感单薄. **永远至少读 §X.3 基础套件**
 
 ---
 
 ## 1. CSS 3D 立体路径 (Q1)
+
+> **读完这一段 LLM 应该能为**: 卡片堆/球面/钟面/立方体 3D 旋转场景, 写出 chapter.tsx (perspective + preserve-3d + rotateY/X/Z 容器) + chapter.css (有 box-shadow 多层 + linear-gradient 投影的卡片皮肤)。
 
 ### 1.1 何时用
 
@@ -97,6 +300,8 @@ animate('.card', {
 ---
 
 ## 2. 字符级 stagger 路径 (Q2)
+
+> **读完这一段 LLM 应该能为**: 标题/数字/词组逐字入场场景, 写出 chapter.tsx (5+ keyframe 弹入-回弹-就位 timeline + stagger(80, { from: 'center' })), **配合 text-shadow 让字符有发光质感**。
 
 ### 2.1 何时用
 
@@ -167,6 +372,8 @@ tl.add('.chapter-chars', {
 ---
 
 ## 3. 流体循环路径 (Q3)
+
+> **读完这一段 LLM 应该能为**: 装饰性持续动背景 (粒子/漂浮物/烟雾), 写出 chapter.tsx (100+ keyframes 随机 + onComplete 链式 + utils.randomPick 多种 easing) + chapter.css (radial-gradient + mix-blend-mode 光晕)。
 
 ### 3.1 何时用
 
@@ -241,6 +448,7 @@ for (let i = 0; i < 6; i++) {
 
 ## 4. 基础 5 封装 (Q4)
 
+> **读完这一段 LLM 应该能为**: 简单入场/出场/拖拽/状态切换, 写出 chapter.tsx (animate / stagger / svg.createDrawable / Draggable / onScroll 5 封装直接用), **仍然加 box-shadow / linearGradient 基础质感, 不做 flat 物体**。
 > **仅当 Q1/Q2/Q3 都不适用时使用**。如果你的动画"看起来像 PPT", 说明你该重新走 §0 决策树, 而不是用基础封装硬堆。
 
 ### 4.1 `animate()` 元素级
