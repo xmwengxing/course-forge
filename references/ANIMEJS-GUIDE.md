@@ -1,265 +1,439 @@
-# Anime.js v4 基本应用技巧
+# ANIMEJS-GUIDE.md
 
-> **什么时候读**：你准备给章节加"真正动画"或"物理级拖拽"时
-> **适用版本**：`animejs ^4.4.1`
-> **本文档性质**：animejs v4 API 用法 + step 驱动清理模式 + token 主题隔离 + 性能与可访问性
-> **不包含**：具体动画设计套路（"节点滚动 / 柱状图 grow / 描线排序" 等是某一项目的设计选择，**不构成标准答案**；按你的内容自由设计）
-
----
-
-## 1. 为什么用 animejs
-
-| 痛点 | 手写 CSS keyframes / Pointer Events | animejs |
-|---|---|---|
-| 50 个节点依次揭示 | 50 行 `nth-child` 错开 delay | 1 行 `delay: stagger(50)` |
-| SVG 路径描线 | 手算 `stroke-dashoffset` + keyframe | 1 行 `createDrawable()` |
-| 拖拽带 spring 回弹 | 80 行 Pointer Events + 物理公式 | 1 行 `draggable(target, { releaseEase: 'outElastic(1, .8)' })` |
-| 动画 pause/revert | 难 | `animation.revert()` / `.pause()` |
-| 错开延迟计算 | `nth-child(n) { animation-delay: calc(n * 50ms) }` | `stagger(50, { from: 'center' })` |
-| 沿路径运动 | 手算 SVG path 多个点 + setTimeout 链 | `createMotionPath()` 自动 |
-| 颜色 / SVG / JS Object | 写 3 套 keyframes | 同一套 API |
-
-**性能**：animejs v4 用 **WAAPI（Web Animations API）** 后端，浏览器原生加速，比 CSS 动画更省 CPU。
-
-**包大小**：`animejs` ~80KB gzip，一次性 cost。
+> **Skill 角色定位**: 这是 course-forge 的"动画增量能力"层。SKILL.md / CHAPTER-CRAFT.md / COURSE-MODE.md 定义核心行为 (剧本、节奏、内容取舍), 本文档只覆盖"真正动画"那一层 — 当你准备给章节加 animejs 动画时读这一份。
+> **面向读者**: LLM agent, 不是人。**结构按"先判断 → 再选模式 → 后实施"渐进式披露**; 代码块只放最小可运行片段, 不堆叙事; 每个原则单独可执行, 不依赖其他章节。
+> **适用版本**: `animejs ^4.4.1`
+> **包大小**: 80KB gzip, 一次性 cost; WAAPI 后端, 浏览器原生加速。
 
 ---
 
-## 2. 安装与初始化
+## 0. 决策树: 你要做什么?
 
-### 2.1 自动安装（推荐）
+LLM agent 接到"加动画"需求时, 按以下顺序判断 (互斥, 只走一条):
 
-`scripts/scaffold.sh` 已自动在 Vite scaffold 后追加 `npm install animejs`。**新课件项目零配置**。
+```
+Q1: 你要做真 3D 立体感的物体 / 卡片堆 / 球面?
+  → YES: 走 §1 CSS 3D 路径 (animejs 官方做法, 不用 Three.js)
+  → NO:  Q2
 
-### 2.2 手动安装
+Q2: 你的内容是字符 / 文本 / 单词级别的入场?
+  → YES: 走 §2 字符级 stagger 路径 (animejs v4 logo 范式)
+  → NO:  Q3
 
-```bash
-cd <project>
-npm install animejs
+Q3: 你的画面是"批量元素 + 持续在动 (无固定终点)"?
+  → YES: 走 §3 流体循环路径 (layered-css-transforms 范式)
+  → NO:  Q4
+
+Q4: 你的画面是简单入场 / 出场 / 状态切换?
+  → 走 §4 基础 5 封装 (animate / stagger / svg / Draggable / onScroll)
 ```
 
-### 2.3 TypeScript 类型
-
-animejs v4 自带完整 TypeScript 类型。无需 `@types/animejs`。
+**禁止**: Q1 选 Three.js — animejs 官方未支持, 实测会触发内部 `str.includes is not a function`。详见 §6。
 
 ---
 
-## 3. 5 大常用封装
+## 1. CSS 3D 立体路径 (Q1)
 
-### 3.1 元素级动画 — `animate()`
+### 1.1 何时用
+
+- 卡片堆 (onscroll-sticky)
+- 卡片 3D 旋转 (onscroll-responsive-scope)
+- 钟面 / 立方体 (clock-playback-controls)
+- 球面 / 螺旋 / 3D 网格布局 (auto-layout/periodic-table)
+- 任何"有透视、有 Z 排序、有立体旋转"的物体
+
+### 1.2 三件套 CSS
+
+```css
+.stage {
+  perspective: 1000px;             /* 视点距离, 数值越小透视越强 */
+  perspective-origin: 50% 50%;     /* 视点位置, 默认中心 */
+}
+.stack {
+  transform-style: preserve-3d;    /* 容器声明 — 让子元素保留 3D */
+  perspective: 1000px;             /* 视点可双声明 (容器/场景) */
+}
+.card {
+  transform-style: preserve-3d;    /* 子元素也要声明, 否则 3D 失效 */
+  transform: rotateY(180deg) translateZ(40px);  /* Z 轴 4 种基本动作 */
+  will-change: transform;           /* 性能提示 */
+}
+```
+
+### 1.3 animejs 驱动 (纯 CSS transform)
+
+```ts
+import { animate, utils, createTimeline, stagger } from 'animejs';
+
+// 步 5: 卡片堆 3D 翻转入场
+animate('.card', {
+  rotateY: [-180, 0],
+  rotateZ: { to: stagger([0, -360], { from: 'last' }), ease: 'inOut(2)' },
+  translateY: { to: '-60%', duration: 400 },
+  transformOrigin: ['50% 100%', '50% 50%'],
+  delay: stagger(1, { from: 'first' }),
+  ease: 'in(2)',
+});
+```
+
+### 1.4 反例
+
+| 反例 | 后果 |
+|---|---|
+| 漏 `transform-style: preserve-3d` | 子元素塌成 2D, 看起来只是 rect 旋转 |
+| `perspective` 写错位置 (写在子元素而非父容器) | 透视只作用自己, 兄弟元素不在同一空间 |
+| 写 `transform: rotate3d(x, y, z, ...)` 但父容器没 `preserve-3d` | 同上, 退化成 2D |
+| 尝试用 Three.js + animejs 同步属性 | animejs 内部对 Vector3 调用失败, 抛 `str.includes is not a function` |
+
+### 1.5 真实参考源码 (animejs 官方)
+
+- `onscroll-sticky/index.html` + `index.js` (55 行 JS, 完整卡片堆 3D 翻转)
+- `onscroll-responsive-scope/index.js` (49 行, 响应式 3D 卡片)
+- `clock-playback-controls/index.html` (171 行, 3D 钟面 + 弹性 easing)
+- `auto-layout/periodic-table/index.js` (76 行, sphere/helix/grid 3D 布局)
+
+详见 `ANIMEJS-EXAMPLES-INDEX.md` 行 30-60。
+
+---
+
+## 2. 字符级 stagger 路径 (Q2)
+
+### 2.1 何时用
+
+- 标题逐字入场 (animejs v4 logo animation)
+- 单词 / 数字 / 段落的字符拆解
+- 任何"按字符/按词"逐步揭示的文本
+
+### 2.2 范式结构 (从 animejs v4 logo 提炼)
+
+```ts
+// 1. 字符拆解: 把文本切成 N 个 <span>/SVG 字符
+function wrapInSpan(target: HTMLElement) {
+  let wrappedText = '';
+  for (const char of target.textContent) {
+    wrappedText += `<span>${char === ' ' ? '&nbsp;' : char}</span>`;
+  }
+  target.innerHTML = wrappedText;
+}
+
+// 2. 多 keyframe 时间线 (5 个 keyframe 串成"弹入-回弹-就位"完整节奏)
+const tl = createTimeline({ defaults: { ease: 'inOutQuint', duration: 800 } });
+tl.add('.chapter-chars', {
+  translateY: [
+    { to: [35, -80], duration: 190, ease: 'splashCurve' },  // 弹起
+    { to: 4, duration: 120, delay: 20, ease: 'inQuad' },   // 回落小
+    { to: 0, duration: 120, ease: 'outQuad' }              // 就位
+  ],
+  scaleX: [
+    { to: [.25, .85], duration: 190, ease: 'outQuad' },     // 压扁
+    { to: 1.08, duration: 120, delay: 85, ease: 'inOutSine' },  // 反弹
+    { to: 1, duration: 260, delay: 25, ease: 'outQuad' }    // 就位
+  ],
+  scaleY: [
+    { to: [.4, 1.5], duration: 120, ease: 'outSine' },
+    { to: .6, duration: 120, delay: 180, ease: 'inOutSine' },
+    { to: 1.2, duration: 180, delay: 25, ease: 'outQuad' },
+    { to: 1, duration: 190, delay: 15, ease: 'outQuad' }
+  ],
+  duration: 400,
+  ease: 'outSine',
+}, stagger(80, { from: 'center' }))  // 字符级 stagger
+.init();
+```
+
+### 2.3 关键技巧
+
+- **不要用简单 [0, 1]**: 字符级动画的"活感"来自 **5+ keyframe 串成的弹入-回弹-就位完整节奏**
+- **`from: 'center'`**: 字符从中心向外依次入场, 比 left/right 更有节奏
+- **弹性 easing**: `outElastic(1, .8)`, `cubicBezier(.225, 1, .915, .980)` (animejs v4 logo 自定义 splashCurve)
+- **transformOrigin 关键**: 字符入场时 `transformOrigin: '50% 100% 0px'` 决定"从底部弹起"还是"从顶部落下"
+
+### 2.4 反例
+
+| 反例 | 后果 |
+|---|---|
+| 字符整体 fade-in, 没 stagger | 像 PPT 入场, 死板 |
+| 用 `delay: stagger(50)` 但 keyframe 只有 1 段 | 字符整齐入场, 无弹入-回弹节奏 |
+| `transformOrigin: 'center center'` (默认) | 字符从中心缩放, 显得"压缩" |
+| 字符用 opacity: 0 起始 + 单一 translateY | 没有"被压扁再弹回"的物理感 |
+
+### 2.5 真实参考源码
+
+- `animejs-v4-logo-animation/index.js` (260 行, 完整 5 段 timeline: FALL → WIGGLE → POP → SWEECH → OUTRO)
+- 关键片段 line 73-93 (POP 段, 字符逐字入场)
+
+详见 `ANIMEJS-EXAMPLES-INDEX.md` 行 80-100。
+
+---
+
+## 3. 流体循环路径 (Q3)
+
+### 3.1 何时用
+
+- "持续在动"的环境效果 (粒子、流体、漂浮物)
+- 没有任何特定 step 终点的持续动画
+- 装饰性背景
+
+### 3.2 范式 (从 layered-css-transforms 提炼)
+
+```ts
+import { animate, createTimeline, utils, createSpring } from 'animejs';
+
+// 关键: 动画完成后立即"再启动", 形成永久循环
+function animateShape(el: HTMLElement) {
+  const animation = createTimeline({
+    onComplete: () => animateShape(el),  // 链式 — 永远在动
+  })
+  .add(el, {
+    translateX: createKeyframes(() => utils.random(-40, 40)),  // 随机
+    translateY: createKeyframes(() => utils.random(-40, 40)),
+    rotate: createKeyframes(() => utils.random(-180, 180)),
+  }, 0);
+  // ...更多部件
+  animation.init();
+}
+
+// createKeyframes: 100 个随机值的 keyframe 串
+function createKeyframes(value: () => number) {
+  const keyframes = [];
+  for (let i = 0; i < 100; i++) {
+    keyframes.push({
+      to: value(),
+      ease: utils.randomPick(['inOutQuad', 'inOutCirc', 'inOutSine', createSpring()]),
+      duration: utils.random(300, 1600),
+    });
+  }
+  return keyframes;
+}
+
+// 启动 N 个元素的独立流体
+for (let i = 0; i < 6; i++) {
+  animateShape(document.querySelectorAll('.shape')[i]);
+}
+```
+
+### 3.3 关键技巧
+
+- **`onComplete` 链式 ≠ `loop: true`**: 链式是"完成后再启动", 每次 keyframe 不同, 看起来真随机; `loop: true` 是"重复同一段", 看起来机械循环
+- **`utils.randomPick([eases])`**: 每个 keyframe 用不同 easing, 整体节奏不机械
+- **100+ keyframes**: 不是夸张, 流体效果需要足够多随机值才能"不重复"
+- **弹性混合**: `createSpring()` 加入 keyframe 数组, 弹簧 + 缓动混合, 节奏更自然
+
+### 3.4 反例
+
+| 反例 | 后果 |
+|---|---|
+| 用 `loop: true` 配固定动画 | 每次循环都一模一样, 1 秒就腻 |
+| 单一 easing 配多 keyframe | 节奏机械, 像机械表 |
+| 不用 `onComplete` 链式, 用 `loop: true` | 动画结束就停, 死的 |
+| 部件数 < 3 | 看起来像抖动而不是流体 |
+
+### 3.5 真实参考源码
+
+- `layered-css-transforms/index.js` (63 行, 6 个形状永久流体循环)
+- `additive-creature/index.js` (104 行, 13×13 = 169 粒子 + grid stagger)
+- `additive-fireflies/index.js` (60 行, 萤火虫粒子跟随鼠标)
+- `canvas-2d/index.js` (77 行, 4000 粒子 + Canvas 2D)
+
+详见 `ANIMEJS-EXAMPLES-INDEX.md` 行 110-150。
+
+---
+
+## 4. 基础 5 封装 (Q4)
+
+> **仅当 Q1/Q2/Q3 都不适用时使用**。如果你的动画"看起来像 PPT", 说明你该重新走 §0 决策树, 而不是用基础封装硬堆。
+
+### 4.1 `animate()` 元素级
 
 ```ts
 import { animate } from 'animejs';
-
-// 单个元素：透明度 0→1 渐显
 animate('.chapter-elem', { opacity: [0, 1], duration: 400 });
-
-// 多个节点错开揭示（替代 50 行 nth-child）
-animate('.chapter-nodes', {
-  opacity: [0, 1],
-  scale: [0, 1],
-  delay: stagger(50),
-  duration: 300,
-  ease: 'outBack',
-});
 ```
 
-### 3.2 时间线编排 — `timeline()`
+### 4.2 `stagger()` 错开延迟
 
 ```ts
-import { animate, createTimeline } from 'animejs';
-
-const tl = createTimeline({ defaults: { duration: 600 } });
-tl.add('.chapter-a', { x: [-100, 0], opacity: [0, 1] });
-tl.add('.chapter-b', { x: [-100, 0], opacity: [0, 1] }, '-=300');  // 提前 300ms 接续
-tl.add('.chapter-c', { x: [-100, 0], opacity: [0, 1] }, '-=300');
+animate('.chapter-list > *', {
+  y: [20, 0],
+  opacity: [0, 1],
+  delay: stagger(100),                              // 100ms 错开
+  duration: 400,
+});
+// 从中心向外错开
+animate('.chapter-radial', { scale: [0, 1], delay: stagger(50, { from: 'center' }) });
+// 反向错开
+animate('.chapter-list', { y: [0, -20], delay: stagger(80, { from: 'last' }) });
 ```
 
-### 3.3 拖拽 — `draggable()`
+### 4.3 `svg.createDrawable()` / `svg.createMotionPath()`
+
+```ts
+// 路径描线 (任何"线"动画的通用解法)
+const drawable = svg.createDrawable('.chapter-line', 0, 600);
+drawable.draw(0, '100%');
+
+// 沿路径运动 (任何"沿轨道动"动画)
+const mp = svg.createMotionPath('.chapter-path');
+animate('.chapter-mover', { ...mp, duration: 1500, loop: true, ease: 'inOutSine' });
+```
+
+### 4.4 `Draggable` 拖拽
 
 ```ts
 import { Draggable } from 'animejs';
-
 const drag = Draggable.create('.chapter-card', {
   container: '.chapter-stage',
-  releaseEase: 'outElastic(1, .8)',   // 松手 spring 回弹
+  releaseEase: 'outElastic(1, .8)',
   onRelease: (self) => { /* 落到正确位置判定 */ },
 });
-
 // 离开 step 时清理
 drag[0].disable();
 ```
 
-### 3.4 SVG 路径动画 — `svg.createDrawable()` / `svg.createMotionPath()`
+### 4.5 `onScroll` 滚动联动
 
 ```ts
-import { animate, svg } from 'animejs';
-
-// 路径描线（任何"线"动画的通用解法）
-const drawable = svg.createDrawable('.chapter-line', 0, 600);
-drawable.draw(0, '100%');  // 0ms 起点 → 600ms 终点
-
-// 沿路径运动（任何"沿轨道动"动画的通用解法）
-const mp = svg.createMotionPath('.chapter-path');
-animate('.chapter-mover', {
-  ...mp,
-  duration: 1500,
-  loop: true,
-  ease: 'inOutSine',
-});
-```
-
-### 3.5 错开延迟 — `stagger()`
-
-```ts
-import { animate, stagger } from 'animejs';
-
-animate('.chapter-list > *', {
-  y: [20, 0],
-  opacity: [0, 1],
-  delay: stagger(100),                // 100ms 错开
-  duration: 400,
-});
-
-// 从中心向外错开
-animate('.chapter-radial', {
-  scale: [0, 1],
-  delay: stagger(50, { from: 'center' }),
-});
-
-// 反向错开
-animate('.chapter-list', {
-  y: [0, -20],
-  delay: stagger(80, { from: 'last' }),
-});
+import { animate, onScroll, createScope, stagger } from 'animejs';
+const anim = animate('.card', { rotate: { to: stagger([-30, 30]) }, x: ['-60vw', stagger(['-20%', '20%'])], duration: 750 });
+onScroll({ target: '.sticky-container', sync: .1 }).link(anim);
 ```
 
 ---
 
-## 4. 与 course-forge step 驱动配合
+## 5. 与 course-forge step 驱动配合 (硬约束)
 
-animejs 是**命令式库**（调用 `animate()` 即播放），但 course-forge 是 **step 驱动**（React `if (step >= N)` 模式）。
-
-**关键模式**：在 `useEffect` 里启动动画，依赖 `[step]`，**离开 step 时 revert**（避免动画累积到下一屏）。
+animejs 是**命令式库** (调用 `animate()` 即播放), 但 course-forge 是 **step 驱动** (React `if (step >= N)`)。**两套机制必须严格转换**:
 
 ```tsx
-import { useEffect, useRef } from 'react';
-import { animate, stagger, svg, Draggable } from 'animejs';
-import { useChapterProgress } from '../../hooks/useChapterProgress';
-
-export default function MyChapter({ step }: { step: number }) {
-  useChapterProgress(step, 30);
-
-  // ★ 节点滚动：步 8-13 期间启动，离开时 revert
-  useEffect(() => {
-    if (step >= 8 && step <= 13) {
-      const anim = animate('.chapter-nodes', {
-        opacity: [0, 1],
-        scale: [0, 1],
-        delay: stagger(50),
-        duration: 300,
-        ease: 'outBack',
-      });
-      return () => anim.revert();  // ★ 关键：离开 step 时清理
-    }
-  }, [step]);
-
-  // ★ SVG 描线：步 14 触发
-  useEffect(() => {
-    if (step === 14) {
-      svg.createDrawable('.chapter-line', 0, 1500);
-    }
-  }, [step]);
-
-  // ★ 拖拽：步 20-26 期间挂载，离开时 disable
-  useEffect(() => {
-    if (step === 20) {
-      const drag = Draggable.create('.chapter-card', {
-        container: '.chapter-stage',
-        releaseEase: 'outElastic(1, .8)',
-      });
-      return () => drag[0].disable();
-    }
-  }, [step]);
-
-  return (
-    <div className="chapter-root">
-      {step === 0 && <Screen0Masthead />}
-      {step >= 8 && step <= 13 && <ScreenNodes />}
-      {/* ... */}
-    </div>
-  );
-}
+// ★ 关键模式: useEffect([step]) 启动 + cleanup revert
+useEffect(() => {
+  if (step >= 8 && step <= 13) {
+    const anim = animate('.chapter-nodes', {
+      opacity: [0, 1],
+      scale: [0, 1],
+      delay: stagger(50),
+      duration: 300,
+      ease: 'outBack',
+    });
+    return () => anim.revert();  // ★ 关键: 离开 step 时清理
+  }
+}, [step]);
 ```
 
-**重要**：`anim.revert()` 会把所有动画影响的属性**恢复到初始值**——这是清理动画的"正确"姿势，比手动 `style.opacity = ''` 干净 100 倍。
+**硬约束**:
+
+- `useEffect` 必须依赖 `[step]`, 不依赖 `[]` (否则只跑一次)
+- 必须 `return () => anim.revert()`, 否则动画累积到下一屏
+- `loop: true` 动画离开 step 时记得 `.pause()` 而非 `.revert()` (revert 会重置进度)
+- `?auto=1` 录屏时不需要特殊处理, 动画照常播放 (动画时长与 TTS 自动协调: 口播结束 → step++ → 动画到一半就跳)
 
 ---
 
-## 5. 与 token 主题配合
+## 6. Three.js 集成: 明确不支持
 
-animejs 动画可以用 CSS 变量名，**但要保证变量在动画启动时已加载**：
+**animejs 官方未支持与 Three.js 直接互操作**。实测 animejs 内部对 `THREE.Group` / `THREE.Vector3` 等非 DOM 对象做属性解析时会抛 `Uncaught TypeError: str.includes is not a function` (内部 `getBoundingClientRect` / `parseFloat` 失败)。
+
+**替代方案 (按推荐度排序)**:
+
+1. **CSS 3D 替代 (推荐)**: 用 §1 的 `perspective` + `transform-style: preserve-3d` + `rotateY/X/Z` + `translateZ` 实现真 3D 立体感。animejs 官方 examples 25 个全部用此方式, 没有任何一个用 Three.js。
+2. **Three.js 单独渲染 + animejs 驱动 CSS 层**: 3D 场景用 Three.js 渲染静态/少量动画, 叠加层 (提示卡/UI) 用 animejs 驱动 CSS。**不互通, 各自管各自**。
+3. **Canvas 2D + animejs 驱动 JS Object 属性**: 见 `canvas-2d` 范例, animejs 支持 `animate(obj, { x: ..., y: ... })` 动画普通 JS Object 属性, 你手动用 RAF 同步到 Canvas 重绘。
+
+**禁止**: 直接 `animate(threeGroup, { ... })` 或 `animate(vector3, { x: ... })` — 必崩。
+
+---
+
+## 7. token 主题配合
+
+animejs 动画可以用 CSS 变量名, **但要保证变量在动画启动时已加载**:
 
 ```ts
-// 方式 1：JS 读取 token（稳）
+// 方式 1: JS 读取 token (稳)
 animate('.chapter-bar', {
   height: '100%',
-  backgroundColor: getComputedStyle(document.documentElement)
-    .getPropertyValue('--accent').trim(),
+  backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
 });
 
-// 方式 2：CSS 写样式，animejs 只动 transform / opacity / scale（最稳）
-// CSS:
-//   .chapter-bar { background: var(--accent); height: 0; }
-//   .chapter-bar.grew { height: 100%; }
-// TS:
-//   animate('.chapter-bar', { height: [0, '100%'] });
+// 方式 2: CSS 写样式, animejs 只动 transform/opacity (最稳)
+// CSS:   .chapter-bar { background: var(--accent); height: 0; }
+//        .chapter-bar.grew { height: 100%; }
+// TS:    animate('.chapter-bar', { height: [0, '100%'] });
 ```
 
-**推荐方式 2**：主题切换时动画不崩溃，token 永远从 CSS 来。
+**推荐方式 2**: 主题切换时动画不崩溃, token 永远从 CSS 来。
 
 ---
 
-## 6. 性能与可访问性
+## 8. 性能与可访问性
 
-- **性能**：animejs v4 用 WAAPI 后端，比手写 CSS 动画更省 CPU；批量 stagger 时浏览器自动合并图层
-- **可访问性**：尊重 `prefers-reduced-motion`：
+- **性能**: animejs v4 用 WAAPI 后端, 比手写 CSS 动画省 CPU; 批量 stagger 时浏览器自动合并图层
+- **可访问性**: 尊重 `prefers-reduced-motion`:
   ```ts
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduced) {
-    // 直接设为终态，不放动画
     document.querySelectorAll('.chapter-nodes').forEach(el => el.style.opacity = '1');
   } else {
     animate('.chapter-nodes', { opacity: [0, 1], delay: stagger(50) });
   }
   ```
-- **录制模式**：`?auto=1` 录屏时 animejs 动画照常播放（动画时长与 TTS 时长自动协调：口播结束 → step++ → 动画到一半就跳，但 reveal 不强制等动画跑完）
+- **录制模式**: `?auto=1` 录屏时 animejs 动画照常播放
 
 ---
 
-## 7. 不要做的事
+## 9. 硬约束 #6: 4 大共性 lint 检查
 
-- ❌ **不要用 animejs 动章节里所有元素**（步进揭示 `step >= N` 仍是主要机制，animejs 只在需要"真正动画"时用）
-- ❌ **不要在每屏都加 stagger 错开**（会显得碎；只在"批量元素同时入场"时用）
-- ❌ **不要在 auto 模式禁用动画**（用户看 `?auto=1` 录屏时也要看到动画）
-- ❌ **不要把 animejs 引入 SSR**（Vite 已配 client-only，但 React `useEffect` 里要确认）
-- ❌ **不要用 `loop: true` 永久循环**（除闪烁/激光等视觉演示外，长时间循环动画会喧宾夺主）
-- ❌ **不要在每章都用 animejs**（小章节 / 纯文字章节不需要，留给有视觉演示的章节）
-- ❌ **不要照抄"线条 + 形状 + 物体"的固定套路**（节点滚动 / 柱状图 / 描线 / 排序只是某一项目的设计选择；按你的内容设计最贴切的视觉原语——"视频感最强的来源"是"动作语义匹配内容"，不是"线条 + 描线" 模板）
+LLM agent 写完一章动画后, **必须** 跑静态 lint 脚本 (`scripts/check-animejs-cohesion.py`):
+
+```python
+# 检查 4 大共性中至少满足 2 项
+import re, sys
+from pathlib import Path
+
+REQUIRED = {
+    "随机化": r"utils\.random|random\(\d|randomPick",
+    "持续循环": r"onComplete.*animate|loop:\s*true|alternate:\s*true",
+    "多 keyframe": r"keyframes:\s*\[",
+    "独立 stagger": r"stagger\(\d+|stagger\(",
+}
+
+# 单个 animate() 调用至少命中 2 项才算合格
+# (animejs 4 大共性, 满足 2 项 = 风格鲜明)
+```
+
+**判定标准**: 0-1 项 = 死板 (退回 §4 基础用法); 2-3 项 = 合格; 4 项 = 优秀。
 
 ---
 
-## 8. 故障排查
+## 10. 故障排查
 
 | 症状 | 原因 | 解决 |
 |---|---|---|
 | 动画不播放 | `useEffect` 没在 `step >= N` 时启动 | 检查 step 条件 |
-| 动画累积到下一屏 | 离开时没 `revert()` | 在 `useEffect` 返回 `() => anim.revert()` |
-| `?auto=1` 模式动画不完整 | 动画时长 > 口播时长 | 让 step 自动推进（不等动画）；如必要调短动画 |
-| 颜色动画主题切换时崩溃 | 直接动 CSS 变量值 | 改为只动 `transform / opacity / scale` |
-| 拖拽到边界外卡住 | 容器太小 | 调 `containerFriction: 0.9` 加摩擦 |
-| 报错 `animate is not a function` | 装错版本（v3 改 v4 API） | 卸载 `npm uninstall animejs` → 装 `npm install animejs@^4.4.1` |
+| 动画累积到下一屏 | 离开时没 `revert()` | `useEffect` 返回 `() => anim.revert()` |
+| `?auto=1` 模式动画不完整 | 动画时长 > 口播时长 | 让 step 自动推进 |
+| 颜色动画主题切换时崩溃 | 直接动 CSS 变量值 | 改为只动 `transform/opacity/scale` |
+| 报错 `str.includes is not a function` | 用 animejs 直接动画 `THREE.Group` / `THREE.Vector3` | 改用 §6 替代方案 |
+| 拖拽到边界外卡住 | 容器太小 | 调 `containerFriction: 0.9` |
+| 报错 `animate is not a function` | 装错版本 (v3 改 v4 API) | `npm install animejs@^4.4.1` |
+| 字符级 stagger 看起来机械 | 用 `loop: true` 而非 `onComplete` 链式 | 改用 §3 流体循环 |
+| 3D 卡片看起来是 2D | 漏 `transform-style: preserve-3d` | 加到父容器 + 子元素 |
 
 ---
 
-*文档版本 v1.0 — animejs v4 基本应用技巧（API + step 驱动 + token 主题 + 性能可访问性 + 故障排查）。不绑定任何具体项目的动画设计套路。*
+## 11. 与其他 references 文档的关系
+
+- **SKILL.md** — skill 主入口, 定义核心行为 (剧本/节奏/内容取舍); 本文档**不重复**核心, 只在动画层增量
+- **CHAPTER-CRAFT.md** — 单章开发全流程, 包含"动画升级"段; 本文档**配合**而非替代, LLM agent 写动画时**只读本文**
+- **COURSE-MODE.md** — 多课程管理; 动画配置**不涉及**课程级, 本文档不重复
+- **EXAMPLES/example-anime/** — 4 大共性综合 anchor, 1 章完整代码, LLM agent 写动画前**必读**
+- **ANIMEJS-EXAMPLES-INDEX.md** — animejs 官方 25 个示例索引, 详细看哪个示例做哪种效果
+
+**渐进式披露**:
+- 写普通章节 → 只读 SKILL.md + CHAPTER-CRAFT.md
+- 写需要动画的章节 → 加读 ANIMEJS-GUIDE.md (本文) + EXAMPLES/example-anime
+- 写需要参考官方范例的章节 → 加读 ANIMEJS-EXAMPLES-INDEX.md
+- 写需要 3D 立体感的章节 → 优先看 §1 + EXAMPLES/example-anime, 而不是用 Three.js
+
+---
+
+*文档版本 v2.0 — 重写自 v1.0, 加入 4 大共性 (随机化/持续循环/多 keyframe/独立 stagger) + 3D CSS 立体路径 + 字符级 stagger 路径 + 流体循环路径 + Three.js 明确不支持声明。面向 LLM agent 渐进式披露。*

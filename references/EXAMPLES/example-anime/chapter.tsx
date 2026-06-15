@@ -1,111 +1,167 @@
-// example-anime/chapter.tsx
-// Anchor: animejs v4 实战章节
-// 30 步原生 step 范式 + 真视觉演示 3 处 + 互动 2 处
-// 真视觉演示与拖拽全部由 animejs v4 驱动（替代手写 CSS keyframes + Pointer Events）
-// 详见 references/ANIMEJS-GUIDE.md
+// 864-i6-stagger-style · 4 大共性综合示范 (临时 anchor, 后续删除)
+// 5 屏架构 / 30 步 (硬约束 ≤ 12 步/章, 此处作为 anchor 不限)
+// 4 大共性全部应用:
+//   ★ 共性 #1 随机化: 流体背景 utils.random() 起始位置
+//   ★ 共性 #2 持续循环: 字符级入场 onComplete 链式 / 流体 onComplete 链式 / SVG 描线循环
+//   ★ 共性 #3 多 keyframe: 字符级 5+ keyframe 时间线
+//   ★ 共性 #4 独立 stagger: from: 'center' / from: 'last' / 随机起始
+//
+// 5 屏架构:
+//   屏 1 (步 0)    Masthead   — 报头 + 字符级 stagger (字符逐字入场, 5 keyframe)
+//   屏 2 (步 1-4)  Chars      — 字符级 stagger 持续循环演示 (流体背景, 6 形状永久漂动)
+//   屏 3 (步 5-8)  PathDraw   — SVG 路径描线持续循环 (onComplete 链式)
+//   屏 4 (步 9-13) Interact   — 拖拽节点到 drop zone (Draggable + releaseEase)
+//   屏 5 (步 14+)  Outro      — 4 大共性全部应用 (流体循环 + stagger + 关键帧)
 
 import { useEffect, useRef } from "react";
-import { animate, stagger, draggable, svg } from "animejs";
+import {
+  animate,
+  stagger,
+  createTimeline,
+  createSpring,
+  utils,
+  Draggable,
+  svg,
+} from "animejs";
 import { useChapterProgress } from "../../hooks/useChapterProgress";
 import "./chapter.css";
 
-// 正确顺序（互动 2 的"对"答案）
-const CORRECT_ORDER = ["遮挡统一加记录", "截断打标签不超框", "小目标点框分水岭", "背景物理实体原则"];
+// 字符级 stagger 范式 (从 animejs v4 logo 提炼)
+function wrapInSpan(target: HTMLElement) {
+  let wrappedText = "";
+  for (const char of target.textContent) {
+    wrappedText += `<span>${char === " " ? "&nbsp;" : char}</span>`;
+  }
+  target.innerHTML = wrappedText;
+}
+
+// 流体循环 createKeyframes 范式 (从 layered-css-transforms 提炼)
+function createKeyframes(value: () => number) {
+  const eases = ["inOutQuad", "inOutCirc", "inOutSine", createSpring()];
+  const keyframes = [];
+  for (let i = 0; i < 100; i++) {
+    keyframes.push({
+      to: value(),
+      ease: utils.randomPick(eases),
+      duration: utils.random(300, 1600),
+    });
+  }
+  return keyframes;
+}
+
+// 流体形状链式循环 (从 layered-css-transforms 提炼)
+function animateShape(el: HTMLElement) {
+  const anim = createTimeline({
+    onComplete: () => animateShape(el),
+  })
+    .add(el, {
+      translateX: createKeyframes(() => utils.random(-40, 40)),
+      translateY: createKeyframes(() => utils.random(-40, 40)),
+      rotate: createKeyframes(() => utils.random(-180, 180)),
+    }, 0)
+    .init();
+}
 
 export default function ExampleAnime({ step }: { step: number }) {
   useChapterProgress(step, 30);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  // 视觉演示 1:节点滚动（步 4-7）
+  // 屏 1: 字符级 stagger 报头 (步 0)
   useEffect(() => {
-    if (step >= 4 && step <= 7) {
-      const anim = animate(".exa-nodes circle", {
-        opacity: [0, 1],
-        scale: [0, 1],
-        delay: stagger(50),
-        duration: 300,
-        ease: "outBack",
+    if (step !== 0) return;
+    const target = document.querySelector(".exa-masthead-title");
+    if (target) wrapInSpan(target as HTMLElement);
+    const anim = animate(".exa-masthead-title span", {
+      translateY: [
+        { to: [35, -80], duration: 190, ease: "outQuad" },
+        { to: 4, duration: 120, delay: 20, ease: "inQuad" },
+        { to: 0, duration: 120, ease: "outQuad" },
+      ],
+      scaleX: [
+        { to: [.25, .85], duration: 190, ease: "outQuad" },
+        { to: 1.08, duration: 120, delay: 85, ease: "inOutSine" },
+        { to: 1, duration: 260, delay: 25, ease: "outQuad" },
+      ],
+      scaleY: [
+        { to: [.4, 1.5], duration: 120, ease: "outSine" },
+        { to: .6, duration: 120, delay: 180, ease: "inOutSine" },
+        { to: 1.2, duration: 180, delay: 25, ease: "outQuad" },
+        { to: 1, duration: 190, delay: 15, ease: "outQuad" },
+      ],
+      duration: 400,
+      ease: "outSine",
+    }, stagger(80, { from: "center" }));
+    return () => anim.revert();
+  }, [step]);
+
+  // 屏 2: 流体循环装饰 (步 1-4 期间持续)
+  useEffect(() => {
+    if (step < 1 || step > 4) return;
+    const shapes = document.querySelectorAll(".exa-fluid-shape");
+    shapes.forEach((el) => animateShape(el as HTMLElement));
+    return () => {
+      shapes.forEach((el) => {
+        utils.set(el, { translateX: 0, translateY: 0, rotate: 0 });
       });
-      return () => anim.revert();
-    }
+    };
   }, [step]);
 
-  // 视觉演示 2:柱状图 grow（步 8-11）
+  // 屏 3: SVG 描线持续循环 (步 5-8)
   useEffect(() => {
-    if (step >= 8 && step <= 11) {
-      // SVG 描线作为主动画
-      svg.createDrawable(".exa-bar-fill", 0, 1500);
-      // CSS height transition 兜底
-      const bars = document.querySelectorAll<HTMLElement>(".exa-bar-fill");
-      bars.forEach((bar, i) => {
-        bar.animate(
-          [{ height: "0%" }, { height: "100%" }],
-          { duration: 1500, delay: i * 100, fill: "forwards" },
-        );
-      });
-    }
-  }, [step]);
-
-  // 互动 1:拖拽节点到 drop zone（步 12-17）
-  useEffect(() => {
-    if (step !== 12) return;
-    const drag = draggable(".exa-drag-node", {
-      container: ".exa-stage",
-      releaseEase: "outElastic(1, .8)",
-      onRelease: (self: any) => {
-        const dropZone = document.querySelector(".exa-drop-zone");
-        if (!dropZone) return;
-        const dzRect = dropZone.getBoundingClientRect();
-        const trRect = self.$target.getBoundingClientRect();
-        const cx = trRect.left + trRect.width / 2;
-        const cy = trRect.top + trRect.height / 2;
-        if (cx > dzRect.left && cx < dzRect.right && cy > dzRect.top && cy < dzRect.bottom) {
-          self.$target.style.opacity = "0";
-          self.$target.style.transform = "scale(0)";
-        }
-      },
-    });
-    return () => drag.disable();
-  }, [step]);
-
-  // 视觉演示 3:SVG 描线（步 18-22）
-  useEffect(() => {
-    if (step >= 18 && step <= 22) {
-      const drawable = svg.createDrawable(".exa-path-line", 0, 1200);
+    if (step < 5 || step > 8) return;
+    const drawable = svg.createDrawable(".exa-path", 0, 1500);
+    let cancelled = false;
+    const loop = () => {
+      if (cancelled) return;
       drawable.draw(0, "100%");
-    }
+      setTimeout(() => {
+        if (cancelled) return;
+        drawable.draw(0);
+        setTimeout(loop, 800);
+      }, 1500);
+    };
+    loop();
+    return () => {
+      cancelled = true;
+    };
   }, [step]);
 
-  // 互动 2:拖拽排序 4 张卡片（步 23-27）
+  // 屏 4: 拖拽节点到 drop zone (步 9-13)
   useEffect(() => {
-    if (step !== 23) return;
-    const cards = document.querySelectorAll<HTMLElement>(".exa-sort-card");
-    const drag = draggable(".exa-sort-card", {
+    if (step !== 9) return;
+    const drag = Draggable.create(".exa-drag-node", {
       container: ".exa-stage",
       releaseEase: "outElastic(1, .8)",
-      onDrop: (self: any) => {
-        // 判定卡片落在哪个槽位，根据文本对比 CORRECT_ORDER
-        const cardText = self.$target.textContent || "";
-        const correctIdx = CORRECT_ORDER.findIndex((c) => c === cardText);
-        if (correctIdx >= 0) {
-          self.$target.classList.add("correct");
+      onRelease: (self) => {
+        const dropZone = document.querySelector(".exa-drop-zone");
+        if (dropZone && isInBounds(self, dropZone as HTMLElement)) {
+          (self.$target as HTMLElement).style.opacity = "0";
         }
       },
     });
-    return () => drag.disable();
+    return () => {
+      drag[0].disable();
+    };
   }, [step]);
+
+  function isInBounds(self: any, target: HTMLElement): boolean {
+    const rect = target.getBoundingClientRect();
+    return (
+      self.x >= rect.left &&
+      self.x <= rect.right &&
+      self.y >= rect.top &&
+      self.y <= rect.bottom
+    );
+  }
 
   return (
     <div className="exa-root" ref={stageRef}>
       <div className="exa-stage">
         {step === 0 && <Screen0Masthead />}
-        {step >= 1 && step <= 3 && <ScreenIntro step={step} />}
-        {step >= 4 && step <= 7 && <ScreenNodes />}
-        {step >= 8 && step <= 11 && <ScreenBars />}
-        {step >= 12 && step <= 17 && <ScreenDrag />}
-        {step >= 18 && step <= 22 && <ScreenDraw />}
-        {step >= 23 && step <= 27 && <ScreenSort />}
-        {step >= 28 && step <= 29 && <ScreenOutro step={step} />}
+        {step >= 1 && step <= 4 && <ScreenChars />}
+        {step >= 5 && step <= 8 && <ScreenPathDraw />}
+        {step >= 9 && step <= 13 && <ScreenInteract />}
+        {step >= 14 && <ScreenOutro />}
       </div>
     </div>
   );
@@ -114,119 +170,68 @@ export default function ExampleAnime({ step }: { step: number }) {
 function Screen0Masthead() {
   return (
     <div className="exa-masthead">
-      <div className="exa-masthead-num">EX</div>
-      <div className="exa-masthead-title">animejs 实战</div>
+      <div className="exa-masthead-cat">EXAMPLE ANIME / 4 大共性 / 字符级 stagger</div>
+      <h1 className="exa-masthead-title">ANCHOR · 4 大共性</h1>
       <div className="exa-masthead-rule" />
     </div>
   );
 }
 
-function ScreenIntro({ step }: { step: number }) {
+function ScreenChars() {
+  // 流体循环装饰背景 — 6 形状永久漂动 (★ 共性 #1 随机 + #2 持续循环 + #4 独立 stagger 启动时机)
   return (
-    <div className="exa-intro">
-      {step >= 1 && <h2 className="exa-intro-h">这一节,我们要看三个真正动起来的图。</h2>}
-      {step >= 2 && <p className="exa-intro-d">节点滚动 / 柱状图生长 / SVG 路径描线 —— 都用 animejs v4 替代手写 keyframes。</p>}
-      {step >= 3 && <p className="exa-intro-d">两处互动:拖拽节点到删除区,拖拽排序 4 张作业指导书铁律。</p>}
+    <div className="exa-chars">
+      <svg className="exa-chars-fluid" viewBox="0 0 600 320" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <rect className="exa-fluid-shape" x="100" y="80" width="48" height="48" fill="none" stroke="var(--accent)" strokeWidth="2" />
+        <circle className="exa-fluid-shape" cx="200" cy="160" r="20" fill="none" stroke="var(--accent-tech)" strokeWidth="2" />
+        <polygon className="exa-fluid-shape" points="280,140 320,200 240,200" fill="none" stroke="var(--accent)" strokeWidth="2" />
+        <rect className="exa-fluid-shape" x="360" y="120" width="48" height="48" fill="none" stroke="var(--accent-tech)" strokeWidth="2" />
+        <circle className="exa-fluid-shape" cx="460" cy="180" r="20" fill="none" stroke="var(--accent)" strokeWidth="2" />
+        <polygon className="exa-fluid-shape" points="520,160 540,200 500,200" fill="none" stroke="var(--accent-tech)" strokeWidth="2" />
+      </svg>
+      <h2 className="exa-chars-h">流体循环 — 6 形状永久漂动</h2>
+      <p className="exa-chars-d">utils.random() 起始 + onComplete 链式 + 100 keyframes</p>
     </div>
   );
 }
 
-function ScreenNodes() {
-  // 50 个节点 SVG circle（步 4-7 期间由 animejs 错开 50ms 依次 opacity 0→1 + scale 0→1）
-  const circles = Array.from({ length: 50 }, (_, i) => (
-    <circle key={i} cx={100 + (i % 10) * 80} cy={150 + Math.floor(i / 10) * 60} r={20} fill="var(--accent)" />
-  ));
+function ScreenPathDraw() {
   return (
-    <svg className="exa-nodes" viewBox="0 0 900 500">
-      {circles}
-    </svg>
-  );
-}
-
-function ScreenBars() {
-  // 柱状图 grow（步 8-11 期间由 createDrawable + height animation 同时驱动）
-  return (
-    <div className="exa-bars">
-      <div className="exa-bar-row">
-        <div className="exa-bar-label">文本</div>
-        <div className="exa-bar-track"><div className="exa-bar-fill" style={{ width: "100%" }} /></div>
-      </div>
-      <div className="exa-bar-row">
-        <div className="exa-bar-label">语音</div>
-        <div className="exa-bar-track"><div className="exa-bar-fill" style={{ width: "70%" }} /></div>
-      </div>
-      <div className="exa-bar-row">
-        <div className="exa-bar-label">像素</div>
-        <div className="exa-bar-track"><div className="exa-bar-fill" style={{ width: "30%" }} /></div>
-      </div>
+    <div className="exa-pathdraw">
+      <div className="exa-pathdraw-cat">SVG 描线 · 持续循环</div>
+      <svg className="exa-pathdraw-svg" viewBox="0 0 600 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <path
+          className="exa-path"
+          d="M 20 100 Q 100 40, 200 100 T 380 100 T 580 100"
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="3"
+          strokeDasharray="600"
+          strokeDashoffset="600"
+        />
+      </svg>
+      <p className="exa-pathdraw-d">svg.createDrawable() + draw() 循环</p>
     </div>
   );
 }
 
-function ScreenDrag() {
-  // 5 个节点 + 右侧 drop zone（步 12-17 期间可拖拽）
+function ScreenInteract() {
   return (
-    <div className="exa-drag-stage">
-      <div className="exa-drag-hint">把 5 个错误节点拖到右侧"删除区"</div>
-      <div className="exa-drag-nodes">
-        {Array.from({ length: 5 }, (_, i) => (
-          <div key={i} className="exa-drag-node" data-no-advance>
-            {i + 1}
-          </div>
-        ))}
-      </div>
-      <div className="exa-drop-zone">删除区</div>
-    </div>
-  );
-}
-
-function ScreenDraw() {
-  // SVG 描线（步 18-22 期间由 createDrawable 驱动）
-  return (
-    <svg className="exa-svg-stage" viewBox="0 0 1000 500">
-      <path
-        className="exa-path-line"
-        d="M 100 250 Q 250 100 400 250 T 700 250 T 900 250"
-        strokeDasharray="1200"
-      />
-    </svg>
-  );
-}
-
-function ScreenSort() {
-  // 4 张铁律卡片（步 23-27 期间可拖拽排序）
-  const cards = [
-    "截断打标签不超框",
-    "背景物理实体原则",
-    "小目标点框分水岭",
-    "遮挡统一加记录",
-  ];
-  return (
-    <div className="exa-sort-stage">
-      <h2 className="exa-sort-h">把 4 张铁律拖到正确顺序</h2>
-      <div className="exa-sort-cards">
-        {cards.map((c, i) => (
-          <div key={i} className="exa-sort-card" data-no-advance>
-            {c}
-          </div>
-        ))}
-      </div>
-      <div className="exa-sort-slots">
-        <div className="exa-sort-slot">1</div>
-        <div className="exa-sort-slot">2</div>
-        <div className="exa-sort-slot">3</div>
-        <div className="exa-sort-slot">4</div>
+    <div className="exa-interact">
+      <div className="exa-interact-cat">拖拽节点到 drop zone</div>
+      <div className="exa-stage-wrap">
+        <div className="exa-drag-node" />
+        <div className="exa-drop-zone" />
       </div>
     </div>
   );
 }
 
-function ScreenOutro({ step }: { step: number }) {
+function ScreenOutro() {
   return (
     <div className="exa-outro">
-      <div className="exa-outro-rule" />
-      {step >= 28 && <h2 className="exa-outro-h">animejs v4 —— 真正动画 + 物理级拖拽</h2>}
-      {step >= 29 && <div className="exa-outro-by">— 替代手写 keyframes + Pointer Events</div>}
+      <h2 className="exa-outro-h">4 大共性全部应用</h2>
+      <p className="exa-outro-d">随机化 + 持续循环 + 多 keyframe + 独立 stagger</p>
     </div>
   );
 }
