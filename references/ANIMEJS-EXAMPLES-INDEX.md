@@ -158,6 +158,66 @@
 
 ---
 
+## 9. Three.js adapter (v4.5.0+ 内置, 真 3D 场景)
+
+> **何时读**: 你的项目用 `animejs ^4.5.0+`, 需要真 3D 场景 (光照 / PBR 材质 / 后处理 / 物理), **CSS 3D 表达不了**。
+> **何时不读**: 你的项目锁 `animejs ^4.4.1` — §6 不适用, 用 §1 CSS 3D 替代。
+> **官网文档**: https://animejs.com/documentation/adapters/three
+
+### 用法 (副作用导入)
+
+```js
+import * as THREE from "three";
+import { animate, createTimeline } from "animejs";
+import "animejs/adapters/three"; // ★ 副作用导入, 扩展 animate() 到 Three.js
+
+const cube = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial({ color: 0xff0000 }));
+scene.add(cube);
+
+animate(cube.position, { x: 100, y: 50, z: 0, duration: 1000, ease: "outBounce" });
+animate(cube.rotation, { x: Math.PI, y: Math.PI, duration: 2000 });
+animate(cube.material, { color: 0x00ff00, opacity: 0.8, duration: 1500 });
+```
+
+### 支持的 Three.js 类型
+
+| 类型 | 示例 |
+|---|---|
+| `Object3D` (位置 / 旋转 / 缩放) | `mesh.position`, `mesh.rotation`, `mesh.scale` |
+| `Materials` (color / opacity / emissive) | `mesh.material.color`, `mesh.material.opacity` |
+| `Lights` (intensity / distance) | `light.intensity`, `light.distance` |
+| `Cameras` (fov / position) | `camera.fov`, `camera.position` |
+| `Audio nodes` | `audioContext.destination` |
+| `UniformNode` (TSL / WebGPU) | `uniformNode.value` |
+| `InstancedMesh` | `instancedMesh.count` |
+
+### 配合 stagger 3D (v4.5.0 新增)
+
+```js
+// {x, y, z} 坐标 stagger
+animate(".dot", {
+  translateX: stagger(10, { grid: [10, 10, 10], from: [0.5, 0.5, 0.5] }),
+  translateY: stagger(10, { grid: [10, 10, 10], from: [0.5, 0.5, 0.5] }),
+  translateZ: stagger(10, { grid: [10, 10, 10], from: [0.5, 0.5, 0.5] }),
+  duration: 1500,
+});
+```
+
+### 速查表 (含 v4.5.0 Three.js 场景)
+
+| 需求 | 推荐 |
+|---|---|
+| 卡片堆 / 简单立方体 | §1 CSS 3D |
+| 光照 / PBR 材质 / 阴影 | §6 Three.js adapter (v4.5.0+) |
+| 物理模拟 (碰撞 / 重力) | §6 Three.js + cannon-es / rapier |
+| 大量粒子 (1000+) | §6 Three.js InstancedMesh |
+| 后处理 (bloom / blur) | §6 Three.js EffectComposer |
+| 简单入场 / 出场 | §4 基础 5 封装 (无需 §1/§6) |
+
+**对应 ANIMEJS-GUIDE.md**: §6 Three.js 集成
+
+---
+
 ## 8. 总览: 25 个示例速查表 (按 JS 行数排序)
 
 | 行数 | 示例 | 类型 |

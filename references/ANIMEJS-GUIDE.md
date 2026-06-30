@@ -14,7 +14,9 @@ LLM agent 接到"加动画"需求时, 按以下顺序判断 (互斥, 只走一�
 
 ```
 Q1: 你要做真 3D 立体感的物体 / 卡片堆 / 球面?
-  → YES: 走 §1 CSS 3D 路径 (animejs 官方做法, 不用 Three.js)
+  → 轻量 3D (卡片堆 / 立方体 / 静态透视): 走 §1 CSS 3D 路径
+  → 真 3D 场景 (光照 / 材质 / 后处理, v4.5.0+): 走 §6 Three.js adapter
+  → v4.4.1 项目: 只能走 §1 CSS 3D, 升 v4.5.0 后可用 §6
   → NO:  Q2
 
 Q2: 你的内容是字符 / 文本 / 单词级别的入场?
@@ -30,7 +32,34 @@ Q4: 你的画面是简单入场 / 出场 / 状态切换?
   →  仍想做"有质感的物体" → 走 §X 5 大共性 (含材质) 单独看
 ```
 
-**禁止**: Q1 选 Three.js — animejs 官方未支持, 实测会触发内部 `str.includes is not a function`。详见 §6。
+**v4.4.1 项目禁止直接 `animate(threeObj, ...)`** (实测抛 `str.includes is not a function`); **v4.5.0+ 项目可走 §6 Three.js adapter** (内置支持)。详见 §0.5 + §6。
+
+---
+
+## 0.5 anime.js 版本边界 (v4.4.1 vs v4.5.0+)
+
+> **必读**: 不同 anime.js 版本支持的路径差异极大, 直接决定 §1-§6 章节是否适用。
+
+| 版本 | 关键能力 | 影响章节 |
+|---|---|---|
+| **v4.0 - v4.4.1** | CSS / SVG / DOM 属性动画; `stagger` / `keyframes` / `createTimeline`; Draggable; onScroll | §1-§5 全部适用, §6 Three.js **不适用** |
+| **v4.5.0+ (2026-06-22)** | 新增 `registerAdapter()` API; **内置 Three.js adapter** (`animejs/adapters/three`); Stagger 3D (x/y/z + jitter + seed); Color pseudo-linear 混合 | §6 整段重写: Three.js **支持** (内置 adapter) |
+
+**v4.5.0 Three.js adapter 用法**:
+```js
+import "animejs/adapters/three"; // 副作用导入, 扩展 animate() 到 Three.js 对象
+import { animate, createTimeline } from "animejs";
+
+animate(cube.position, { x: 100, y: 0, z: 0, duration: 1000 });
+animate(mesh.material, { color: 0xff0000, duration: 1000 });
+animate(camera.position, { z: 500, duration: 1000 });
+```
+
+支持的 Three.js 类型: Object3D / materials / lights / cameras / audio nodes / UniformNode (TSL) / instanced meshes。
+
+**v4.4.1 → v4.5.0 迁移决策**:
+- 你的项目如果用 `animejs ^4.4.1` (package.json), **先升 ^4.5.0** 再用 §6 Three.js adapter
+- §1 CSS 3D 路径仍然适用 — **轻量 3D (卡片堆 / 简单旋转) 仍用 CSS 3D**, **真 3D 场景 (光照/材质/后处理) 才用 Three.js adapter**
 
 ---
 
@@ -222,7 +251,10 @@ Q4: 你的画面是简单入场 / 出场 / 状态切换?
 
 ---
 
-## 1. CSS 3D 立体路径 (Q1)
+## 1. CSS 3D 立体路径 (Q1, 轻量 3D 推荐, v4.5.0+ 可选 Three.js adapter)
+
+> **何时用 CSS 3D**: 卡片堆 / 简单立方体 / 静态透视场景 / 轻量 3D 旋转 — 浏览器原生支持, 0 依赖。
+> **何时改用 Three.js adapter (§6 v4.5.0+)**: 需要真 3D 光照 / 材质 / 后处理 / 复杂网格 / 物理引擎 — CSS 3D 表达不了。
 
 ### 1.1 何时用
 
@@ -519,17 +551,73 @@ useEffect(() => {
 
 ---
 
-## 6. Three.js 集成: 明确不支持
+## 6. Three.js 集成 (v4.5.0+ 内置 adapter)
 
-**animejs 官方未支持与 Three.js 直接互操作**。实测 animejs 内部对 `THREE.Group` / `THREE.Vector3` 等非 DOM 对象做属性解析时会抛 `Uncaught TypeError: str.includes is not a function` (内部 `getBoundingClientRect` / `parseFloat` 失败)。
+> **v4.5.0 重大变化** (2026-06-22 release): animejs 官方内置 Three.js adapter, 通过副作用导入扩展 `animate()` / `utils.set()` 到 Three.js 对象。**v4.4.1 仍不支持** (会抛 `str.includes is not a function`)。
 
-**替代方案 (按推荐度排序)**:
+### 6.1 用法 (v4.5.0+)
 
-1. **CSS 3D 替代 (推荐)**: 用 §1 的 `perspective` + `transform-style: preserve-3d` + `rotateY/X/Z` + `translateZ` 实现真 3D 立体感。animejs 官方 examples 25 个全部用此方式, 没有任何一个用 Three.js。
-2. **Three.js 单独渲染 + animejs 驱动 CSS 层**: 3D 场景用 Three.js 渲染静态/少量动画, 叠加层 (提示卡/UI) 用 animejs 驱动 CSS。**不互通, 各自管各自**。
-3. **Canvas 2D + animejs 驱动 JS Object 属性**: 见 `canvas-2d` 范例, animejs 支持 `animate(obj, { x: ..., y: ... })` 动画普通 JS Object 属性, 你手动用 RAF 同步到 Canvas 重绘。
+```js
+import * as THREE from "three";
+import { animate, createTimeline, utils } from "animejs";
+// ★ 关键: 副作用导入, 扩展 animate() 支持 Three.js 对象
+import "animejs/adapters/three";
 
-**禁止**: 直接 `animate(threeGroup, { ... })` 或 `animate(vector3, { x: ... })` — 必崩。
+// Object3D (位置 / 旋转 / 缩放)
+const cube = new THREE.Mesh(geo, mat);
+animate(cube.position, { x: 100, y: 0, z: 0, duration: 1000, ease: "outBounce" });
+animate(cube.rotation, { x: Math.PI, y: Math.PI / 2, duration: 2000 });
+animate(cube.scale, { x: 2, y: 2, z: 2, duration: 800 });
+
+// Materials (color / opacity / emissive)
+animate(mesh.material, {
+  color: 0xff0000,
+  emissive: 0x440000,
+  opacity: 0.8,
+  duration: 1500,
+});
+
+// Lights
+animate(light, { intensity: 2.5, distance: 100, duration: 1000 });
+
+// Cameras
+animate(camera.position, { z: 500, y: 50, duration: 2000, ease: "inOutQuad" });
+animate(camera, { fov: 60, duration: 1000 });
+
+// InstancedMesh
+animate(instancedMesh, { count: 1000, duration: 1500 });
+
+// TSL UniformNode (WebGPU)
+animate(uniformNode.value, { x: 10, duration: 1000 });
+```
+
+### 6.2 v4.4.1 兼容方案
+
+如果项目锁 v4.4.1 (或更早), **直接 `animate(threeObj, ...)` 必抛 `str.includes is not a function`**。
+
+**替代方案**:
+1. **CSS 3D 替代 (推荐)**: 见 §1。卡片堆 / 简单立方体 / 静态透视 — 0 依赖, 25 个官方 examples 全用此方式。
+2. **registerAdapter() 自定义**: v4.5.0+ 新 API。如果项目必须 v4.4.1, 升级到 v4.5.0 是最简路径。
+3. **Three.js + RAF 自驱**: Three.js 内部用 RAF 跑循环, 不需要 animejs。animejs 驱动 UI 层 (HTML/CSS 覆盖), 互不干扰。
+
+### 6.3 CSS 3D vs Three.js 决策表
+
+| 场景 | 推荐 | 原因 |
+|---|---|---|
+| 卡片堆 (3-20 张) | **CSS 3D** | 0 依赖, 性能足够 |
+| 简单立方体 (1-6 个) | **CSS 3D** | 浏览器原生反走样 |
+| 复杂网格 (>100 面) | **Three.js adapter** | CSS 性能下降 |
+| 真光照 / PBR 材质 / 阴影 | **Three.js adapter** | CSS 表达不了 |
+| 后处理 (bloom / blur) | **Three.js adapter** | CSS 后处理性能差 |
+| 物理模拟 (碰撞 / 重力) | **Three.js + 物理引擎** | CSS 表达不了 |
+| 文字 + 卡片小元素 | **CSS 3D** | 轻量场景 |
+
+### 6.4 何时用 §1 vs §6
+
+- **§1 CSS 3D**: 95% 课件场景 (5.4 / 5.5 / 5.6 现有 60+ 章节, 演示章 482a, 5.6 S1 段 860-862 重做后)
+- **§6 Three.js adapter**: 复杂 3D 场景才考虑 (5.6 段 S3-S5 段未来可能涉及)
+
+**禁止**: v4.4.1 项目直接 `animate(threeObj, ...)` — 必崩, 升级 v4.5.0 或用 §1 CSS 3D。
 
 ---
 
