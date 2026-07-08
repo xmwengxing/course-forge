@@ -1,0 +1,39 @@
+/* SubtitleStep — fixed bottom bar for spoken narration */
+
+.ss-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 24px 20px;
+  background: var(--shell);
+  border-top: 1px solid var(--rule);
+  min-height: 56px;
+  flex-shrink: 0;
+}
+
+.ss-chunk {
+  font-size: 22px;
+  color: var(--text);
+  line-height: 1.4;
+  text-align: center;
+  max-width: 90%;
+  letter-spacing: var(--track-snug, -0.005em);
+}
+
+.ss-bar--err {
+  background: var(--accent-warn);
+  color: var(--surface);
+}
+
+.ss-err {
+  font-size: 12px;
+  letter-spacing: var(--track-caps, 0.22em);
+  text-transform: uppercase;
+}
+
+.ss-empty {
+  color: var(--text-mute);
+  font-size: 18px;
+}

@@ -4,6 +4,15 @@ import { useStageScale } from "../hooks/useStageScale";
 interface Props {
   onAdvance(): void;
   children: ReactNode;
+  /**
+   * "viewport" (default) = full-screen fixed (`.app-shell`), used by
+   *   single-video mode where Stage owns the entire screen.
+   * "embedded" = normal flow (no `.app-shell`), used by course mode where
+   *   ChapterMenu + ModeControls + SubtitleStep share the screen with
+   *   Stage. The fitter is still 1920×1080 scaled, but `.app-stage-area`
+   *   above centers it within the main column.
+   */
+  layout?: "viewport" | "embedded";
 }
 
 /**
@@ -19,7 +28,7 @@ interface Props {
  * Surface colors come from the active theme's CSS custom properties
  * (var(--shell), var(--surface)) — see themes/<id>/tokens.css.
  */
-export function Stage({ onAdvance, children }: Props) {
+export function Stage({ onAdvance, children, layout = "viewport" }: Props) {
   const scale = useStageScale();
   const fitterStyle: CSSProperties = {
     width: 1920 * scale,
@@ -29,7 +38,7 @@ export function Stage({ onAdvance, children }: Props) {
     transform: `scale(${scale})`,
   };
   return (
-    <div className="app-shell">
+    <div className={layout === "embedded" ? "stage-embedded" : "app-shell"}>
       <div className="stage-fitter" style={fitterStyle}>
         <div
           className="stage-frame"

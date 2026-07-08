@@ -8,6 +8,8 @@ export interface ModeControlsProps {
   onModeChange: (m: PlaybackMode) => void;
   /** "space → start auto" hint text shown next to the button. */
   hint?: string;
+  onFullscreen?: () => void;
+  isFullscreen?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ export interface ModeControlsProps {
  *
  * Pressing M on the keyboard cycles through these.
  */
-export function ModeControls({ mode, onModeChange, hint }: ModeControlsProps) {
+export function ModeControls({ mode, onModeChange, hint, onFullscreen, isFullscreen }: ModeControlsProps) {
   const set = useCallback(
     (target: PlaybackMode) => () => onModeChange(target),
     [onModeChange],
@@ -47,6 +49,18 @@ export function ModeControls({ mode, onModeChange, hint }: ModeControlsProps) {
             </span>
           </button>
         ))}
+        {onFullscreen && (
+          <button
+            type="button"
+            className="mc-btn mc-btn--fs"
+            onClick={onFullscreen}
+            aria-pressed={!!isFullscreen}
+            title="F"
+          >
+            <span className="mc-btn-en label-mono">FS</span>
+            <span className="mc-btn-cn serif-cn">{isFullscreen ? "退出全屏" : "全屏"}</span>
+          </button>
+        )}
       </div>
       {hint && <div className="mc-hint label-mono">{hint}</div>}
     </div>
