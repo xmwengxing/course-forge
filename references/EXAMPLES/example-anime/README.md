@@ -226,7 +226,7 @@ function createKeyframes(value: () => number) {
 - 链接卡片收尾 — 静态布局
 - 章节报头/页脚印章 — 单一 `svg.createDrawable` 描线即可
 
-→ 这些场景的视觉原语已在 `../CHAPTER-CRAFT.md` Part 3 视觉工具箱 (CSS / SVG / Canvas / JS 全栈) 里覆盖.
+→ 这些场景的视觉原语已在 `../CHAPTER-CRAFT.md` § 字体 / 配色 / 动画 / 留白 —— 视频演示基本审美 (CSS / SVG / Canvas / JS 全栈) 里覆盖.
 
 ## 下一步
 

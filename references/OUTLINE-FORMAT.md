@@ -19,7 +19,7 @@
 > [`AUDIO.md`](AUDIO.md)）。如果实现时章节 step 数和 outline 不一致，
 > 回过来同步 outline 即可，不需要纠结"对得严丝合缝"。
 
-> **写 outline 前必读**（双源原则，[CHAPTER-CRAFT.md Part 0 原则 10](CHAPTER-CRAFT.md#10-双源原则scriptmd-定节拍--articlemd-定画面密度)）：
+> **写 outline 前必读**（双源原则，详见 [`CHAPTER-CRAFT.md` § 双源：节奏跟口播稿，细节回原文章](CHAPTER-CRAFT.md)）：
 >
 > - **`script.md`** —— 决定**节拍**：按 `---` 切节拍，每节拍 1~2 step、估时
 > - **`article.md`**（如有）—— 决定**画面信息密度**：每章首段抽**信息池**
@@ -58,7 +58,7 @@
 
 > **关于时长**：outline 里**只**写 step 的 `(~Ts)` 口播估时（音画对齐
 > 用），**绝对不写**动画时长 / 错峰量 / keyframe 数值。这些都在章节开发
-> 阶段决定（[`CHAPTER-CRAFT.md`](CHAPTER-CRAFT.md) Part 3 时长参考）。
+> 阶段决定（[`CHAPTER-CRAFT.md`](CHAPTER-CRAFT.md) § 字体 / 配色 / 动画 / 留白 —— 视频演示基本审美）。
 
 > **想看具象示例**：
 > - 钩子型开场结构 → [`EXAMPLES/hook-chapter/`](EXAMPLES/hook-chapter/)

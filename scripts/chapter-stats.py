@@ -1,55 +1,36 @@
 #!/usr/bin/env python3
+"""chapter-stats.py — Analyze audio-segments.json to report per-chapter and
+per-section narration/estimated-video duration.
+
+Usage:
+  python3 scripts/chapter-stats.py
+  python3 scripts/chapter-stats.py --file=audio-segments.json --json
+  python3 scripts/chapter-stats.py --section=S2
+
+Section inference (generic):
+  - "S1".."S5" suffix on chapter id  → that section
+  - Anything else                   → "未分组"
 """
-chapter-stats.py — 验收时统计课件时长
 
-从 audio-segments.json 自动算出每章 / 每段的:
-  - 步数
-  - 中文字数
-  - 纯朗读时长（380ms/字）
-  - 视频估算时长（+ 视觉过渡 1.5s/步）
-
-用法:
-  python3 scripts/chapter-stats.py                          # 用 presentation/audio-segments.json
-  python3 scripts/chapter-stats.py --file <path>            # 指定其他 audio-segments.json
-  python3 scripts/chapter-stats.py --section <prefix>       # 只看某 section (如 t6)
-  python3 scripts/chapter-stats.py --json                  # 输出 JSON (供其他脚本消费)
-
-音频语速参考: 350-400ms/字 (录屏时通常 300ms/字 → 视频比纯朗读短)
-"""
 import argparse
 import json
 import sys
 from collections import defaultdict
 from pathlib import Path
 
-# 默认参数
-DEFAULT_MS_PER_CHAR = 380       # 纯朗读（朗读录音）
-DEFAULT_STEP_VISUAL_S = 1.5     # 每步视觉过渡 + 元素入场
+DEFAULT_MS_PER_CHAR = 380      # narration ms per Chinese char
+DEFAULT_STEP_VISUAL_S = 1.5    # visual transition + element entry per step
 
-# 章节 → 段 (S1-S5) 的映射（基于 1.6 课件的命名约定）
+
 def guess_section(chapter_id: str) -> str:
-    # 启发式：从章节名判断属于哪个段
-    # 1.6 课件的命名：t6-bill-gate/role-shift/toxic-warning/promise → S1
-    #                t6-bpmn-symbols/as-is/to-be/flowchart/recap-s2 → S2
-    #                t6-ecrs-intro/eliminate/combine/rearrange/simplify/recap-s3 → S3
-    #                t6-reimburse-as-is/pause-think/reimburse-solve/magic-experience/recap-s4 → S4
-    #                t6-mindmap/quiz/assignment/next → S5
-    S1 = {"bill-gate", "role-shift", "toxic-warning", "promise"}
-    S2 = {"bpmn-symbols", "as-is", "to-be", "flowchart", "recap-s2"}
-    S3 = {"ecrs-intro", "eliminate", "combine", "rearrange", "simplify", "recap-s3"}
-    S4 = {"reimburse-as-is", "pause-think", "reimburse-solve", "magic-experience", "recap-s4"}
-    S5 = {"mindmap", "quiz", "assignment", "next"}
-    short = chapter_id.split("-", 1)[-1] if "-" in chapter_id else chapter_id
-    if short in S1: return "S1"
-    if short in S2: return "S2"
-    if short in S3: return "S3"
-    if short in S4: return "S4"
-    if short in S5: return "S5"
-    return "其他"
+    """Generic: use the last dash-delimited segment if it starts with 'S' followed by digits."""
+    last = chapter_id.rsplit("-", 1)[-1]
+    if len(last) >= 2 and last[0].upper() == "S" and last[1:].isdigit():
+        return last.upper()
+    return "未分组"
 
 
 def is_chinese_char(c: str) -> bool:
-    """简单中文字符判定（覆盖 90% 课件场景）"""
     cp = ord(c)
     return (
         0x4E00 <= cp <= 0x9FFF
@@ -59,12 +40,10 @@ def is_chinese_char(c: str) -> bool:
 
 
 def count_chinese_chars(text: str) -> int:
-    """只统计中文字符（不含英文/数字/标点）"""
     return sum(1 for c in text if is_chinese_char(c))
 
 
 def fmt_duration(seconds: float) -> str:
-    """格式化时长"""
     if seconds < 60:
         return f"{seconds:.1f}s"
     minutes = int(seconds // 60)
@@ -77,9 +56,8 @@ def fmt_int(n: int) -> str:
 
 
 def analyze(segments, ms_per_char: float, step_visual_s: float):
-    """分析 audio-segments.json，返回按 section 分组的数据"""
-    by_section = defaultdict(lambda: {"steps": 0, "chars": 0, "texts": 0})
-    by_chapter = defaultdict(lambda: {"section": "其他", "steps": 0, "chars": 0})
+    by_section = defaultdict(lambda: {"steps": 0, "chars": 0})
+    by_chapter = defaultdict(lambda: {"section": "未分组", "steps": 0, "chars": 0})
 
     for seg in segments:
         ch = seg["chapter"]
@@ -90,9 +68,8 @@ def analyze(segments, ms_per_char: float, step_visual_s: float):
         by_section[section]["steps"] += 1
         by_section[section]["chars"] += count_chinese_chars(seg.get("text", ""))
 
-    # 计算时长
     for d in [by_section, by_chapter]:
-        for k, v in d.items():
+        for v in d.values():
             v["audio_s"] = v["chars"] * ms_per_char / 1000
             v["video_s"] = v["audio_s"] + v["steps"] * step_visual_s
     return by_section, by_chapter
@@ -101,20 +78,17 @@ def analyze(segments, ms_per_char: float, step_visual_s: float):
 def print_report(segments, ms_per_char, step_visual_s, only_section=None):
     by_section, by_chapter = analyze(segments, ms_per_char, step_visual_s)
 
-    # 过滤（支持段名 S1-S5 或课程前缀 t6/t2）
     if only_section:
         if only_section.upper().startswith("S"):
-            by_section = {k: v for k, v in by_section.items() if k == only_section}
-            by_chapter = {k: v for k, v in by_chapter.items() if v["section"] == only_section}
+            by_section = {k: v for k, v in by_section.items() if k == only_section.upper()}
+            by_chapter = {k: v for k, v in by_chapter.items() if v["section"] == only_section.upper()}
         else:
-            # 按课程前缀过滤 (如 t6) — 用过滤后的 segments 重新计算
+            # filter by chapter-id prefix
             filtered_segs = [s for s in segments if s["chapter"].startswith(only_section)]
             by_section, by_chapter = analyze(filtered_segs, ms_per_char, step_visual_s)
 
-    # 排序
     sorted_chapters = sorted(by_chapter.keys())
 
-    # 打印
     print("=" * 80)
     print(f"📊 课件时长统计 (audio_ms={ms_per_char:.0f}ms, visual={step_visual_s:.1f}s/step)")
     print("=" * 80)
@@ -122,10 +96,8 @@ def print_report(segments, ms_per_char, step_visual_s, only_section=None):
     print(f"{'章节':<32} {'段':<6} {'步数':>4} {'字数':>6} {'音频时长':>10} {'视频估算':>10}")
     print("-" * 80)
 
-    total_steps = 0
-    total_chars = 0
-    total_audio_s = 0
-    total_video_s = 0
+    total_steps = total_chars = 0
+    total_audio_s = total_video_s = 0
     section_audio_s = defaultdict(float)
     section_video_s = defaultdict(float)
     section_steps = defaultdict(int)
@@ -145,13 +117,10 @@ def print_report(segments, ms_per_char, step_visual_s, only_section=None):
         section_steps[sec] += d["steps"]
         section_chars[sec] += d["chars"]
 
-    # 按段小计
     print("-" * 80)
     print("【按段小计】")
     print(f"{'段':<6} {'章节数':>6} {'步数':>4} {'字数':>6} {'音频时长':>10} {'视频估算':>10}")
-    for sec in ["S1", "S2", "S3", "S4", "S5", "其他"]:
-        if sec not in section_audio_s:
-            continue
+    for sec in sorted(section_audio_s.keys()):
         chapters_in_sec = [ch for ch, d in by_chapter.items() if d["section"] == sec]
         print(f"{sec:<6} {len(chapters_in_sec):>6} {section_steps[sec]:>4} "
               f"{fmt_int(section_chars[sec]):>6} "
@@ -166,38 +135,19 @@ def print_report(segments, ms_per_char, step_visual_s, only_section=None):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="验收时统计课件时长")
-    parser.add_argument(
-        "--file",
-        type=Path,
-        default=Path("presentation/audio-segments.json"),
-        help="audio-segments.json 路径（默认: presentation/audio-segments.json）",
-    )
-    parser.add_argument(
-        "--section",
-        help="只显示某段或某前缀 (如 S1/S2/S3/S4/S5 或 t6/t2 课程前缀)",
-    )
-    parser.add_argument(
-        "--audio-ms",
-        type=float,
-        default=DEFAULT_MS_PER_CHAR,
-        help=f"每字毫秒（默认 {DEFAULT_MS_PER_CHAR}）",
-    )
-    parser.add_argument(
-        "--visual-s",
-        type=float,
-        default=DEFAULT_STEP_VISUAL_S,
-        help=f"每步视觉过渡秒数（默认 {DEFAULT_STEP_VISUAL_S}）",
-    )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="输出 JSON 格式",
-    )
+    parser = argparse.ArgumentParser(description="Analyze audio-segments.json: per-chapter and per-section narration/estimated-video duration.")
+    parser.add_argument("--file", type=Path, default=Path("presentation/audio-segments.json"),
+                        help="audio-segments.json path (default: presentation/audio-segments.json)")
+    parser.add_argument("--section", help="Filter to one section (e.g. S2) or one chapter-id prefix")
+    parser.add_argument("--audio-ms", type=float, default=DEFAULT_MS_PER_CHAR,
+                        help=f"ms per Chinese char (default {DEFAULT_MS_PER_CHAR})")
+    parser.add_argument("--visual-s", type=float, default=DEFAULT_STEP_VISUAL_S,
+                        help=f"visual transition seconds per step (default {DEFAULT_STEP_VISUAL_S})")
+    parser.add_argument("--json", action="store_true", help="Output JSON instead of a report")
     args = parser.parse_args()
 
     if not args.file.exists():
-        print(f"❌ {args.file} 不存在", file=sys.stderr)
+        print(f"❌ {args.file} does not exist", file=sys.stderr)
         sys.exit(1)
 
     with open(args.file) as f:

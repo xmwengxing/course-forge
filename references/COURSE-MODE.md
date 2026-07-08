@@ -7,7 +7,7 @@
 
 > **课程模式 5 级术语**（与 SKILL 主体"章"对齐，避免歧义）：
 > - **课 (Section)** = 整节课件（多段课程的顶层单元，自己定义命名），JSON 字段 `sections`
-> - **段 (Segment)** = 课内主题分块（S1~S5），JSON 字段 `segments`
+> - **段 (Segment)** = 课内主题分块（id 形如 S1、S2...，**段数按内容需要灵活切分**，常见 1~5 段），JSON 字段 `segments`
 > - **小节 (Lesson)** = 段下内容编排单位（agent 切分时的人为分组，**不进入 JSON**）
 > - **章 (Chapter)** = 30-60s 画面 = N 步 = **SKILL 主体"章"**（JSON 字段 `chapters`）
 > - 步 (Step) = 最小口播节拍（与 SKILL 主体同义）

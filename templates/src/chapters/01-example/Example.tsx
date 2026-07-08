@@ -80,25 +80,27 @@ export default function ExampleChapter({ step }: ChapterStepProps) {
   }
 
   /* Step 2 — pull-quote close */
-  return (
-    <div className="ex-scene scene-pad ex-close">
-      <div className="ex-close-inner">
-        <div className="kicker">Now</div>
-        <div className="pull-quote ex-quote">
-          <MaskReveal show duration={1100}>
-            <span className="serif-cn">Replace this with </span>
-          </MaskReveal>
-          <MaskReveal show delay={400} duration={1100}>
-            <span className="serif-it ex-em">your own&nbsp;</span>
-          </MaskReveal>
-          <MaskReveal show delay={760} duration={1100}>
-            <span className="serif-cn">chapters.</span>
-          </MaskReveal>
-        </div>
-        <div className="ex-close-foot label-mono">
-          See SKILL.md / CHAPTER-CRAFT.md / THEMES.md
+  if (step === 2) {
+    return (
+      <div className="ex-scene scene-pad ex-close">
+        <div className="ex-close-inner">
+          <div className="kicker">Now</div>
+          <div className="pull-quote ex-quote">
+            <MaskReveal show duration={1100}>
+              <span className="serif-cn">Replace this with </span>
+            </MaskReveal>
+            <MaskReveal show delay={400} duration={1100}>
+              <span className="serif-it ex-em">your own&nbsp;</span>
+            </MaskReveal>
+            <MaskReveal show delay={760} duration={1100}>
+              <span className="serif-cn">chapters.</span>
+            </MaskReveal>
+          </div>
+          <div className="ex-close-foot label-mono">
+            See SKILL.md / CHAPTER-CRAFT.md / THEMES.md
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 }

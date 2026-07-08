@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # ─────────────────────────────────────────────────────────────
-# scaffold.sh —— 一键脚手架，创建一个 video-presentation 项目。
+# scaffold.sh —— 一键脚手架，创建一个 course-forge 项目。
 #
 # 用法：
 #   bash scripts/scaffold.sh <target-dir> [--theme=<id>]
 #   bash scripts/scaffold.sh --list-themes
 #
 # 例子：
-#   bash <path-to-web-video-presentation>/scripts/scaffold.sh ./presentation
-#   bash <path-to-web-video-presentation>/scripts/scaffold.sh ./talk --theme=paper-press
-#   bash <path-to-web-video-presentation>/scripts/scaffold.sh --list-themes
+#   bash <path-to-course-forge>/scripts/scaffold.sh ./presentation
+#   bash <path-to-course-forge>/scripts/scaffold.sh ./talk --theme=paper-press
+#   bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 #
 # 跑完后，看 SKILL.md "Phase 2.4 实现单章" + references/CHAPTER-CRAFT.md
 # 了解每章怎么写。卡壳时翻 references/EXAMPLES/ 找完整章节 anchor。
 #
 # 之后切换主题，覆盖一个文件即可：
-#   cp <path-to-web-video-presentation>/themes/<id>/tokens.css \
+#   cp <path-to-course-forge>/themes/<id>/tokens.css \
 #      <project>/src/styles/tokens.css
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
@@ -164,6 +164,8 @@ cp "$TEMPLATES/scripts/tts-providers/minimax.sh"  scripts/tts-providers/minimax.
 cp "$TEMPLATES/scripts/tts-providers/openai.sh"   scripts/tts-providers/openai.sh
 cp "$TEMPLATES/scripts/compress-audio.sh"     scripts/compress-audio.sh
 chmod +x scripts/compress-audio.sh
+cp "$TEMPLATES/scripts/regenerate-course-json.py" scripts/regenerate-course-json.py
+chmod +x scripts/regenerate-course-json.py
 
 # Wire the audio scripts into npm so contributors don't have to remember
 # the exact command. Uses node to merge into the existing package.json.
@@ -174,6 +176,7 @@ p.scripts = Object.assign({}, p.scripts, {
   "extract-narrations": "tsx scripts/extract-narrations.ts",
   "synthesize-audio":   "bash scripts/synthesize-audio.sh",
   "compress-audio":     "bash scripts/compress-audio.sh",
+  "regenerate-course-json": "python3 scripts/regenerate-course-json.py",
 });
 fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
 '
@@ -208,7 +211,7 @@ cat <<EOF
   • 把 src/chapters/01-example/ 替换成你自己的章节
     （流程见 SKILL.md "Phase 2.4 实现单章" —— 每章一次到位完整版本，
      不分骨架 / 精修两步；动画选型由 chapter agent 按 CHAPTER-CRAFT.md
-     Part 0 原则 7 + Part 1 五问决定）。
+     § 这是视频，不是 PPT / § 视觉中心：舞台中心 ≠ 元素居中 决定）。
   • 在 src/registry/chapters.ts 注册每个新章节。
   • **每章必须有 narrations.ts**（与 Example.tsx 同目录），
     数组长度 = step 数，是音频合成 + Auto 模式的唯一真相源。
@@ -231,9 +234,9 @@ cat <<EOF
 写章节时必读（单一入口，路径在 SKILL 仓库内）：
 
   • $SKILL_DIR/references/CHAPTER-CRAFT.md
-      Part 0 十条原则 / Part 1 开工 5 问 / Part 2 关系→动作决策树 /
-      Part 3 视觉工具箱 / Part 4 时长 / Part 5 反 AI 味反模式 /
-      Part 6 代码硬规则 / Part 7 完工自检 / Part 8 反馈速查
+      十条原则 → 视觉演示要求 → 逐步揭示 → 内容取舍 → 双源原则 →
+      视频演示审美 → 避免 AI 味 → 代码层最小约束 → 完工自检 →
+      附录 L: animejs 升级
   • $SKILL_DIR/themes/$THEME/theme.json
       看 descriptionZh / mood / bestFor —— 参考主题气质
       （动画 / 时长 / 字号 / emoji 由 chapter agent 在每章自由决定）

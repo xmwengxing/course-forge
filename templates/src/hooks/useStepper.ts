@@ -2,8 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChapterDef } from "../registry/types";
 
 /**
- * Bump this when chapter step counts / structure change so old persisted
- * cursors don't land mid-removed-step.
+ * Bump the trailing version (v4 → v5 → ...) when chapter step counts /
+ * structure change so old persisted cursors don't land mid-removed-step.
+ *
+ * Known limitation: the key is global per origin, so two different
+ * courseware projects served from the same host will share the same
+ * stored cursor. For multi-course deployment, prefer deploying each
+ * course to its own origin or subpath.
  */
 const STORAGE_KEY = "presentation-cursor-v4";
 

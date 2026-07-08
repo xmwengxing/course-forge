@@ -36,7 +36,7 @@ npm run synthesize-audio -- --force
 
 | 文件 | 后端 | 鉴权 | 备注 |
 |---|---|---|---|
-| `minimax.sh` | MiniMax `mmx` CLI | `mmx auth login --api-key` | **默认**；中文口播质量稳 |
+| `minimax.sh` | MiniMax T2A v2 (direct curl) | `MINIMAX_API_KEY` env var | **默认**；中文口播质量稳；无额外 CLI 依赖 |
 | `openai.sh` | OpenAI Audio Speech API | `OPENAI_API_KEY` env var | curl-based；多数 agent 已有 key |
 
 只内置这两个 —— 我们不替你做更多技术选型。其它后端的代码片段在下面，

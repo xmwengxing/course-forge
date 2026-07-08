@@ -1,175 +1,149 @@
 # Course Forge · 课件锻造台
 
-**将知识文档转化为分段式互动课件 — 带旁白配音、全场景交互和嵌入式评估。可嵌入 Web 应用或录制为独立视频。**
+把一份知识文档或口播稿，做成可录屏的 16:9 点击驱动网页演示——可选 TTS 配音、按句切分字幕，最后嵌入 Web 应用或导出 MP4。
 
-[English](./README.md) · [中文文档](./README.zh-CN.md)
+[English](./README.md) · [中文文档](./README.zh-CN.md) · [技能入口](./SKILL.md)
 
 ---
 
-`course-forge` 构建可用于录屏的 Vite + React + TypeScript 互动式课件。从 5 分钟的微课到完整课程，从一份知识文档或口播稿开始，技能引导你完成段规划、互动章节开发、TTS 语音合成、字幕时序生成和部署——每个关键节点都有硬性人工确认。完成的课件可嵌入 Web 应用或录制为独立视频文件。
+## 它做什么
 
-**源于 280+ 章的生产级课件开发**，覆盖文本、视频、语音、点云等多模态数据处理等教学场景。
+你提供一篇文章或口播稿。技能引导 agent 走完：
+
+1. 写口播稿 (`script.md`) 和章节开发计划 (`outline.md`)
+2. 跟你对齐 5 件事：稿子 / outline / 主题 / 素材 / 开发模式
+3. 脚手架一个 Vite + React + TS 项目，逐章实现（**第 1 章必须在主线程作为锚点**）
+4. 可选地用可插拔 TTS（MiniMax / OpenAI / Edge / 自带）合成音频
+5. 嵌入 Web 应用，或自动录屏为 MP4
+
+产出是纯静态的 `dist/`，可以部署到任何地方。
 
 ---
 
 ## 安装
 
-### 方式 A · `skills` CLI (npx) — 推荐
-
 ```bash
-# 完整安装
+# 推荐 — skills CLI
 npx skills add xmwengxing/course-forge
-# 最小安装
-npx skills add xmwengxing/course-forge -s course-forge --minimal
-```
 
-### 方式 B · 手动复制
-
-```bash
+# 或手动克隆
 git clone https://github.com/xmwengxing/course-forge.git
-cp -r course-forge /你的项目/.opencode/skills/
+cp -r course-forge /��的项目/.opencode/skills/
 ```
+
+Claude Code 还可以走插件市场：`/plugin marketplace add xmwengxing/course-forge`。
 
 ---
 
 ## 快速开始
 
 ```bash
-npx skills add xmwengxing/course-forge
+# 1. 安装（见上）
+
+# 2. 脚手架一个课件项目
 bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk-garden
+
+# 3. 把原文交给 agent，说：
+#    "用 course-forge 从 docs/my-knowledge-doc.md 创建课件"
 ```
 
-然后对 AI 说："用 course-forge 从 docs/xxx.md 创建课件"
+agent 会产出 `script.md` + `outline.md`，走完 5 件事对齐节点，然后逐章实现。完整工作流见 [`SKILL.md`](./SKILL.md)。
 
 ---
 
-## 核心能力
+## 内置主题
 
-| 能力 | 描述 |
-|:--|:--|
-| **交互** | **无边界** — 拖拽、点击、输入、切换、3D 旋转、实时预览。CSS+HTML+React 意味着 Web 能实现的任何交互，课件都能体现——不限于预设题型 |
-| **时长灵活** | **5 分钟微课到完整课程** — 段落越短交互密度越高；好的口播稿搭配动态画面，被动视频秒变互动演示 |
-| **课程架构** | **课 → 段(S1-S5) → 章** 三级 `course.json` 结构，自动生成脚本 |
-| **评估体系** | **柯氏四级评估** (L1-L4) 自然嵌入课程流程 |
-| **字幕系统** | 字数占比分配 + 80字句界 + 0-indexed 对齐。**双模式**：默认（ffprobe + 字数占比）和 MiniMax 词级（逐字 ms 精准） |
-| **分发方式** | 嵌入 Web 应用 (新窗口/iframe/DB驱动) **或** 录制为视频 (`bash scripts/record.sh`) |
-| **教学方法** | 视觉化演示、极端场景推演、案发现场复盘 |
+6 套主题，每套独立的设计 DNA——不是简单的换色。按情绪挑，或复制一份作为你自己的起点：
+
+| midnight-press | chalk-garden | paper-press | newsroom | blueprint | bauhaus-bold |
+|:--:|:--:|:--:|:--:|:--:|:--:|
+| 暗色电影感 | 手写粉笔 | 浅色编辑级 | 报刊衬线 | 技术蓝图 | 现代主义 |
+
+完整设计签名、token 契约和"自创主题"流程见 [`references/THEMES.md`](references/THEMES.md)。
 
 ---
 
-## 工作流
+## 工作流速览
 
 ```
-  用户提供知识文档 / 课件大纲 / 口播稿
-                 │
-  ┌──────────────┴──────────────┐
-  │ Phase 0 — 输入与内容准备 ▼  │
-  │  0.1  识别输入类型          │
-  │  0.2  生成口播稿            │        用户审阅
-  │  0.3  提出 S1-S5 拆分方案   │        用户确认
-  │  0.4  选择主题              │
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 1 — 逐段开发          │
-  │  1.1  脚手架搭建            │
-  │  1.2  开发 S1 → 验收       │◄── 逐段验收汇报时长
-  │  ...  开发 S2 → 验收       │
-  │  1.N  开发 S5 → 验收       │
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 2 — 音频与字幕        │
-  │  2.1  合成 TTS 旁白         │    MiniMax / OpenAI / Edge
-  │  2.2  压缩音频（可选）       │    64kbps → ↓50%
-  │  2.3  生成字幕时序          │    ffprobe 按字分配
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 3 — 构建与验收        │
-  │  3.1  npm run build → dist/ │    纯静态文件
-  │  3.2  本地预览              │    npx serve dist
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 4 — 部署 / 录制       │
-  │  4.1  嵌入 Web 应用         │    新窗口 / iframe / DB驱动
-  │  4.2  录制为视频            │    bash scripts/record.sh
-  └─────────────────────────────┘
+Phase 1  内容编写    →  script.md + outline.md
+                       [Checkpoint Plan]  对齐 5 件事
+Phase 2  网页开发    →  脚手架 + 章节（第 1 章 = 锚点）
+                       [用户验收]        锚点必须先通过
+                       →  第 2..N 章    （逐章 / 顺序 / 并行）
+Phase 3  音频（可选）→  TTS 合成 + 按句切分字幕
+Phase 4  部署        →  嵌入（新窗口 / iframe / DB）  OR  录屏为 MP4
 ```
+
+`[]` 行是硬节点——agent 必须在每个节点暂停等人审。每个阶段的读文件指引见 [`SKILL.md`](./SKILL.md) § 文件读取指南。
 
 ---
 
-## 课程架构
-
-`course-forge` 使用 **课 (Lesson) → 段 (Segment) → 章 (Chapter)** 三级架构：
+## 课程层级（课程模式）
 
 ```
-course/
-├── course.json              # 课 > 段(S1-S5) > 章
-├── presentation/
-│   ├── src/chapters/        # 每章一个目录
-│   │   ├── 01-opening/      # TSX + CSS + narrations.ts
-│   │   └── ...
-│   ├── public/
-│   │   ├── audio/           # 合成音频 (gitignored)
-│   │   └── subtitle-timing.json
-│   └── scripts/
-│       ├── tts-providers/   # 可替换 TTS 后端
-│       └── record.sh        # 自动录屏为视频
-└── regenerate-course-json.py
+Course   — 单门领域或完整课程（如"X 入门"）
+Segment  — S1..SN，课内的主题块（导入 / 精讲 / 案例 / 收官 / ...）
+Chapter  — 30~60s 屏 = N 步，技能实际构建的最小单元
+Step     — 单个口播节拍 = 一屏整画内容
 ```
 
-### 段拆分参考
-
-| 口播稿字数 | 建议拆分 | 章数 | 时长 |
-|:--|:--|:--|:--|
-| ≤ 2,000 字 | 2-3 段 | 6-12 | 10-20 min |
-| 2,000-5,000 | 3-5 段 (S1-S3/S5) | 12-25 | 20-40 min |
-| 5,000-8,000 | 5 段 (S1-S5) | 20-35 | 40-60 min |
-| > 8,000 | 考虑拆分为独立课 | — | — |
-
-> 段落越短 + 互动画面越强 = 知识密度越高。5 分钟微课 = 一段 S1-S2 即可。
-
-### S1-S5 标准模板
-
-| 段 | 类型 | 教学内容 | 方法 |
-|:--|:--|:--|:--|
-| S1 | 导入 | 事故案例/冲突场景 | 案发现场复盘 |
-| S2 | 知识精讲 | 核心概念/技术原理 | 视觉化演示 |
-| S3 | 案例演示 | 真实数据/操作步骤 | 极端场景推演 |
-| S4 | 难点攻克 | 边界案例/常见陷阱 | 启发式设问 |
-| S5 | 总结通关 | 复盘/弹题/作业 | 柯氏四级评估 |
-| S6+ | 扩展 | 知识深化/新增专题 | 任意 |
+**单视频模式（最常见）跳过 Course 和 Segment 两级**——`course.json` 可删。详见 [`references/COURSE-MODE.md`](references/COURSE-MODE.md)。
 
 ---
 
-## 关键特性
+## 架构不变量
 
-### 逐段开发
-大文档按 S1-S5 或更少段拆分，每段独立开发验收。5 分钟微课可只用 1-2 段。
+三件事撑起整个系统。破坏任何一件，章节、音频、章节菜单都会跟着崩：
 
-### 设计体系
-内置设计约束防止 AI-slop：指定字体栈（Noto Sans SC / Inter）、强制颜色 token、禁用纯黑纯白、1920×1080 舞台空间编排、8 种布局模式 + 10 类交互模式，强制多样性规则（连续两章不得重复布局或交互模式）。
+1. **`narrations.ts` 是单一真相源** —— 数组长度必须等于章节 `.tsx` 里 `if (step === N)` 出现的最大 N + 1。守住这一条规则，5 个产物（`script.md` / `outline.md` / 章节代码 / `chapters.ts` / 音频）永远不会漂
+2. **主题 = CSS token + JSON 元数据** —— 切换主题就是把 `themes/<id>/tokens.css` 覆盖到 `<project>/src/styles/tokens.css`。组件永远不引入主题专属的值
+3. **每章渲染进固定 1920×1080 舞台** —— 通过 `useStageScale` 用 CSS `transform: scale()` 缩放。在那个坐标系里写，不要用视口像素
 
-### 全场景交互
-CSS + HTML + React 意味着课件是编程画布，不是预设题型：
-- **点击揭示**：隐藏注解、展开详情、开关切换
-- **拖拽操控**：3D 旋转、滑块输入、可排序列表
-- **实时模拟**：流程动画、参数调谐、终端模拟
-- **状态对比**：前后对照、颜色模式切换
-- **评估**：测验、文本输入、路径挑战 — 自然嵌入流程
-- **CSS 3D 探索**：纯 CSS transforms + pointer events
+---
 
-### 两种分发方式
+## 何时用它
 
-| 路径 | 方法 | 产物 |
-|:--|:--|:--|
-| **嵌入** | `embed.html` → 新窗口/iframe/DB驱动 | 集成到 Web 应用 |
-| **录制** | `bash scripts/record.sh` → `?auto=1` 自动播放 | 独立 MP4 视频 |
+| 适合 | 不太适合 |
+|---|---|
+| 千人规模标准化培训 | 真人出镜才传神的内容（领导讲话 / 励志） |
+| 内容需要频繁小修 | 物理/实验/手工演示 |
+| 测验 / 决策树 / 拖拽练习 | 需要现场答疑 |
+| 零边际交付成本敏感 | 还在大量改稿阶段的新内容 |
+| 需要可搜索 + 数据分析 | 离线手机播放（能跑，但 MP4 更省心） |
+
+---
+
+## 兼容性
+
+| 运行时 | skill 路径 |
+|---|---|
+| OpenCode | `.opencode/skills/<name>/` |
+| Claude Code | `.claude/skills/<name>/` 或插件市场 |
+| Cursor | `.agents/skills/<name>/` |
+| Codex CLI | `.codex/skills/<name>/` |
+
+脚手架出来的项目要 Node 20+。TTS 视所选 provider 需要对应网络。
+
+---
+
+## 文档地图
+
+| 文件 | 何时读 |
+|---|---|
+| [`SKILL.md`](./SKILL.md) | **始终先读** —— 工作流总览 + 各阶段读文件指引 |
+| [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | 写每章时 —— 单章能否通过验收的唯一标准 |
+| [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1 —— 文章转口播稿 |
+| [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1 —— `outline.md` 字段规范和章节切分规则 |
+| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | Phase 1/2 —— 仅在做多段课程时读 |
+| [`references/THEMES.md`](references/THEMES.md) | Checkpoint Plan / 任何选换主题时刻 |
+| [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 —— TTS pipeline / provider / 字幕时序 |
+| [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 —— 自动录屏为 MP4 |
+| [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md) | Phase 4 —— 嵌入已有 Web 应用 |
+| [`references/ANIMEJS-GUIDE.md`](references/ANIMEJS-GUIDE.md) | 写需要真动画 / 物理级拖拽的章节时 |
 
 ---
 
 ## 许可
 
-MIT License
+[MIT](./LICENSE) © course-forge contributors

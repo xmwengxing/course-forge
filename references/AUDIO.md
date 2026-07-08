@@ -14,7 +14,7 @@ Auto 模式会自动按 step 播放并自动推进——录屏可以一镜到底
 
 | Provider | 默认 | 何时用 |
 |---|---|---|
-| `minimax` | ✓ | 中文口播首选（用 `mmx-cli`，要 MiniMax API key） |
+| `minimax` | ✓ | 中文口播首选（直接 curl，要 `MINIMAX_API_KEY`） |
 | `openai`  | —— | 多数 agent 已有 `OPENAI_API_KEY`；curl-based、响应快 |
 
 换 / 加 provider 见
@@ -89,12 +89,7 @@ npm run synthesize-audio -- --force   # 全部重合成
 npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 ```
 
-启动时 runner 会先调 provider 的 `tts_check`：
-
-- mmx 未安装 → 报 `mmx CLI not found in PATH`，并打印安装说明
-- mmx 未登录 → 报 `mmx is not authenticated`，并提示登录命令
-
-修完再跑。每条段打印进度：
+启动时 runner 会先调 provider 的 `tts_check`（针对 minimax 是检查 `MINIMAX_API_KEY` 是否已设置），缺啥报啥。修完再跑。每条段打印进度：
 
 ```
 [  3/24] coldopen/3.mp3   ✓ 4s
@@ -207,7 +202,7 @@ npm run synthesize-audio -- --provider=edge-tts
 
 #### 2.D 退化路径
 
-如果两个内置 provider 都没就绪（没装 mmx 也没有 OpenAI key）告诉用户：
+如果两个内置 provider 都没就绪（没设 `MINIMAX_API_KEY` 也没有 `OPENAI_API_KEY`）告诉用户：
 
 ```
 我可以：
@@ -216,9 +211,9 @@ npm run synthesize-audio -- --provider=edge-tts
      export OPENAI_API_KEY=sk-...
      PRESENTATION_TTS=openai npm run synthesize-audio
 
-  2. 帮你装 MiniMax CLI（默认 provider，中文音色更稳）
-     npm install -g mmx-cli && mmx auth login --api-key sk-xxxxx
-     API key 在 https://platform.minimaxi.com 获取
+  2. 用内置 minimax provider（默认，中文音色更稳；只需要 API key）
+     export MINIMAX_API_KEY=sk-xxxxx     # 在 https://platform.minimaxi.com 获取
+     npm run synthesize-audio            # 不需要任何额外 CLI 工具
 
   3. 换其它 provider
      scripts/tts-providers/README.md 里有 5 种现成代码片段：

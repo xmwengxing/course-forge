@@ -1,10 +1,10 @@
 # Anchor: hook-chapter（钩子型开场）
 
 > ⚠️ **这是结构示意，不是抄袭模板**。先走 [`../../CHAPTER-CRAFT.md`](../../CHAPTER-CRAFT.md)
-> Part 0 五问。本 anchor 给的是"钩子型开场的结构骨架"——你要保留它的
+> § 这是视频，不是 PPT + § 视觉中心：舞台中心 ≠ 元素居中。本 anchor 给的是"钩子型开场的结构骨架"——你要保留它的
 > step 切分逻辑、字号关系、布局原则，**按本项目的主题 + 内容换动作
 > 选型**。倒过来照抄 = [`../../CHAPTER-CRAFT.md`](../../CHAPTER-CRAFT.md)
-> Part 5 第 8 条「整章只用一种入场动画」同质化反模式。
+> § 避免 AI 味 列出的同质化反模式。
 
 ## 定位
 
@@ -41,7 +41,7 @@
 
 ## 为什么 2-N 不能 stagger 同时上
 
-口播会**逐个念出来** —— 必须 1 项 = 1 step（[CHAPTER-CRAFT.md Part 0 原则 8](../../CHAPTER-CRAFT.md#8-多点内容必须逐个揭示绝不同时上)）。
+口播会**逐个念出来** —— 必须 1 项 = 1 step（[`../../CHAPTER-CRAFT.md` § 逐步揭示，禁止一次全展示](../../CHAPTER-CRAFT.md)）。
 同时 stagger 上 = 观众扫一眼看完，讲者还在念第一张 = PPT 直觉。
 
 ## 文件结构

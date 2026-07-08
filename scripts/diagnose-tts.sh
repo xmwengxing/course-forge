@@ -12,7 +12,7 @@ if [ -z "$API_KEY" ]; then
 fi
 
 TEST_TEXT="端点诊断测试"
-API_URL="${1:-https://api.minimax.chat/v1/t2a_v2}"
+API_URL="${1:-https://api.minimaxi.com/v1/t2a_v2}"
 
 echo "=== MiniMax TTS API Diagnostic ==="
 echo "Endpoint: $API_URL"
@@ -24,7 +24,7 @@ echo "[1/3] Testing endpoint connectivity..."
 HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$API_URL" \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"speech-2.8-hd","text":"'"$TEST_TEXT"'","voice_setting":{"voice_id":"Chinese_casual_instructor_vv2"}}' \
+  -d '{"model":"speech-2.8-hd","text":"'"$TEST_TEXT"'","voice_setting":{"voice_id":"male-cn-instructor"}}' \
   --connect-timeout 10 --max-time 30 2>/dev/null || echo "000")
 echo "  HTTP status: $HTTP_CODE"
 
@@ -33,7 +33,7 @@ echo "[2/3] Testing API response..."
 RESP=$(curl -s -X POST "$API_URL" \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"model":"speech-2.8-hd","text":"'"$TEST_TEXT"'","voice_setting":{"voice_id":"Chinese_casual_instructor_vv2"}}' \
+  -d '{"model":"speech-2.8-hd","text":"'"$TEST_TEXT"'","voice_setting":{"voice_id":"male-cn-instructor"}}' \
   --connect-timeout 10 --max-time 30 2>/dev/null)
 
 STATUS_CODE=$(echo "$RESP" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('base_resp',{}).get('status_code','unknown'))" 2>/dev/null || echo "parse_error")
@@ -49,8 +49,6 @@ case "$STATUS_CODE" in
   1002) echo "  ⚠ RPM rate limit — 每分钟请求超限，等待60秒后重试" ;;
   1039) echo "  ⚠ TPM rate limit — 每分钟 token 超限" ;;
   1004) echo "  ✗ API key 无效 — 请检查 MINIMAX_API_KEY" ;;
-  2049) echo "  ✗ API key 无效（域名不匹配）— 尝试切换 .chat ↔ .io" ;;
-  2056) echo "  ✗ Token Plan 额度已用尽或未分配 — 联系 MiniMax 客服" ;;
   2013) echo "  ✗ 参数错误 — 检查 model/voice_id" ;;
-  *)    echo "  ? 未知错误码" ;;
+  *)    echo "  ? 未知错误码 — 查看 STATUS_MSG 或 MiniMax 官方文档" ;;
 esac

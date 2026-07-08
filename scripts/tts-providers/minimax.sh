@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ────────────────────────────────────────────────────────────────────
 # MiniMax T2A v2 provider — direct curl (Token Plan keys).
-# API:     POST https://api.minimax.chat/v1/t2a_v2
-# Default: model=speech-2.8-hd  voice=Chinese_casual_instructor_vv2
+# API:     POST https://api.minimaxi.com/v1/t2a_v2
+# Default: model=speech-2.8-hd  voice=male-cn-instructor
 # ────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 API_KEY="${MINIMAX_API_KEY:-}"
-API_URL="https://api.minimax.chat/v1/t2a_v2"
-VOICE="${PRESENTATION_MINIMAX_VOICE:-Chinese_casual_instructor_vv2}"
+API_URL="https://api.minimaxi.com/v1/t2a_v2"
+VOICE="${PRESENTATION_MINIMAX_VOICE:-male-cn-instructor}"
 MODEL="${PRESENTATION_MINIMAX_MODEL:-speech-2.8-hd}"
 
 tts_check() {
@@ -31,7 +31,7 @@ To use the MiniMax direct-curl provider:
 
   Optional — configure model / voice:
     export PRESENTATION_MINIMAX_MODEL=speech-2.8-hd         # default
-    export PRESENTATION_MINIMAX_VOICE=Chinese_casual_instructor_vv2  # default
+    export PRESENTATION_MINIMAX_VOICE=male-cn-instructor  # default
 
   Or pick another provider:  PRESENTATION_TTS=<name> npm run synthesize-audio
 EOF

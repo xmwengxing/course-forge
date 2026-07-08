@@ -1,333 +1,149 @@
 # Course Forge
 
-**Turn knowledge documents into interactive, section-based courseware — with narration, quizzes, 3D exploration, and embedded assessment.**
+Turn a knowledge document or narration script into a record-ready, click-driven 16:9 web presentation — with optional TTS audio, chunk-based subtitles, and either web embed or MP4 export.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills count](https://img.shields.io/badge/skills-1-orange)]()
-
-[English](./README.md) · [中文文档](./README.zh-CN.md)
+[English](./README.md) · [中文文档](./README.zh-CN.md) · [SKILL entry](./SKILL.md)
 
 ---
 
-`course-forge` builds record-ready Vite + React + TypeScript interactive courseware that behaves like a professional e-learning production surface. From 5-minute micro-tutorials to full courses, start from a single knowledge document or prepared narration script, and the skill guides you through segment planning, interactive chapter development, TTS audio synthesis, subtitle timing, and deployment — all with hard checkpoints for human approval. Completed courses can be embedded into web apps or recorded as standalone video files.
+## What it does
 
-**Born from 280+ chapters of production courseware** across text, video, speech, and point-cloud data processing domains.
+You provide an article or script. The skill walks an agent through:
 
----
+1. Writing narration (`script.md`) and a per-chapter build plan (`outline.md`)
+2. Aligning with you on the script, outline, theme, source assets, and dev mode
+3. Scaffolding a Vite + React + TS project, then building chapters one-by-one (chapter 1 is always built in the main thread as the anchor)
+4. Optionally synthesizing audio via pluggable TTS (MiniMax / OpenAI / Edge / custom)
+5. Embedding into a web app, or auto-recording as MP4
 
-## Table of Contents
-
-- [What Makes It Different](#what-makes-it-different)
-- [Install](#install)
-- [Quick Start](#quick-start)
-- [Course Structure](#course-structure)
-- [Theme Gallery](#theme-gallery)
-- [Key Features](#key-features)
-- [Compatibility](#compatibility)
-- [License](#license)
-
----
-
-## What Makes It Different
-
-`course-forge` combines the interactive power of CSS+HTML+React with structured pedagogy. Every chapter is a programmable canvas:
-
-| Capability | Description |
-|:--|:--|
-| **Interaction** | **Unbounded** — drag, click, type, toggle, 3D rotate, real-time preview. CSS+HTML+React means any interaction the web can express, the course can embody — not limited to predefined question types |
-| **Adaptable length** | **5 min micro-tutorials to full-length courses** — shorter segments amplify interaction density; a well-written script with dynamic visuals teaches faster than passive video |
-| **Course architecture** | **Lesson → Segment (S1-S5) → Chapter** 3-tier `course.json` structure with auto-generation |
-| **Assessment framework** | **Kirkpatrick 4-level evaluation** (L1-L4) embedded naturally into the course flow |
-| **Subtitle system** | Character-proportional ms allocation per step, 80-char chunk boundary, 0-indexed alignment. **Dual-mode**: default (ffprobe + proportional) and MiniMax word-level (ms-precise) |
-| **Deploy & distribute** | Embed into web apps (new-tab / iframe / DB-driven) **or** record as standalone video via the built-in auto-record script |
-| **Teaching methodology** | Visual demo, edge-case deduction, incident review — 3-method pedagogy |
-
-### Course Layout
-
-![Course Layout Diagram](./assets/layout-diagram.svg)
+Output is a static `dist/` — deployable anywhere.
 
 ---
 
 ## Install
 
-### Option A · `skills` CLI (npx) — Recommended
-
 ```bash
-# Full install (templates + themes + scripts)
+# Recommended — skills CLI
 npx skills add xmwengxing/course-forge
 
-# Minimal install (SKILL.md + references + scripts only, ~50KB)
-npx skills add xmwengxing/course-forge -s course-forge --minimal
-```
-
-### Option B · Claude Code Plugin Marketplace
-
-```bash
-/plugin marketplace add xmwengxing/course-forge
-/plugin install course-forge@course-forge
-```
-
-### Option C · Pinned `.zip` from Releases
-
-```bash
-VERSION=1.0.0
-curl -fsSL -o course-forge.zip \
-  "https://github.com/xmwengxing/course-forge/releases/download/v${VERSION}/course-forge-${VERSION}.zip"
-unzip -q course-forge.zip -d .claude/skills/
-```
-
-### Option D · Manual Copy
-
-```bash
+# Or — manual clone
 git clone https://github.com/xmwengxing/course-forge.git
 cp -r course-forge /your-project/.opencode/skills/
 ```
 
-### Option E · Git Submodule
-
-```bash
-git submodule add https://github.com/xmwengxing/course-forge.git vendor/course-forge
-ln -s ../../vendor/course-forge .opencode/skills/course-forge
-```
+For Claude Code, also available as a plugin marketplace entry: `/plugin marketplace add xmwengxing/course-forge`.
 
 ---
 
-## Quick Start
+## Quick start
 
 ```bash
-# 1. Install
-npx skills add xmwengxing/course-forge
+# 1. Install (see above)
 
-# 2. Scaffold a new course
+# 2. Scaffold a courseware project
 bash .opencode/skills/course-forge/scripts/scaffold.sh ./my-course --theme=chalk-garden
 
-# 3. Tell the agent to build it
-# "Create a course from docs/my-knowledge-doc.md using course-forge"
+# 3. Hand the source document to your agent and say:
+#    "Create a course from docs/my-knowledge-doc.md using course-forge"
 ```
 
-The agent will:
-1. Analyze your document and propose a 5-segment (S1-S5) section plan
-2. Ask you to confirm the split and choose a theme
-3. Build S1 first (3-5 chapters), let you review, then continue
-4. Generate audio narration (MiniMax TTS or pluggable provider)
-5. Create chunk-based subtitles with auto-timing
-6. Embed interactive quizzes or 3D exploration where appropriate
+The agent will produce `script.md` + `outline.md`, walk you through the 5-point checkpoint, then build chapters. See [`SKILL.md`](./SKILL.md) for the full workflow.
 
 ---
 
----
+## Built-in themes
 
-## Workflow
+Six themes, each a distinct design DNA — not just color swaps. Pick by mood, or copy one as the starting point for your own:
 
-The skill follows a structured pipeline with human checkpoints at critical decision points:
+| midnight-press | chalk-garden | paper-press | newsroom | blueprint | bauhaus-bold |
+|:--:|:--:|:--:|:--:|:--:|:--:|
+| dark cinematic | handwritten chalk | light editorial | print/serif | tech blueprint | modernist |
 
-```
-  User provides knowledge doc / outline / narration script
-                 │
-  ┌──────────────┴──────────────┐
-  │ Phase 0 — Input & Content ▼ │
-  │  0.1  Identify input type   │
-  │  0.2  Generate narration    │        User reviews narration at docs/xxx.md
-  │       (if not provided)      │
-  │  0.3  Propose S1-S5 split   │        User confirms chapter plan + duration
-  │  0.4  Select theme          │
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 1 — Build (per seg)   │
-  │  1.1  Scaffold project      │
-  │  1.2  Build S1 → review     │◄── Segment-by-segment verification
-  │  ...  Build S2 → review     │    with duration reporting
-  │  1.N  Build S5 → review     │
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 2 — Audio & Subtitles │
-  │  2.1  Synthesize narration  │    TTS (MiniMax / OpenAI / Edge)
-  │  2.2  Compress audio (opt)  │    64kbps → 50% size reduction
-  │  2.3  Generate subtitle     │    ffprobe-measured chunk timing
-  │       timing                 │
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-  │ Phase 3 — Build & Verify    │
-  │  3.1  npm run build → dist/ │    Self-contained static files
-  │  3.2  Local preview         │    npx serve dist → user verifies
-  └──────────────┬──────────────┘
-                 ▼
-  ┌──────────────┴──────────────┐
-   │ Phase 4 — Deploy / Record   │
-   │  4.1  Embed in web app       │    new-tab / iframe / DB-driven
-   │  4.2  Record as video        │    bash scripts/record.sh → auto-play MP4
-   └─────────────────────────────┘
-```
-
-### Imperative: What You Control
-
-| Step | What You Decide | AI Does |
-|------|:--:|------|
-| Narration script | Approve or request edits | Generates from source doc |
-| S1-S5 split | Approve chapter count × duration | Proposes optimal breakdown |
-| Theme | Choose (chalk-garden recommended) | Shows theme options |
-| Each segment (S1-S5) | Review visuals + timing | Builds chapters + runs audio pipeline |
-| Audio synthesis | Confirm before running | TTS + compress + subtitles |
-| Distribution | Embed in app or record as video | Deploy files or produce recording script |
+Full signatures, design tokens, and a "create your own" walkthrough live in [`references/THEMES.md`](references/THEMES.md).
 
 ---
 
-## Course Structure
-
-Every course-forge project uses a **Lesson (课) → Segment (段) → Chapter (章)** hierarchy:
+## Workflow at a glance
 
 ```
-course/
-├── course.json              # Lesson > Segments(S1-S5) > Chapters
-├── presentation/
-│   ├── src/chapters/        # One folder per chapter
-│   │   ├── 01-opening/      # TSX + CSS + narrations.ts
-│   │   └── ...
-│   ├── public/
-│   │   ├── audio/           # Synthesized TTS audio (gitignored)
-│   │   └── subtitle-timing.json
-│   └── scripts/
-│       ├── tts-providers/   # Pluggable TTS backends
-│       └── record.sh        # Auto-record course as video
-└── regenerate-course-json.py
+Phase 1  Content       →  script.md + outline.md
+                          [Checkpoint Plan]  align 5 things
+Phase 2  Web build     →  scaffold + chapters (chapter 1 = anchor)
+                          [User review]      anchor must be approved
+                          →  chapters 2..N   (per-chapter / sequential / parallel)
+Phase 3  Audio (opt.)  →  TTS synthesis + chunk-based subtitles
+Phase 4  Deploy        →  embed (new-tab / iframe / DB)  OR  record as MP4
 ```
 
-### Segment Split Guide
-
-| Narration Chars | Recommended Split | Chapters | Duration |
-|:--|:--|:--|:--|
-| ≤ 2,000 | 2-3 segments | 6-12 | 10-20 min |
-| 2,000-5,000 | 3-5 segments (S1-S3/S5) | 12-25 | 20-40 min |
-| 5,000-8,000 | 5 segments (S1-S5) | 20-35 | 40-60 min |
-| > 8,000 | Consider splitting into separate lessons | — | — |
-
-> Shorter segments with well-crafted scripts and interactive visuals achieve higher engagement density.
+Hard stops are the `[]` lines — the agent must pause for human review at every one. For phase details and what to read at each stage, see [`SKILL.md`](./SKILL.md) § "File reading guide".
 
 ---
 
-## Theme Gallery
+## Course hierarchy (course mode)
 
-Select a theme during checkpoint phase, or browse all 23:
+```
+Course      — single domain or full-length curriculum (e.g. "Intro to X")
+Segment     — S1..SN, themed block within a course (导入 / 精讲 / 案例 / 收官 / ...)
+Chapter     — 30-60s screen = N steps, the unit the skill actually builds
+Step        — single narration beat = full-screen content
+```
 
-| creative-voltage | blueprint | swiss-ikb | chalk-garden |
-|:--:|:--:|:--:|:--:|
-| creative talks | tech architecture | data reports | popular science |
-
-> **Full 23-theme gallery with live 16:9 previews, design signatures, and best-for tags:** [open in REAMDE.md](https://github.com/xmwengxing/course-forge#theme-gallery)
+Single-video mode (most common) skips the `Course` and `Segment` tiers — `course.json` is optional and can be deleted. See [`references/COURSE-MODE.md`](references/COURSE-MODE.md).
 
 ---
 
-## Key Features
+## Architecture: the invariants
 
-### Segment-Based Development
-Large knowledge documents are split into 3-5 segments (S1 Import → S2 Lecture → S3 Case Study → S4 Deep Dive → S5 Assessment → S6+ Extensions). Each segment is developed and reviewed independently — 5-minute micro-tutorials can be a single segment.
+Three things hold the whole system together. Break any one and chapters, audio, and chapter menu break with it.
 
-### Design System
-Built-in design constraints prevent AI-slop: font stack specificity (Noto Sans SC / Inter), color token enforcement, no pure black/white, spatial choreography across the 1920×1080 stage canvas, 8 layout modes, and 10 interaction modes with enforced diversity rules (no two consecutive chapters use the same layout or interaction pattern).
+1. **`narrations.ts` is the single source of truth** — array length must equal `max(if (step === N)) + 1` in the chapter's `.tsx`. Five artifacts stay aligned by obeying this one rule: `script.md`, `outline.md`, chapter code, `chapters.ts` registry, and audio files.
+2. **Theme = CSS tokens + JSON metadata** — switching themes means copying `themes/<id>/tokens.css` over `<project>/src/styles/tokens.css`. Components never import theme-specific values.
+3. **Each chapter renders into a fixed 1920×1080 stage** — CSS `transform: scale()` via `useStageScale`. Author inside that coordinate system, not viewport pixels.
 
-### Unbounded Interactivity
-CSS + HTML + React means the course is a programmable canvas, not limited to preset question types:
-- **Click-to-reveal**: Hidden annotations, expandable details, toggle switches
-- **Drag manipulation**: 3D rotation, slider inputs, sortable lists, connect-the-dots
-- **Real-time simulation**: Process animations, physics demonstrations, terminal emulation
-- **State comparison**: Side-by-side before/after panels, color-mode switching, parameter sliders
-- **Assessment**: Quizzes, text input, path-following challenges — naturally embedded in flow
-- **CSS 3D exploration**: Pure CSS transforms + pointer events, zero external dependencies
+---
 
-### Output & Distribution
-Two paths — pick one or both:
-| Path | Method | Output |
-|:--|:--|:--|
-| **Embed** | `embed.html` → iframe / new-tab / DB-driven navigation | Integrated into web app |
-| **Record** | `bash scripts/record.sh` → auto-play via `?auto=1` | Standalone video file (MP4) |
+## When to use it
 
-### Kirkpatrick 4-Level Evaluation
-Every course S5 embeds L1-L4 assessment:
-- **L1 Reaction**: Completion rate + quiz accuracy
-- **L2 Learning**: SOP template submission (process + result evaluation)
-- **L3 Behavior**: Supervisor observation of on-job application
-- **L4 Results**: Business metric tracking (e.g., Bad Case reduction rate)
-
-### Chunk-Based Subtitle System
-Dual-mode timing: default proportional distribution (80-char chunks × ffprobe-measured duration) with 0-indexed keys matching the stepper. For Max accuracy, MiniMax word-level mode uses API-returned per-character millisecond timestamps for frame-precise alignment. A standalone Python script (`subtitle-timing.py`) regenerates timing after audio synthesis.
-
-### Embedding in Web Applications
-1. **Standalone new-tab** (recommended, best compatibility)
-2. `<iframe>` with X-Frame-Options override
-3. React lazy-load with dynamic import
-4. Database-driven chapter routing via `start_chapter` field
-5. URL parameter control (`?chapter=N&auto=1`)
-
-### Pluggable TTS
-Provider-agnostic audio runner with two built-in backends:
-- **MiniMax** (speech-2.8-hd, Chinese optimized)
-- **OpenAI TTS** (curl-based)
-- Contract for custom providers in `scripts/tts-providers/README.md`
-- Rate-limit handling with automatic retry + 25s cooldown
-- Built-in diagnostic script (`diagnose-tts.sh`)
-
-### Dual-Source Principle
-Every chapter uses two sources: the narration script sets the **beat** (step sequence), the original knowledge document sets the **visual density** (what info to surface on screen beyond the spoken words). This prevents chapters from becoming just "talking head with bullet points."
-
-### Three Teaching Methods
-- **Visual Demonstration**: Waveform diagrams, 3D point clouds, comparison tables
-- **Edge-Case Deduction**: Accident reconstruction, irreversible consequence walkthroughs
-- **Incident Review**: Real case backtracking, root cause analysis from actual project data
+| Good fit | Less ideal |
+|---|---|
+| Standardized training at scale (1000+ learners) | Content where the human instructor's presence carries the message |
+| Content that needs frequent small updates | Physical/lab/hands-on demonstrations |
+| Quiz / decision-tree / drag-and-drop exercises | Live Q&A that needs real-time adaptation |
+| Cost-sensitive delivery (zero marginal cost per learner) | Brand-new content where the script needs many drafts |
+| Searchable, indexable, analytics-rich content | Offline-on-a-phone-only delivery (works, but MP4 is simpler) |
 
 ---
 
 ## Compatibility
 
-| Agent / Runtime | Skill Location | Status |
-|---|---|---|
-| **OpenCode** | `.opencode/skills/<name>/` | ✅ Tested (primary) |
-| **Claude Code** | `.claude/skills/<name>/` or plugin marketplace | ✅ Supported |
-| **Cursor** | `.agents/skills/<name>/` | ✅ Supported |
-| **Codex CLI** | `.codex/skills/<name>/` | ✅ Supported |
+| Runtime | Skill location |
+|---|---|
+| OpenCode | `.opencode/skills/<name>/` |
+| Claude Code | `.claude/skills/<name>/` or plugin marketplace |
+| Cursor | `.agents/skills/<name>/` |
+| Codex CLI | `.codex/skills/<name>/` |
+
+Requires Node 20+ for scaffolded projects. TTS requires network access to whichever provider you pick.
 
 ---
 
-## AI Interactive Courseware vs. Human-Recorded Video
+## Documentation map
 
-A side-by-side comparison across key dimensions, based on 280+ chapters of production courseware development.
-
-| Dimension | AI Interactive Courseware (`course-forge`) | Human-Recorded Video |
-|---|---|---|
-| **Storage Footprint** | 🟢 160 KB per chapter (TSX + CSS + compressed 64kbps MP3); full 23-chapter course ≈ 3.5 MB | 🔴 720p MP4 averages 50-200 MB per 45-min lesson; multi-course library easily exceeds 10 GB |
-| **Interactive Elements** | 🟢 Full spectrum: click-to-reveal annotations, drag-to-rotate 3D scenes, ranking quizzes, decision tree walkthroughs, accordion expand/collapse, comparison panels with verdict buttons, live metric calculators | 🔴 None — passive linear playback only. Quizzes require a separate LMS platform |
-| **Partial Adjustments** | 🟢 Edit a single chapter's `narrations.ts` → rebuild → deploy. No re-recording needed. Fix a typo or add a chapter in minutes | 🔴 Requires re-recording the entire video segment, re-editing the timeline, and re-exporting. A 30-second fix can take 2+ hours |
-| **Cross-Platform Compatibility** | 🟡 Renders in any modern browser (Chrome/Firefox/Safari/Edge). Responsive stage scaling adapts to desktop, tablet, and mobile. Fullscreen API + orientation lock for mobile landscape mode | 🟢 MP4 plays virtually everywhere — browsers, media players, smart TVs, embedded in slides. Slightly better legacy device support |
-| **Access Control & Copyright** | 🟢 Full control via web server auth middleware, token-gated access, domain whitelisting, or paywall integration. Source code (TSX/CSS/narrations) easily protected by back-end routing | 🔴 Once the MP4 file is downloaded, it can be freely copied, re-uploaded, or pirated. DRM solutions are expensive and easily bypassed |
-| **Theme Richness & Extensibility** | 🟢 23 built-in themes with independent design signatures (font pairing, color palette, animation curves). 5 semantic color tokens (`--accent`, `--accent-tech`, `--accent-good`, `--accent-warn`, `--accent-deep`). New themes added via CSS variable overrides | 🟡 Visual style is locked at recording time — backgrounds, overlays, lower-thirds are "baked in." Re-styling requires a full re-shoot or video post-production |
-| **Voice-Over Flexibility** | 🟢 Provider-agnostic TTS pipeline: MiniMax (Chinese-optimized), OpenAI, Edge-TTS, or custom providers. Re-synthesize any single chapter independently. Change voice, speed, or language per segment | 🔴 Requires a human narrator. Re-recording means booking studio/voice talent, matching tone consistency with existing segments, and re-syncing. Expensive and slow |
-| **Development Efficiency** | 🟡 Initial development: ~2-4 hours per 45-min course (narration scripting + TSX layout + CSS + audio synthesis). After first course, common components accelerate subsequent courses. **60 chapters developed in one session (3 courses)** is feasible with AI assistance | 🔴 Typical production pipeline: script writing → rehearsal → studio recording → editing → post-production → export. A polished 45-min video often takes 2-5 working days end-to-end |
-| **Offline Usage** | 🟡 Works offline after initial page load (static Vite build). Audio is preloaded as MP3 assets. Service worker caching can enable full offline PWA mode | 🟢 MP4 file can be downloaded and played offline on any device with zero technical setup |
-| **Content Searchability** | 🟢 Chapter titles, narration text, and interactive prompts are all in plain text (TypeScript) — fully searchable and indexable by search engines when deployed as static HTML | 🔴 Video content is opaque — requires manual transcription or auto-generated captions for searchability. Captions often lag behind content updates |
-| **Learner Analytics** | 🟢 Built-in: step-by-step progress tracking, quiz answer logging, completion rates, time spent per chapter, interactive engagement metrics. Data feeds directly into the Kirkpatrick L1-L4 evaluation model | 🔴 Requires an external LMS (Learning Management System) or video hosting platform with analytics add-ons. Often limited to play/pause/completion events |
-| **Human Presence** | 🔴 No real human face, body language, or live energy. Relies on visual design quality and interactivity to maintain engagement | 🟢 Human instructor's expressions, gestures, and vocal nuances create a personal connection. Body language aids comprehension |
-| **Physical Demonstration** | 🔴 Limited to 2D/3D simulated visualizations. Cannot show real-world physical operations, lab experiments, or hands-on tool usage | 🟢 Can show real-world operations, physical demonstrations, whiteboard sketching, and tool walkthroughs |
-| **Real-Time Adaptability** | 🔴 Pre-authored logic — cannot dynamically respond to an individual learner's questions or adjust pacing based on live audience feedback | 🟡 In live-stream or classroom settings, the instructor can pause for Q&A, adapt examples on the fly, and read the room |
-
-### When to Choose Which
-
-| Scenario | Recommendation |
+| File | Read when |
 |---|---|
-| Large-scale standardized training (1000+ learners) | **AI Interactive** — consistent quality, zero marginal delivery cost |
-| Rapid iteration and frequent content updates | **AI Interactive** — edit a chapter in minutes |
-| Quizzes, hands-on exercises, decision-making practice | **AI Interactive** — built-in interactivity |
-| Leadership/keynote/inspirational content | **Human Video** — personal presence matters |
-| Physical skills training (lab, workshop, sports) | **Human Video** — real demonstration needed |
-| Learner analytics and compliance tracking | **AI Interactive** — native data collection |
-| Quick MVP for a new course concept | **AI Interactive** — develop and iterate in hours |
-| High-stakes certification exam prep | **Hybrid** — AI interactive for content + human proctoring |
-
-`course-forge` — interactive courseware builder for 45-60 minute courses with assessments, 3D exploration, and multi-modal data processing.
+| [`SKILL.md`](./SKILL.md) | **Always first** — workflow overview + per-phase reading guide |
+| [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | Writing each chapter — single source of truth for what makes a chapter pass review |
+| [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1 — turning an article into narration |
+| [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1 — the `outline.md` schema and chapter-split rules |
+| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | Phase 1/2 — only if building a multi-segment course |
+| [`references/THEMES.md`](references/THEMES.md) | Checkpoint Plan / any time you pick or change a theme |
+| [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 — TTS pipeline, providers, subtitle timing |
+| [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 — auto-record the running site as MP4 |
+| [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md) | Phase 4 — embed into an existing web app |
+| [`references/ANIMEJS-GUIDE.md`](references/ANIMEJS-GUIDE.md) | Writing a chapter that needs real animation or physics-style drag |
 
 ---
 
 ## License
 
-[MIT](./LICENSE) © [xmwengxing](https://github.com/shijingtian)
+[MIT](./LICENSE) © course-forge contributors
