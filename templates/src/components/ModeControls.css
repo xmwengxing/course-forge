@@ -1,0 +1,60 @@
+/* ModeControls — playback mode toggle */
+
+.mc-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--surface-2);
+  border-top: 1px solid var(--rule);
+}
+
+.mc-group {
+  display: flex;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.mc-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-mute);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.mc-btn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.mc-btn--active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.mc-btn-en {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+}
+
+.mc-btn-cn {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mc-hint {
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.10em;
+}

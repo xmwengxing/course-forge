@@ -5,12 +5,13 @@ import type { ChapterDef } from "../registry/types";
  * Bump the trailing version (v4 → v5 → ...) when chapter step counts /
  * structure change so old persisted cursors don't land mid-removed-step.
  *
- * Known limitation: the key is global per origin, so two different
- * courseware projects served from the same host will share the same
- * stored cursor. For multi-course deployment, prefer deploying each
- * course to its own origin or subpath.
+ * Course-mode: the key is namespaced by `courseId` so two different
+ * courses served from the same origin (e.g. `?course=kids-coding` vs
+ * `?course=ai-trainer-l4`) keep independent progress.
  */
-const STORAGE_KEY = "presentation-cursor-v4";
+const STORAGE_KEY_VERSION = "v4";
+const storageKey = (courseId: string) =>
+  `cf-cursor-${courseId}-${STORAGE_KEY_VERSION}`;
 
 export type Cursor = { chapter: number; step: number };
 
@@ -43,12 +44,13 @@ function sanitize(cursor: Cursor, chapters: ChapterDef[]): Cursor {
   return { chapter, step };
 }
 
-export function useStepper(chapters: ChapterDef[]): StepperState {
+export function useStepper(chapters: ChapterDef[], courseId = "default"): StepperState {
+  const key = storageKey(courseId);
   const [cursor, setCursor] = useState<Cursor>(() => {
     const fallback = { chapter: 0, step: 0 };
     if (typeof window === "undefined") return fallback;
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = window.localStorage.getItem(key);
       if (raw) return sanitize(JSON.parse(raw), chapters);
     } catch {
       /* ignore */
@@ -70,11 +72,11 @@ export function useStepper(chapters: ChapterDef[]): StepperState {
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cursor));
+      window.localStorage.setItem(key, JSON.stringify(cursor));
     } catch {
       /* ignore */
     }
-  }, [cursor]);
+  }, [cursor, key]);
 
   const offsets = useMemo(() => {
     const arr: number[] = [];

@@ -1,0 +1,150 @@
+/* QuizPanel — Kirkpatrick L1-L2 interaction */
+
+.qp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 32px;
+  background: var(--surface-2);
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.qp-panel--blocking {
+  box-shadow: 0 0 48px rgba(0, 188, 212, 0.3);
+}
+
+.qp-prompt {
+  font-size: 28px;
+  color: var(--text);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.qp-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qp-opt {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border: 2px solid var(--rule);
+  border-radius: 4px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--text);
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.qp-opt:hover:not(:disabled) {
+  background: var(--surface-3);
+  border-color: var(--accent);
+}
+
+.qp-opt--sel {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.qp-opt--correct {
+  border-color: var(--accent-good);
+  background: rgba(34, 197, 94, 0.12);
+}
+
+.qp-opt--wrong {
+  border-color: var(--accent-warn);
+  background: rgba(251, 146, 60, 0.12);
+}
+
+.qp-opt:disabled {
+  cursor: default;
+}
+
+.qp-opt-id {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-mute);
+  letter-spacing: 0.12em;
+  min-width: 24px;
+}
+
+.qp-opt--sel .qp-opt-id,
+.qp-opt--correct .qp-opt-id {
+  color: var(--accent);
+}
+
+.qp-opt-label {
+  font-size: 18px;
+  flex: 1;
+}
+
+.qp-text {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 2px solid var(--rule);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 16px;
+  resize: vertical;
+}
+
+.qp-text:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.qp-submit {
+  align-self: center;
+  padding: 12px 32px;
+  background: var(--accent);
+  color: var(--surface);
+  border: none;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qp-submit:hover:not(:disabled) {
+  background: var(--accent-tech);
+}
+
+.qp-submit:disabled {
+  background: var(--rule);
+  color: var(--text-mute);
+  cursor: not-allowed;
+}
+
+.qp-rationale {
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+}
+
+.qp-rationale-kicker {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.qp-rationale-body {
+  font-size: 16px;
+  color: var(--text);
+  line-height: 1.5;
+}
