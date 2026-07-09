@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import type { PlaybackMode } from "./useAudioPlayer";
 
 const ORDER: PlaybackMode[] = ["manual", "audio", "auto"];
@@ -46,21 +46,13 @@ export function useAutoMode() {
     setMode(ORDER[(ORDER.indexOf(mode) + 1) % ORDER.length]!);
   }, [mode, setMode]);
 
-  // Keyboard: `M` cycles mode. `Space` starts auto if gated.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
-      if (e.key === "m" || e.key === "M") {
-        e.preventDefault();
-        cycleMode();
-      } else if (e.key === " " && mode === "auto" && !autoStarted) {
-        e.preventDefault();
-        setAutoStarted(true);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [mode, autoStarted, cycleMode]);
+  // NOTE: The M (cycle mode) and Space (start auto) keyboard shortcuts
+// were originally wired here. They were REMOVED from this hook because
+// they conflicted with the parent <App>'s own Space handler — two
+// listeners both firing caused Space to both pause and advance, and
+// paused state to flicker. The parent now owns ALL keyboard shortcuts
+// (M / F / Space) so there is one source of truth. See App.tsx
+// `useEffect` for the keydown handler.
 
   return { mode, setMode, cycleMode, autoStarted, setAutoStarted };
 }

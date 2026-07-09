@@ -528,20 +528,25 @@ body {
  * ======================================================================== */
 
 :root {
-  --ui-accent:       var(--accent);
-  --ui-accent-soft:  var(--accent-soft);
-  --ui-good:         var(--accent-good);
-  --ui-warn:         var(--accent-warn);
-  --ui-tech:         var(--accent-tech);
-  --ui-deep:         var(--accent-deep);
-  --ui-shell:        var(--shell);
-  --ui-surface:      var(--surface);
-  --ui-surface-2:    var(--surface-2);
-  --ui-surface-3:    var(--surface-3);
-  --ui-text:         var(--text);
-  --ui-text-2:       var(--text-2);
-  --ui-text-mute:    var(--text-mute);
-  --ui-rule:         var(--rule);
+  --ui-accent:           var(--accent);
+  --ui-accent-soft:      var(--accent-soft);
+  --ui-accent-good:      var(--accent-good);
+  --ui-accent-warn:      var(--accent-warn);
+  --ui-accent-tech:      var(--accent-tech);
+  --ui-accent-deep:      var(--accent-deep);
+  --ui-shell:            var(--shell);
+  --ui-surface:          var(--surface);
+  --ui-surface-2:        var(--surface-2);
+  --ui-surface-3:        var(--surface-3);
+  --ui-text:             var(--text);
+  --ui-text-2:           var(--text-2);
+  --ui-text-mute:        var(--text-mute);
+  --ui-rule:             var(--rule);
+  /* Short aliases for the most common chrome needs */
+  --ui-good:             var(--ui-accent-good);
+  --ui-warn:             var(--ui-accent-warn);
+  --ui-tech:             var(--ui-accent-tech);
+  --ui-deep:             var(--ui-accent-deep);
 }
 
 /* blueprint theme ships a near-pure-white shell that crushes the chrome
