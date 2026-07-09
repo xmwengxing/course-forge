@@ -44,27 +44,27 @@
 
 ```jsonc
 {
-  "courseId": "<course-id>",        // 例: "kids-coding" / "ai-trainer-l4"
-  "title": "<课程标题>",            // 例: 任何领域都可, 课程展示名
+  "courseId": "<course-id>",        // 跨课唯一短名, 例 "kids-coding" / "ai-trainer-l4"
+  "title": "<课程标题>",            // 课程展示名, 任何领域都可用
   "sections": [
     {
-      "id": "1.1",
-      "title": "第1课 你好，数字世界",
+      "id": "1.1",                   // section 编号 (与源文档章节号一致, 如 "1.1" / "Module-1")
+      "title": "<第 1 课时标题>",   // 例 "你好, 数字世界" / "什么是函数"
       "segments": [
-        { "id": "S1", "title": "导入", "chapters": [
-          { "id": "01-opening", "title": "从玩家到创造者" },
-          { "id": "02-ide",     "title": "工程师工作台" }
+        { "id": "intro", "title": "<段 1 标题>", "chapters": [
+          { "id": "01-opening", "title": "<第 1 章标题>" },
+          { "id": "02-ide",     "title": "<第 2 章标题>" }
         ]},
-        { "id": "S2", "title": "核心概念", "chapters": [...] },
-        { "id": "S3", "title": "复盘",     "chapters": [...] }
+        { "id": "main",  "title": "<段 2 标题>", "chapters": [...] },
+        { "id": "recap", "title": "<段 3 标题>", "chapters": [...] }
       ]
     },
-    { "id": "1.2", "title": "第2课 …", "segments": [...] }
+    { "id": "1.2", "title": "<第 2 课时标题>", "segments": [...] }
   ]
 }
 ```
 
-**层级**：section（课时）→ segment（段：导入/精讲/复盘）→ chapter（章节）。
+**层级**：section（课时）→ segment（段，按教学节奏切：导入 / 精讲 / 复盘 等）→ chapter（章节）。
 **chapter.id 必须** 与 `chapters.ts` 里的 `ChapterDef.id` 一一对应。
 
 ---
