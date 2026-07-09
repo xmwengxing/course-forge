@@ -18,6 +18,10 @@
 #   cp <path-to-course-forge>/themes/<id>/tokens.css \
 #      <project>/src/styles/tokens.css
 # ─────────────────────────────────────────────────────────────
+# 注意: course.json 不在 scaffold 里创建。开发者跑完脚手架后, 自己手写
+# course.json (在项目根), 由 useCourseLoader 静态 import。
+# 详见 SKILL.md § 2.1 脚手架 + scripts/check-course-json-sync.sh。
+# ─────────────────────────────────────────────────────────────
 set -euo pipefail
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

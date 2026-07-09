@@ -225,6 +225,13 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 ```
 
+> ⚠️ **`course.json` 单一源**：放在**项目根**（`./course.json`），**不要**拷到
+> `public/course.json`。`useCourseLoader` 走 vite **静态 import**（+ 多课程
+> 走 `import.meta.glob`），不发起网络请求。手动拷到 `public/` 后，源文件改动
+> 不会同步，UI 会显示旧版。CI 阶段跑
+> [`scripts/check-course-json-sync.sh`](scripts/check-course-json-sync.sh)
+> 会自动检测这个错。
+
 > 自定义主题 → 先按 [`references/THEMES.md`](references/THEMES.md)
 > "创作新主题"流程做一个 `themes/<my-theme>/`，再 `--theme=<my-theme>`。
 

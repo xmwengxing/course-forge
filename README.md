@@ -125,6 +125,23 @@ Three things hold the whole system together. Break any one and chapters, audio, 
 
 Requires Node 20+ for scaffolded projects. TTS requires network access to whichever provider you pick.
 
+## Upgrading from a previous version
+
+> ⚠️ **If you upgrade from a version before `course.json` static import was
+> introduced**: delete any `public/course.json` (or `public/course-*.json`)
+> in your scaffolded project. The current `useCourseLoader` imports
+> `course.json` directly from the project root, so the `public/` copy is
+> dead weight and can drift out of sync. After deleting, run
+> `npm run build` once to verify.
+
+The first time you pull a new version of this skill, in your scaffolded
+project run:
+
+```bash
+npm install       # or: pnpm install / yarn install
+bash scripts/check-course-json-sync.sh   # exit 0 = clean
+```
+
 ---
 
 ## Documentation map

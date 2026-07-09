@@ -1,22 +1,32 @@
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import type { CourseJson, ChapterDef } from "../registry/types";
+import defaultCourseJson from "../../course.json";
 
 /**
- * useCourseLoader — fetch a course.json at runtime, derive the flat
- * chapter list to render, and resolve which `courseId` to load from
- * the URL query string.
+ * useCourseLoader — load a course.json at module load time, derive the
+ * flat chapter list to render, and resolve which `courseId` to use
+ * from the URL query string.
+ *
+ * **Single source of truth**: `course.json` lives in the project root
+ * (`./course.json` from this hook). It is imported directly — vite/TS
+ * bundle it as a static module. There is **no** `public/course.json`
+ * copy and **no** runtime fetch, so the two-file sync bug is gone.
  *
  * URL contract:
- *   /                       → default course (id="default")
- *   /?course=kids-coding    → loads /course-kids-coding.json
+ *   /                       → default course (the imported one)
+ *   /?course=kids-coding    → loads /course-kids-coding.json (one of the
+ *                             glob-discovered courses below)
  *   /?course=l4            → loads /course-l4.json
  *
- * Fallback chain when the requested course.json fails to load:
- *   1. /course.json (default) — assumed to exist in every project
- *   2. / (with no course data) — UI shows a "course.json missing" notice
+ * `import.meta.glob` is vite's eager-import pattern: it bundles every
+ * file matching the glob into the JS output at build time. So adding a
+ * new `course-<id>.json` in the project root requires **no** code change
+ * here — vite picks it up automatically and we look it up at runtime
+ * by `id`.
  *
- * In single-video mode, the caller passes `singleVideoChapters` and
- * skips the network fetch entirely (use `mode="single"`).
+ * In single-video mode the caller passes `singleVideoChapters` and
+ * skips the JSON entirely (synthesizes a fake course from the
+ * registered chapters).
  */
 export type CourseLoadState =
   | { status: "loading" }
@@ -32,6 +42,33 @@ export function readCourseIdFromUrl(): string {
   if (typeof window === "undefined") return "default";
   const sp = new URLSearchParams(window.location.search);
   return sp.get("course") || "default";
+}
+
+/**
+ * Discover all available course files at build time. Vite's
+ * `import.meta.glob('../../course*.json', { eager: true })` bundles
+ * every matching file into the JS output. Keys are the import paths
+ * (e.g. "../../course-kids-coding.json"), values are the parsed JSON.
+ *
+ * The default course (./course.json) is imported statically above;
+ * additional named courses come from the glob below. Map both into
+ * a single `courseId → CourseJson` registry.
+ */
+type CourseJsonModules = Record<string, CourseJson>;
+const defaultCourse: CourseJson = defaultCourseJson as CourseJson;
+// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+const allCourses: CourseJsonModules = (import.meta.glob("../../course*.json", {
+  eager: true,
+}) as unknown) as CourseJsonModules;
+
+function findCourseById(courseId: string): CourseJson | undefined {
+  if (courseId === "default") return defaultCourse;
+  // Strip the leading "../../" and ".json" from glob keys.
+  for (const [path, course] of Object.entries(allCourses)) {
+    const m = path.match(/course-([^/]+)\.json$/);
+    if (m && m[1] === courseId) return course;
+  }
+  return undefined;
 }
 
 interface UseCourseLoaderOptions {
@@ -70,11 +107,9 @@ export function useCourseLoader({
   mode,
   singleVideoChapters,
 }: UseCourseLoaderOptions): CourseLoadState {
-  const [state, setState] = useState<CourseLoadState>({ status: "loading" });
-
-  useEffect(() => {
+  return useMemo<CourseLoadState>(() => {
     if (mode === "single") {
-      setState({
+      return {
         status: "ok",
         course: {
           courseId: "single",
@@ -95,70 +130,31 @@ export function useCourseLoader({
         },
         chapters: singleVideoChapters,
         flatChapterIds: singleVideoChapters.map((c) => c.id),
-      });
-      return;
+      };
     }
 
+    // Course mode: resolve the courseId from URL and look it up in the
+    // eager-imported map. No network fetch, no public/ copy.
     const courseId = readCourseIdFromUrl();
-    const url = courseId === "default" ? "/course.json" : `/course-${courseId}.json`;
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) {
-          if (cancelled) return;
-          // Fall back to course.json if course-<id>.json 404
-          if (courseId !== "default") {
-            try {
-              const fallback = await fetch("/course.json", { cache: "no-store" });
-              if (fallback.ok) {
-                const course = (await fallback.json()) as CourseJson;
-                const { matched, flatIds, missing } = findChapters(course, singleVideoChapters);
-                if (missing.length > 0) {
-                  setState({
-                    status: "error",
-                    message: `course.json 引用了未注册的章节 id: ${missing.join(", ")}`,
-                  });
-                  return;
-                }
-                setState({ status: "ok", course, chapters: matched, flatChapterIds: flatIds });
-                return;
-              }
-            } catch {
-              /* fall through to missing */
-            }
-          }
-          setState({
-            status: "missing",
-            message: `未找到 ${url}。请先生成 course.json 或切换到单视频模式。`,
-          });
-          return;
-        }
-        const course = (await res.json()) as CourseJson;
-        if (cancelled) return;
-        const { matched, flatIds, missing } = findChapters(course, singleVideoChapters);
-        if (missing.length > 0) {
-          setState({
-            status: "error",
-            message: `course.json 引用了未注册的章节 id: ${missing.join(", ")}`,
-          });
-          return;
-        }
-        setState({ status: "ok", course, chapters: matched, flatChapterIds: flatIds });
-      } catch (err) {
-        if (cancelled) return;
-        setState({
-          status: "error",
-          message: `加载 ${url} 失败: ${err instanceof Error ? err.message : String(err)}`,
-        });
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
+    const course = findCourseById(courseId);
+    if (!course) {
+      const available = Object.keys(allCourses)
+        .map((p) => p.match(/course-([^/]+)\.json$/)?.[1])
+        .filter((x): x is string => Boolean(x));
+      return {
+        status: "missing",
+        message: `未找到 ?course=${courseId}。可用的课程: ${
+          available.length ? available.join(", ") : "(仅默认 course.json)"
+        }`,
+      };
+    }
+    const { matched, flatIds, missing } = findChapters(course, singleVideoChapters);
+    if (missing.length > 0) {
+      return {
+        status: "error",
+        message: `course.json 引用了未注册的章节 id: ${missing.join(", ")}`,
+      };
+    }
+    return { status: "ok", course, chapters: matched, flatChapterIds: flatIds };
   }, [mode, singleVideoChapters]);
-
-  return state;
 }
