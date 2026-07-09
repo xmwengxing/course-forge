@@ -288,7 +288,7 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
             onJumpChapter={(idx, step) => stepper.jumpToChapter(idx, step)}
           />
         ) : (
-          <CourseProgress chapters={chapters} cursor={stepper.cursor} />
+          <CourseProgress chapters={chapters} cursor={stepper.cursor} course={course} />
         )}
 
         <ModeControls
