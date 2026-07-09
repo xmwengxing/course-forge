@@ -230,8 +230,12 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
         toggleFullscreen();
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    // Use capture phase so we run BEFORE any focused-element default
+    // behavior (browser would fire button.click() on Space for focused
+    // buttons) and we can intercept every key event first. The parent
+    // is the single source of truth for Space.
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
   }, [togglePause, toggleFullscreen, mode, autoStarted, setAutoStarted]);
 
   return (
