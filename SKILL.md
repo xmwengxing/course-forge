@@ -10,30 +10,6 @@ description: 把一篇文章或口播稿，做成"看起来像视频"的点击�
 
 ---
 
-## 安装方式
-
-本 skill 仓库含 **2 类文件**，对应 **2 种安装路径**：
-
-| 路径 | 命令 | 内容 | 适用 |
-|---|---|---|---|
-| **轻量 (SKILL.md only)** | `npx skills add xmwengxing/course-forge` | 仅 `SKILL.md` | 简单单视频 / 快速了解 skill 设计 |
-| **完整 (git clone)** | `git clone https://github.com/xmwengxing/course-forge.git ~/.agents/skills/course-forge` | `SKILL.md` + `references/` + `scripts/` + `templates/` + `themes/` | 完整课程模式 / chrome 组件 / 主题 / 脚手架 |
-
-> ⚠️ **`npx skills add` 只下载 SKILL.md**。如果只用 SKILL.md，agent 能写
-> 单视频或简单课程，**但**没法用课程模式 chrome 组件、主题、模板脚手架。
-> 完整工作流（课程模式 / 6 主题 / 自定义主题）需要 git clone 完整版。
-
-**轻量版能做的事**：
-- ✅ 写单视频（按 SKILL.md 十条原则 + CHAPTER-CRAFT 必读段）
-- ✅ Phase 0 模式判断 + 纯文字=重做 + 同屏多槽位 + 真交互
-- ❌ 课程模式 chrome 组件（需 git clone 看 `templates/src/components/`）
-- ❌ 主题切换 / 自定义主题（需 git clone 看 `themes/`）
-- ❌ `scaffold.sh` 脚手架（需 git clone 看 `scripts/`）
-
-**如何识别你装的是哪种**：检查 `references/` 目录是否存在。不存在 = 轻量版，需重装完整版。
-
-
-
 ## 适用场景
 
 - "我有口播稿 / 一篇文章，帮我做成视频" —— 口播驱动的内容
