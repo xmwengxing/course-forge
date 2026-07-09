@@ -18,7 +18,9 @@
   color: var(--ui-text-mute);
   letter-spacing: 0.10em;
   text-transform: uppercase;
-  min-width: 280px;
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .cp-frac,
