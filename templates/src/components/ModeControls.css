@@ -1,51 +1,74 @@
-/* ModeControls — playback mode toggle */
+/* ModeControls — playback mode + transport (pause / fullscreen) */
 
 .mc-bar {
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 8px 16px;
-  background: var(--surface-2);
-  border-top: 1px solid var(--rule);
+  background: var(--ui-surface-2);
+  border-top: 1px solid var(--ui-rule);
+  min-height: 56px;
 }
 
 .mc-group {
   display: flex;
+  align-items: center;
   gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--rule);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-rule);
   border-radius: 4px;
-  padding: 2px;
+  padding: 4px;
+}
+
+.mc-mode-group {
+  display: flex;
+  gap: 4px;
+}
+
+.mc-divider {
+  width: 1px;
+  height: 32px;
+  background: var(--ui-rule);
+  margin: 0 4px;
 }
 
 .mc-btn {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   padding: 6px 14px;
   background: transparent;
   border: none;
   cursor: pointer;
-  color: var(--text-mute);
+  color: var(--ui-text-mute);
   border-radius: 3px;
   transition: all 0.2s ease;
   font-family: inherit;
+  min-height: 36px;
 }
 
 .mc-btn:hover {
-  color: var(--text);
-  background: var(--surface-2);
+  color: var(--ui-text);
+  background: var(--ui-surface-2);
 }
 
 .mc-btn--active {
-  background: var(--accent-soft);
-  color: var(--accent);
+  background: var(--ui-accent-soft);
+  color: var(--ui-accent);
+}
+
+.mc-btn-icon {
+  font-size: 16px;
+  line-height: 1;
+  min-width: 16px;
+  text-align: center;
 }
 
 .mc-btn-en {
   font-size: 11px;
   letter-spacing: 0.16em;
+  font-family: var(--font-mono);
 }
 
 .mc-btn-cn {
@@ -53,8 +76,36 @@
   font-weight: 600;
 }
 
+.mc-btn--pause,
+.mc-btn--fs {
+  color: var(--ui-text);
+}
+
+.mc-btn--pause-active {
+  background: var(--ui-accent-warn);
+  color: var(--ui-surface);
+  box-shadow: 0 0 12px rgba(251, 146, 60, 0.5);
+}
+
+.mc-btn--pause-active:hover {
+  background: var(--ui-accent-warn);
+  color: var(--ui-surface);
+}
+
+.mc-btn--fs-active {
+  background: var(--ui-accent);
+  color: var(--ui-surface);
+  box-shadow: 0 0 12px rgba(0, 188, 212, 0.5);
+}
+
+.mc-btn--fs-active:hover {
+  background: var(--ui-accent);
+  color: var(--ui-surface);
+}
+
 .mc-hint {
   font-size: 11px;
-  color: var(--text-mute);
+  color: var(--ui-text-mute);
   letter-spacing: 0.10em;
+  margin-left: auto;
 }

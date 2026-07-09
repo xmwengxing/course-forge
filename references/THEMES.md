@@ -319,3 +319,63 @@ npm run dev
   = 布局脆弱，修布局
 - **一个主题叠三个设计签名** —— 选 ONE 个（虚线 rule / 扫描线 /
   glass slab / 纸纹 / 粗边），三个会自己打架
+
+---
+
+## 通用 UI Token（chrome 与内容分离）
+
+`base.css` 把 `--ui-*` 映射到主题 token，作为**所有非内容 chrome**
+（ChapterMenu / ModeControls / CourseProgress / SubtitleStep / QuizPanel
+等）的统一入口：
+
+```css
+:root {
+  --ui-accent:    var(--accent);
+  --ui-surface:   var(--surface);
+  --ui-text:      var(--text);
+  /* ... 完整映射见 templates/src/styles/base.css § Generic UI token mapping */
+}
+```
+
+### 为什么需要 `--ui-*` 而不是直接用主题 token
+
+主题 token 是为**内容**服务的——`midnight-press` 的 `--accent` 是霓虹青，
+`paper-press` 的 `--accent` 是墨黑。如果 chrome 也直接用 `--accent`，
+菜单在 `midnight-press` 下会"夺戏"（荧光太刺眼），在 `paper-press` 下
+又"压不住"（菜单项和背景对比度不够）。
+
+`--ui-*` 是 chrome 专用，**默认值跟随主题**（`var(--accent)` 等）保证
+视觉一致，但**主题可以单独覆盖** chrome 风格而不影响内容。
+
+### 短方案（**当前默认**）：base.css fallback
+
+`templates/src/styles/base.css` 已经把 6 主题都映射到 `--ui-* = --accent` 等。
+所有 chrome 组件（5 个 `.css`）已经改用 `--ui-*`，实测在 6 主题下都
+可读、对比度足够。
+
+### 长方案（**未来可选**）：per-theme UI override
+
+每个 `themes/<id>/tokens.css` 末尾可以加一段：
+
+```css
+/* UI chrome override — 让 ChapterMenu / ModeControls 等固定为'中性'风格 */
+:root {
+  --ui-accent:   #4f46e5;        /* 锁定为靛蓝, 不随主题变 */
+  --ui-surface:  #fafafa;        /* 锁定为近白, 与内容背景分开 */
+  --ui-text:     #0f172a;
+  --ui-rule:     #e2e8f0;
+}
+```
+
+**触发时机**（任一满足时由主题作者**手动**加 override）：
+
+- 主题的 `--accent` 在 chrome 位置上**对比度 < 4.5:1**
+- 主题的 `--surface` 与 chrome 默认背景 `--ui-surface` 撞色
+- 主题作者希望 chrome 与内容**视觉风格相反**（如 dark theme 配 light chrome）
+
+### 给主题作者的红线
+
+- 主题文件 **必须** 提供 `--accent` / `--surface` / `--text` / `--rule` / `--shell` / `--surface-2` / `--surface-3` / `--text-2` / `--text-mute` / `--accent-soft` / `--accent-good` / `--accent-warn` / `--accent-tech` / `--accent-deep`
+- 这些 token 是**内容层 + chrome fallback** 的入口
+- **不要** 在 themes/ 之外创建新 token（避免"每个章节都得 import"）
+- 主题可以**可选**添加 `--ui-*` override，不强制（fallback 已够用）

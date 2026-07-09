@@ -510,3 +510,41 @@ body {
   z-index: 100;
   padding: 32px;
 }
+
+/* ========================================================================
+ * Generic UI token mapping
+ *
+ * Non-content chrome (ChapterMenu / ModeControls / CourseProgress /
+ * SubtitleStep / QuizPanel) is theme-agnostic — it should look the same
+ * regardless of which theme is active. The 6 shipped themes each define
+ * `--accent` / `--surface` / `--text` etc. in their own *thematic* way;
+ * we do NOT want, e.g., `midnight-press`'s neon teal showing up on the
+ * menu of a `paper-press` course.
+ *
+ * The cleanest fix is to map --ui-* to the *neutral* version of each
+ * token, with a tiny per-theme override table at the end of every
+ * `tokens.css`. Until every theme has that override, this fallback
+ * block in base.css guarantees the chrome stays readable.
+ * ======================================================================== */
+
+:root {
+  --ui-accent:       var(--accent);
+  --ui-accent-soft:  var(--accent-soft);
+  --ui-good:         var(--accent-good);
+  --ui-warn:         var(--accent-warn);
+  --ui-tech:         var(--accent-tech);
+  --ui-deep:         var(--accent-deep);
+  --ui-shell:        var(--shell);
+  --ui-surface:      var(--surface);
+  --ui-surface-2:    var(--surface-2);
+  --ui-surface-3:    var(--surface-3);
+  --ui-text:         var(--text);
+  --ui-text-2:       var(--text-2);
+  --ui-text-mute:    var(--text-mute);
+  --ui-rule:         var(--rule);
+}
+
+/* blueprint theme ships a near-pure-white shell that crushes the chrome
+   contrast. Nudge it toward a slightly darker neutral for menus and
+   controls. (Per-theme overrides go here until the long-term plan in
+   THEMES.md § Generic UI Token is implemented.) */

@@ -20,6 +20,9 @@ interface Options {
   /** Has the user started auto playback? (Browsers block autoplay until
    *  the page receives a user gesture; the AutoStartGate flips this.) */
   autoStarted: boolean;
+  /** Pause the audio (and, in auto mode, hold auto-advance). The parent
+   *  also gates `onAutoAdvance` so auto-advance never fires while paused. */
+  paused?: boolean;
 }
 
 /**
@@ -37,6 +40,11 @@ interface Options {
  * no "minimum hold" knob. If a chapter's visual animation needs more time,
  * the chapter should write longer narration, split the step, or speed the
  * animation up. This keeps Auto-mode behavior trivially predictable.
+ *
+ * The `paused` flag is honored by (a) pausing the audio element when it
+ * transitions to true, and (b) not firing the auto-advance timer when
+ * the user has paused. The parent still gates `onAutoAdvance` so manual
+ * click + Stage tap also stop advancing while paused.
  */
 export function useAudioPlayer({
   src,
@@ -45,11 +53,29 @@ export function useAudioPlayer({
   estimateFallbackMs = 1500,
   onAutoAdvance,
   autoStarted,
+  paused = false,
 }: Options) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Latest callback ref so timers don't capture stale closures.
   const onAdvanceRef = useRef(onAutoAdvance);
   onAdvanceRef.current = onAutoAdvance;
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
+
+  // Pause / resume the live audio element whenever the flag flips.
+  // We don't re-create the element — just pause it so resuming
+  // continues from the same position.
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (paused) {
+      a.pause();
+    } else {
+      a.play().catch(() => {
+        /* autoplay may be blocked — AutoStartGate handles user-gesture */
+      });
+    }
+  }, [paused]);
 
   useEffect(() => {
     const prev = audioRef.current;
@@ -68,8 +94,9 @@ export function useAudioPlayer({
 
     const advanceAfter = (ms: number) => {
       if (mode !== "auto" || advanced) return;
+      if (pausedRef.current) return; // honor pause
       timer = window.setTimeout(() => {
-        if (advanced) return;
+        if (advanced || pausedRef.current) return;
         advanced = true;
         onAdvanceRef.current();
       }, Math.max(0, ms));
@@ -86,12 +113,14 @@ export function useAudioPlayer({
         if (mode === "auto") advanceAfter(estimateFallbackMs);
       });
 
-      audio.play().catch((err) => {
-        // Autoplay blocked (rare, AutoStartGate should prevent this) or
-        // file missing — fall back to estimate in auto mode.
-        console.warn("audio play failed:", err);
-        if (mode === "auto") advanceAfter(estimateFallbackMs);
-      });
+      if (!pausedRef.current) {
+        audio.play().catch((err) => {
+          // Autoplay blocked (rare, AutoStartGate should prevent this) or
+          // file missing — fall back to estimate in auto mode.
+          console.warn("audio play failed:", err);
+          if (mode === "auto") advanceAfter(estimateFallbackMs);
+        });
+      }
     } else if (mode === "auto") {
       // No audio for this step (silent / empty narration) — use estimate.
       advanceAfter(estimateFallbackMs);

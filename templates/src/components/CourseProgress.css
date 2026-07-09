@@ -1,0 +1,62 @@
+/* CourseProgress — compact course-mode progress bar (replaces ProgressBar) */
+
+.cp-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 6px 16px;
+  background: var(--ui-surface);
+  border-top: 1px solid var(--ui-rule);
+  min-height: 36px;
+}
+
+.cp-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ui-text-mute);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  min-width: 280px;
+}
+
+.cp-frac,
+.cp-step,
+.cp-pct {
+  color: var(--ui-text);
+  font-weight: 600;
+}
+
+.cp-sep {
+  color: var(--ui-rule);
+}
+
+.cp-rail {
+  flex: 1;
+  position: relative;
+  height: 4px;
+  background: var(--ui-rule);
+  border-radius: 2px;
+  overflow: visible;
+}
+
+.cp-rail-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--ui-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.cp-rail-chapter {
+  position: absolute;
+  top: -2px;
+  width: 2px;
+  height: 8px;
+  background: var(--ui-text);
+  border-radius: 1px;
+  transform: translateX(-1px);
+}

@@ -7,15 +7,15 @@
   gap: 4px;
   width: 100%;
   padding: 12px 24px 20px;
-  background: var(--shell);
-  border-top: 1px solid var(--rule);
+  background: var(--ui-shell);
+  border-top: 1px solid var(--ui-rule);
   min-height: 56px;
   flex-shrink: 0;
 }
 
 .ss-chunk {
   font-size: 22px;
-  color: var(--text);
+  color: var(--ui-text);
   line-height: 1.4;
   text-align: center;
   max-width: 90%;
@@ -23,8 +23,8 @@
 }
 
 .ss-bar--err {
-  background: var(--accent-warn);
-  color: var(--surface);
+  background: var(--ui-accent-warn);
+  color: var(--ui-surface);
 }
 
 .ss-err {
@@ -34,6 +34,6 @@
 }
 
 .ss-empty {
-  color: var(--text-mute);
+  color: var(--ui-text-mute);
   font-size: 18px;
 }

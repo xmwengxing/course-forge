@@ -6,6 +6,7 @@ import "./styles/animations.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AutoStartGate } from "./components/AutoStartGate";
 import { ChapterMenu } from "./components/ChapterMenu";
+import { CourseProgress } from "./components/CourseProgress";
 import { ModeControls, type PlaybackMode } from "./components/ModeControls";
 import { ProgressBar } from "./components/ProgressBar";
 import { QuizPanel } from "./components/QuizPanel";
@@ -109,6 +110,14 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   const Cmp = ch.Component;
   const stepText = ch.narrations[stepper.cursor.step] ?? "";
 
+  // Play/pause toggle — independent of playback mode. When paused:
+  //   * audio element is paused
+  //   * auto-advance is held (we override onAutoAdvance to a no-op)
+  //   * manual click on Stage still works (lets the user navigate
+  //     "behind the pause curtain") — but to keep behaviour simple,
+  //     we also block manual advance while paused.
+  const [isPaused, setIsPaused] = useState(false);
+
   // Persist mode choice
   useEffect(() => {
     try {
@@ -118,10 +127,19 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
     }
   }, [playbackMode]);
 
-  const handleAdvance = useCallback(() => stepper.next(), [stepper]);
+  // Reset pause state when the cursor changes (new step = fresh play)
+  useEffect(() => {
+    setIsPaused(false);
+  }, [stepper.cursor.chapter, stepper.cursor.step]);
+
+  const handleAdvance = useCallback(() => {
+    if (isPaused) return;
+    stepper.next();
+  }, [stepper, isPaused]);
 
   useAudioPlayer({
     src: `/audio/${ch.id}/${stepper.cursor.step + 1}.mp3`,
+    paused: isPaused,
     mode,
     autoStarted,
     onAutoAdvance: handleAdvance,
@@ -130,8 +148,9 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
 
   const onAdvance = useCallback(() => {
     if (mode === "auto" && !autoStarted) return;
+    if (isPaused) return;
     stepper.next();
-  }, [mode, autoStarted, stepper]);
+  }, [mode, autoStarted, stepper, isPaused]);
 
   // Demo: a quiz panel is hard-coded at the last step of the last
   // chapter. Real projects should expose `quiz` data via the
@@ -143,6 +162,24 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   // Fullscreen toggle (Fullscreen API on the main area)
   const fsRef = useRef<HTMLDivElement | null>(null);
   const [isFs, setIsFs] = useState(false);
+
+  // ChapterMenu visibility — collapsed by default to give Stage the full
+  // 1920×1080 viewport. Reopens on hover near the left edge or on the
+  // explicit "≡" button in the top-left corner. Closes when the cursor
+  // leaves both the menu and the trigger strip.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuHideTimer = useRef<number | null>(null);
+  function showMenu() {
+    if (menuHideTimer.current != null) {
+      window.clearTimeout(menuHideTimer.current);
+      menuHideTimer.current = null;
+    }
+    setMenuOpen(true);
+  }
+  function hideMenuDelayed() {
+    if (menuHideTimer.current != null) window.clearTimeout(menuHideTimer.current);
+    menuHideTimer.current = window.setTimeout(() => setMenuOpen(false), 220);
+  }
   const toggleFullscreen = useCallback(() => {
     if (!fsRef.current) return;
     if (!document.fullscreenElement) {
@@ -154,13 +191,77 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
     }
   }, []);
 
+  const togglePause = useCallback(() => setIsPaused((p) => !p), []);
+
+  // Keyboard shortcuts:
+  //   Space  → toggle play / pause
+  //   F      → toggle fullscreen
+  //   M      → cycle playback mode (manual → audio → auto)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement
+      ) return;
+      if (e.key === " " || e.code === "Space") {
+        e.preventDefault();
+        e.stopPropagation();
+        // Drop focus from any focused button so a subsequent Space
+        // doesn't re-trigger that button's click (browser default
+        // behavior). Without this, hitting Space while a button is
+        // focused can both pause AND advance.
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+        // Space semantics — never advance the stepper:
+        //   1. AutoStartGate visible (page just opened with ?auto=1,
+        //      user hasn't gestured yet) → dismiss the gate and start
+        //      auto playback. (Bypass the pause flag entirely.)
+        //   2. AutoStartGate dismissed + isPaused → resume.
+        //   3. AutoStartGate dismissed + !isPaused → pause.
+        if (mode === "auto" && !autoStarted) {
+          setAutoStarted(true);
+        } else {
+          togglePause();
+        }
+      } else if (e.key === "f" || e.key === "F") {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [togglePause, toggleFullscreen, mode, autoStarted, setAutoStarted]);
+
   return (
-    <div className="app-root" ref={fsRef}>
+    <div className={`app-root ${menuOpen ? "app-root--menu-open" : ""}`} ref={fsRef}>
       <ChapterMenu
         course={course}
         currentChapterId={ch.id}
         jumpTo={(chapterIndex, step) => stepper.jumpToChapter(chapterIndex, step)}
+        onMouseEnter={showMenu}
+        onMouseLeave={hideMenuDelayed}
       />
+
+      <div
+        className="cm-trigger"
+        onMouseEnter={showMenu}
+        onMouseLeave={hideMenuDelayed}
+        onFocus={showMenu}
+      >
+        <button
+          type="button"
+          className="cm-trigger-btn"
+          onClick={() => (menuOpen ? setMenuOpen(false) : showMenu())}
+          aria-label="显示课程菜单"
+          aria-expanded={menuOpen}
+          title="菜单"
+          data-no-advance
+        >
+          <span aria-hidden="true">≡</span>
+        </button>
+      </div>
 
       <div className="app-main">
         <AutoStartGate
@@ -176,18 +277,24 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
 
         <SubtitleStep chapters={chapters} cursor={stepper.cursor} />
 
-        <ProgressBar
-          chapters={chapters}
-          cursor={stepper.cursor}
-          onJumpChapter={(idx, step) => stepper.jumpToChapter(idx, step)}
-        />
+        {course.courseId === "single" ? (
+          <ProgressBar
+            chapters={chapters}
+            cursor={stepper.cursor}
+            onJumpChapter={(idx, step) => stepper.jumpToChapter(idx, step)}
+          />
+        ) : (
+          <CourseProgress chapters={chapters} cursor={stepper.cursor} />
+        )}
 
         <ModeControls
           mode={playbackMode}
           onModeChange={onModeChange}
           onFullscreen={toggleFullscreen}
           isFullscreen={isFs}
-          hint="← → 推进 · M 切模式 · F 全屏"
+          isPaused={isPaused}
+          onTogglePause={togglePause}
+          hint="Space 暂停/播放 · M 切模式 · F 全屏 · 鼠标点屏幕推进"
         />
 
         {isLastStep && (
