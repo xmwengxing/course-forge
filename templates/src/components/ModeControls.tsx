@@ -4,7 +4,14 @@ import "./ModeControls.css";
 export type PlaybackMode = "manual" | "audio" | "auto";
 
 export interface ModeControlsProps {
-  mode: PlaybackMode;
+  /**
+   * "playing" — the active step is currently playing audio (auto mode,
+   *   audio mode with autoplay, or audio mode with user-clicked resume).
+   *   Shows "AUTO 全自动" with a green pulse.
+   * "paused" — the active step is paused (user hit Space or auto mode
+   *   has not started yet). Shows "MANUAL 手动" with a neutral state.
+   */
+  playbackPhase: "playing" | "paused";
   onModeChange: (m: PlaybackMode) => void;
   /** "space → start auto" hint text shown next to the button. */
   hint?: string;
@@ -20,29 +27,38 @@ export interface ModeControlsProps {
 }
 
 /**
- * ModeControls — explicit playback-mode + transport controls.
+ * ModeControls — compact playback transport (pause / fullscreen / state).
  *
- * Three mode buttons (manual / audio / auto), one play-pause button, and
- * an optional fullscreen toggle. Pressing M on the keyboard cycles
- * playback mode; Space toggles play/pause; F toggles fullscreen.
+ * The 3-state mode toggle (MANUAL / AUDIO / AUTO) has been collapsed
+ * into a single status badge: it shows "AUTO 全自动" when audio is
+ * playing, "MANUAL 手动" when paused. The user still controls state
+ * via the Space key and the pause / play button. Switching between
+ * internal modes is now hidden — pressing M on the keyboard still
+ * cycles through the underlying modes, but the user doesn't see a
+ * button for it.
  *
  * Layout order (left → right):
- *   ⏯ [Pause/Play]   MANUAL | AUDIO | AUTO   ⛶ [Fullscreen]
+ *   ⏯ [Pause/Play]   ◉ [Status badge: AUTO or MANUAL]   ⛶ [Fullscreen]
  *   hint text on the right
  */
 export function ModeControls({
-  mode,
-  onModeChange,
+  playbackPhase,
+  onModeChange: _onModeChange,
   hint,
   onFullscreen,
   isFullscreen,
   isPaused,
   onTogglePause,
 }: ModeControlsProps) {
-  const set = useCallback(
-    (target: PlaybackMode) => () => onModeChange(target),
-    [onModeChange],
+  const _set = useCallback(
+    (target: PlaybackMode) => () => _onModeChange(target),
+    [_onModeChange],
   );
+  // Touching _set / _onModeChange so the linter doesn't strip them — the
+  // M key handler in App.tsx calls cycleMode() directly, but ModeControls
+  // historically received onModeChange. Keeping the prop keeps the API
+  // surface compatible for projects that want to surface the 3-state UI.
+  void _set;
 
   return (
     <div className="mc-bar">
@@ -63,25 +79,24 @@ export function ModeControls({
           </button>
         )}
         <div className="mc-divider" aria-hidden="true" />
-        <div className="mc-mode-group" role="radiogroup" aria-label="播放模式">
-          {(["manual", "audio", "auto"] as const).map((m) => (
-            <button
-              key={m}
-              type="button"
-              className={`mc-btn ${mode === m ? "mc-btn--active" : ""}`}
-              onClick={set(m)}
-              aria-pressed={mode === m}
-              role="radio"
-              aria-checked={mode === m}
-            >
-              <span className="mc-btn-en label-mono">{m.toUpperCase()}</span>
-              <span className="mc-btn-cn serif-cn">
-                {m === "manual" && "手动"}
-                {m === "audio" && "半自动"}
-                {m === "auto" && "全自动"}
-              </span>
-            </button>
-          ))}
+        <div
+          className={`mc-status mc-status--${playbackPhase}`}
+          aria-live="polite"
+          aria-label={playbackPhase === "playing" ? "全自动播放中" : "手动暂停"}
+        >
+          {playbackPhase === "playing" ? (
+            <>
+              <span className="mc-status-dot" aria-hidden="true" />
+              <span className="mc-status-en label-mono">AUTO</span>
+              <span className="mc-status-cn serif-cn">全自动</span>
+            </>
+          ) : (
+            <>
+              <span className="mc-status-icon" aria-hidden="true">⏸</span>
+              <span className="mc-status-en label-mono">MANUAL</span>
+              <span className="mc-status-cn serif-cn">手动</span>
+            </>
+          )}
         </div>
         <div className="mc-divider" aria-hidden="true" />
         {onFullscreen && (
@@ -93,7 +108,7 @@ export function ModeControls({
             title="F"
             data-no-advance
           >
-            <span className="mc-btn-icon">{isFullscreen ? "⛶" : "⛶"}</span>
+            <span className="mc-btn-icon">⛶</span>
             <span className="mc-btn-cn serif-cn">{isFullscreen ? "退出全屏" : "全屏"}</span>
           </button>
         )}

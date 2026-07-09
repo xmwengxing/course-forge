@@ -109,3 +109,80 @@
   letter-spacing: 0.10em;
   margin-left: auto;
 }
+/* ========================================================================
+ * Status badge — single non-interactive pill showing "AUTO" or "MANUAL"
+ * based on `playbackPhase` prop. Replaces the 3-state mode toggle.
+ * ======================================================================== */
+
+.mc-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  min-height: 36px;
+  border-radius: 3px;
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-rule);
+  font-family: inherit;
+  user-select: none;
+}
+
+.mc-status-en {
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+
+.mc-status-cn {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mc-status--playing {
+  border-color: var(--ui-accent-good);
+  background: var(--ui-accent-good);
+  color: var(--ui-surface);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+
+.mc-status--playing .mc-status-en,
+.mc-status--playing .mc-status-cn {
+  color: var(--ui-surface);
+}
+
+.mc-status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: mc-status-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mc-status-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.5; transform: scale(0.85); }
+}
+
+.mc-status--paused {
+  border-color: var(--ui-accent-warn);
+  color: var(--ui-text);
+}
+
+.mc-status--paused .mc-status-en {
+  color: var(--ui-accent-warn);
+}
+
+.mc-status--paused .mc-status-cn {
+  color: var(--ui-text);
+}
+
+.mc-status-icon {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ui-accent-warn);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+}

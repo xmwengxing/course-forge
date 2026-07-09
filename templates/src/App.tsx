@@ -292,13 +292,13 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
         )}
 
         <ModeControls
-          mode={playbackMode}
+          playbackPhase={isPaused ? "paused" : "playing"}
           onModeChange={onModeChange}
           onFullscreen={toggleFullscreen}
           isFullscreen={isFs}
           isPaused={isPaused}
           onTogglePause={togglePause}
-          hint="Space 暂停/播放 · M 切模式 · F 全屏 · 鼠标点屏幕推进"
+          hint="Space 暂停/播放 · F 全屏 · 鼠标点屏幕推进"
         />
 
         {isLastStep && (

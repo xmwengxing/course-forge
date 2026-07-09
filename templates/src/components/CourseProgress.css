@@ -40,7 +40,8 @@
   height: 4px;
   background: var(--ui-rule);
   border-radius: 2px;
-  overflow: visible;
+  overflow: hidden;
+  min-width: 80px;
 }
 
 .cp-rail-fill {
@@ -51,14 +52,4 @@
   background: var(--ui-accent);
   border-radius: 2px;
   transition: width 0.3s ease;
-}
-
-.cp-rail-chapter {
-  position: absolute;
-  top: -2px;
-  width: 2px;
-  height: 8px;
-  background: var(--ui-text);
-  border-radius: 1px;
-  transform: translateX(-1px);
 }
