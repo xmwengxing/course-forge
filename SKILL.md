@@ -68,8 +68,9 @@ Phase 4   部署嵌入 / 录屏 + 后期
 
 | 阶段 | 必读（每次都看） | 一次性看完 / 按需查 |
 |---|---|---|
+| Phase 0 模式判断 | [`references/COURSE-MODE.md`](references/COURSE-MODE.md) § 模式判断 checklist (3 个问题) | —— |
 | Phase 1.1-1.2 内容编写 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) + [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) + `article.md`（用户原文，如有） | —— |
-| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`（用户想了解主题系统时）；`references/COURSE-MODE.md`（课程结构 S1-S5 / 多课程管理 —— 当开发场景为课程而非单视频时必读） |
+| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`（用户想了解主题系统时）；`references/COURSE-MODE.md`（课程结构 / chrome 反模式 / 多课程管理 —— 课程模式时必读） |
 | Phase 2.1 脚手架 | —— | SKILL.md 本节看一次 |
 | **Phase 2.4 实现单章（×N 次）** | **[`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md)** 单一入口（`## 这是视频，不是 PPT` / `## 必须用 CSS / SVG / Canvas / JS 大胆绘制视觉演示 + 提供交互` / `## 逐步揭示，禁止一次全展示` / `## 视觉中心：舞台中心 ≠ 元素居中` / `## 内容取舍：抓重点，不要原文搬运` / `## 双源：节奏跟口播稿，细节回原文章` / `## 字体 / 配色 / 动画 / 留白 —— 视频演示基本审美` / `## 避免 AI 味` / `## 代码层最小约束` / `## 完工自检` / `## L. 动画升级（animejs v4 实战）`）+ 当前主题的 `themes/<id>/theme.json` + 当前章节的 outline.md 段落 + `article.md` 本章对应段落 + 素材清单 | `references/EXAMPLES/`（结构示意，不是抄袭模板）；`references/THEMES.md` 完整 token 契约 |
 | Phase 3 音频合成 | [`references/AUDIO.md`](references/AUDIO.md)（含 narrations.ts → segments.json → 任意 provider 流程） | `templates/scripts/tts-providers/README.md`（换 provider / 自带 TTS 时） |
