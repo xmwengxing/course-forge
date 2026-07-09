@@ -170,3 +170,75 @@ midnight-press 荧光青菜单刺眼）。
 | 进度条右侧溢出 | 进度条总长 = 课程 | 改 `stepPct = (step + 1) / chapterTotalSteps` |
 | 播放按钮凹陷全黑 | CSS 引用 `--ui-accent-warn` 但 base.css 没定义 | base.css 加完整 `--ui-accent-*` 映射 |
 | 进度条右侧溢出切到 S3 段 | 同上 (旧版用全课程) | 改 per-chapter |
+
+---
+
+## 8. chrome 组件清单 (课程模式 6 件套)
+
+> **chrome = 围绕内容的非内容 UI**。以下 6 个组件已包含在 `templates/src/components/`
+> 里，scaffold.sh 同步拷到新项目。课程模式必启用前 4 个，后 2 个按需。
+> 详细 props 看文件，**文档不复制 API**（避免与代码脱节——代码是权威）。
+
+| 组件 | 文件 | 主要 props | 用途 |
+|---|---|---|---|
+| **ChapterMenu** | `components/ChapterMenu.tsx` | `course, currentChapterId, jumpTo` | 左侧 3-tier 树状导航（course/segment/chapter） |
+| **ModeControls** | `components/ModeControls.tsx` | `playbackPhase, onTogglePause, isPaused, onFullscreen, isFullscreen, hint` | 底部三件套：播放/暂停 + 状态徽章 + 全屏 |
+| **CourseProgress** | `components/CourseProgress.tsx` | `chapters, cursor` | 底部细进度条（**按章节**总长，**不**按课程） |
+| **SubtitleStep** | `components/SubtitleStep.tsx` | `chapters, cursor` | 拉 `/subtitle-timing.json`，按 (chapter, step) 渲染字幕 |
+| **QuizPanel** | `components/QuizPanel.tsx` | `question, onSubmit, blocking` | 末段柯氏 L1+L2 弹题（单选/多选/简答） |
+| **AutoStartGate** | `components/AutoStartGate.tsx` | `visible, onStart` | `?auto=1` 进入时全屏 gate，**只响应 click 不监听键**（§ 5.4） |
+
+**hooks**（同样在 `templates/src/hooks/`）：
+
+| hook | 用途 |
+|---|---|
+| `useCourseLoader` | 读 `?course=<id>` → 拉 `/course-<id>.json` 或 fallback `/course.json` |
+| `useStepper(chapters, courseId)` | 步进器，localStorage key 含 courseId 命名空间 |
+| `useAudioPlayer` | 音频 + auto-advance |
+| `useAutoMode` | mode 状态（**不含 keyboard handler**，全归 App.tsx） |
+
+---
+
+## 9. chrome 改法 (token 驱动 + 不动 React 业务)
+
+> **chrome 改样式永远走 CSS token，不动 React 业务代码**。
+
+### 9.1 改 chrome 颜色 / 间距
+
+只动对应组件的 `.css` 文件 + `--ui-*` token：
+
+```css
+/* 例：菜单背景从 dark surface 改成 light neutral */
+.ChapterMenu.css { background: var(--ui-surface); }
+/* 或彻底覆盖 chrome 风格：在 themes/<id>/tokens.css 末尾加 */
+:root {
+  --ui-accent: #4f46e5;   /* 锁定为靛蓝 */
+  --ui-surface: #fafafa;  /* 锁定为近白 */
+}
+```
+
+完整 `--ui-*` 列表见 [`THEMES.md`](THEMES.md) § 通用 UI Token。
+
+### 9.2 改 chrome 行为 / 文案 / 新增 props
+
+- 改 `components/<Name>.tsx` 内的 JSX（**只**该文件）
+- 不动 `App.tsx` 之外的业务代码
+- props 改完同步更新 § 8 表格（不复制 API，但**记录用途变了**）
+
+### 9.3 新增 chrome 组件
+
+1. `templates/src/components/<Name>.tsx` 写实现
+2. `templates/src/components/<Name>.css` 写样式（用 `--ui-*` token）
+3. `templates/src/App.tsx` CourseView 调它
+4. `scaffold.sh` 同步拷到新项目
+5. **更新 § 8 表格**（新增一行）
+
+### 9.4 通用脚本说明
+
+**没有专门的"chrome 生成脚本"**——chrome 是 React 组件 + CSS token。
+
+`scaffold.sh` 做的事：脚手架时**自动拷贝 6 个 chrome 组件**到新项目，不需要额外
+flag。**改 chrome 不需要跑脚本**——直接改源码，HMR 自动应用。
+
+未来如需"按主题定制 chrome 范围"（如 `scaffold.sh --chrome=minimal`），见
+`scripts/scaffold.sh` 头部（**当前未实现**，按需扩展）。
