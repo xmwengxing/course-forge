@@ -1,80 +1,62 @@
 /* ─────────────────────────────────────────────────────────────────────
  * Example chapter — uses ONLY semantic tokens from the active theme.
  * Replace this file freely; it's just demo content.
+ *
+ * Demonstrates the "一屏多步 · 逐步揭示" pattern:
+ * one screen (.ex-screen) = one stable final composition; each element is a
+ * separate <Reveal show={step >= K}> that fades in *in place* while earlier
+ * content stays put. Hidden reveals keep their layout slot (opacity:0), so
+ * nothing reflows or overflows — do NOT collapse them with display:none.
  * ───────────────────────────────────────────────────────────────────── */
 
 .ex-scene { color: var(--text); }
-
 .ex-em { color: var(--accent); }
 
-/* ─── step 0: cover ─── */
-.ex-cover-body {
-  flex: 1;
+/* 屏级容器：跨多个 step 常驻，内容逐步就地叠加（不被 scene-pad 的 padding 覆盖）。
+   关键：所有 <Reveal> 从一开始就按最终构图占好位置（隐藏时 opacity:0 仍占位），
+   逐步揭示时只是就地淡入，绝不推走已揭示内容、绝不回流、绝不溢出。 */
+.ex-screen {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: var(--space-5);
-  padding-top: var(--space-7);
 }
+.ex-masthead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.brand { font-family: var(--font-mono); letter-spacing: 0.1em; color: var(--text-2); }
+.issue { font-family: var(--font-mono); font-size: var(--t-small); color: var(--text-mute); }
+
+/* 揭示动效完全交给 <Reveal> 组件的基类 .cf-reveal（opacity:0 + transform，
+   in 时过渡到位）。切勿在这里给 .cf-reveal:not(.in) 加 display:none——
+   那会让隐藏块脱离布局，新元素出现时整组重新居中/回流，已揭示内容跳动，
+   正是「排版混乱、元素溢出」的元凶。隐藏块保持占位才能稳定。 */
+
+.ex-headline { display: flex; }
 .ex-cover-h {
   font-size: var(--t-display-2);
   line-height: 1.05;
   margin: 0;
   max-width: 24ch;
 }
-.ex-cover-foot {
-  margin-top: var(--space-7);
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
+.ex-visual { display: flex; color: var(--text-2); }
+.ex-stage-demo { width: 100%; max-width: 320px; }
 
-/* ─── step 1: split ─── */
-.ex-split {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(240px, 320px) 1fr;
-  gap: var(--space-9);
-  padding-top: var(--space-7);
-  align-items: start;
-}
-.ex-split-num {
-  font-size: var(--t-display-1);
-}
-.ex-split-body {
+.ex-points { display: flex; flex-direction: column; gap: var(--space-3); }
+.ex-point-list {
+  margin: 0;
+  padding-left: var(--space-5);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-}
-.ex-split-h {
-  font-size: var(--t-h1);
-  line-height: 1.1;
-  margin: 0;
-}
-.ex-split-p {
-  font-family: var(--font-body);
-  font-size: var(--t-body);
-  line-height: 1.6;
+  gap: var(--space-2);
+  font-size: var(--t-h3);
   color: var(--text-2);
-  max-width: 56ch;
-  margin: 0;
+  line-height: 1.5;
 }
-
-/* ─── step 2: close pull-quote ─── */
-.ex-close { padding: 0; }
-.ex-close-inner {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: var(--stage-pad-y) var(--stage-pad-x);
-  gap: var(--space-5);
-}
-.ex-quote {
-  font-size: var(--t-display-2);
-  line-height: 1.15;
-  max-width: 22ch;
-}
-.ex-close-foot {
-  margin-top: var(--space-7);
-}
+.ex-cta { display: flex; flex-direction: column; gap: var(--space-4); margin-top: auto; }
+.ex-cta-line { font-size: var(--t-h2); color: var(--text); }
+.ex-cover-foot { display: flex; align-items: center; gap: var(--space-3); }

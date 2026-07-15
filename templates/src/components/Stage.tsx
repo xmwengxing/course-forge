@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useCallback, useRef, type CSSProperties, type ReactNode } from "react";
 import { useStageScale } from "../hooks/useStageScale";
 
 interface Props {
@@ -29,7 +29,13 @@ interface Props {
  * (var(--shell), var(--surface)) — see themes/<id>/tokens.css.
  */
 export function Stage({ onAdvance, children, layout = "viewport" }: Props) {
-  const scale = useStageScale();
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Measure the rendered container so the stage fills the real available
+  // area (course mode: the .app-stage-area minus subtitle + dock). This
+  // makes the canvas grow when the surrounding chrome shrinks, instead of
+  // being pinned to a fixed window-based margin.
+  const getContainer = useCallback(() => containerRef.current, []);
+  const scale = useStageScale({ marginX: 32, marginY: 24, getContainer });
   const fitterStyle: CSSProperties = {
     width: 1920 * scale,
     height: 1080 * scale,
@@ -38,7 +44,10 @@ export function Stage({ onAdvance, children, layout = "viewport" }: Props) {
     transform: `scale(${scale})`,
   };
   return (
-    <div className={layout === "embedded" ? "stage-embedded" : "app-shell"}>
+    <div
+      ref={containerRef}
+      className={layout === "embedded" ? "stage-embedded" : "app-shell"}
+    >
       <div className="stage-fitter" style={fitterStyle}>
         <div
           className="stage-frame"

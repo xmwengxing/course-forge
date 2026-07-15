@@ -1,0 +1,55 @@
+/* BlockStack — 积木逐个堆叠（隐藏态保留槽位，无回流） */
+.cf-blockstack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.cf-bs-cap {
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+}
+.cf-bs-stage {
+  position: relative;
+  width: 240px;
+}
+.cf-bs-block {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--elev-1);
+  border: 1px solid var(--accent-glow);
+  color: var(--text-1);
+  font-size: 17px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s var(--ease-quart), transform 0.4s var(--ease-quart);
+}
+.cf-bs-block.is-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.cf-bs-block--1 { border-color: var(--accent); }
+.cf-bs-block--2 { border-color: var(--accent-tech); }
+.cf-bs-block--3 { border-color: var(--accent-good); }
+.cf-bs-idx {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text-mute);
+}
+.cf-bs-block--1 .cf-bs-idx { background: var(--accent); color: var(--surface); }
+.cf-bs-block--2 .cf-bs-idx { background: var(--accent-tech); color: var(--surface); }
+.cf-bs-block--3 .cf-bs-idx { background: var(--accent-good); color: var(--surface); }

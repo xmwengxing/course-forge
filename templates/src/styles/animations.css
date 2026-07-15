@@ -11,6 +11,24 @@
 }
 .mask-reveal.in { clip-path: inset(0 0 0 0); }
 
+/* Reveal — generic ELEMENT-level progressive reveal (not text-only).
+ * Wrap any element (card / SVG group / image / button) and flip `show`
+ * (driven by step) to animate it in. Variants: rise / scale / pop / fade.
+ * Motion uses theme tokens so it stays theme-aware. See Reveal.tsx. */
+.cf-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity var(--dur-base) var(--ease-quart),
+              transform var(--dur-base) var(--ease-quart);
+  will-change: opacity, transform;
+}
+.cf-reveal.in { opacity: 1; transform: none; }
+.cf-reveal--scale { transform: scale(0.86); }
+.cf-reveal--scale.in { transform: scale(1); }
+.cf-reveal--pop { transform: scale(0.6) rotate(-3deg); }
+.cf-reveal--pop.in { transform: scale(1) rotate(0); }
+.cf-reveal--fade { transform: none; }
+
 /* Hairline rule grow — scaleX from 0 → 1, transform-origin: left */
 .rule-grow {
   transform: scaleX(0);

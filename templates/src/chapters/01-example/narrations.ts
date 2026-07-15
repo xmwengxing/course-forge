@@ -4,7 +4,9 @@ import type { Narration } from "../../registry/types";
  * Per-step narration for this chapter.
  *
  * Length === number of steps the chapter component renders.
- * Index i === the spoken text for `step === i` in `Example.tsx`.
+ * Index i === the spoken text for `step === i`. This chapter keeps ONE
+ * screen mounted across all steps and reveals content cumulatively
+ * (see Example.tsx) — but the narration is still one entry per step.
  *
  * Audio synthesis uses this file directly (see scripts/extract-narrations.ts).
  * Auto-play mode plays `public/audio/<chapter-id>/<i+1>.mp3` at each step

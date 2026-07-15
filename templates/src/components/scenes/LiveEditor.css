@@ -1,0 +1,104 @@
+/* LiveEditor — 现场改 Bug 编辑器 */
+.cf-editor {
+  width: 100%;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--elev-1);
+  border: 1px solid var(--rule);
+}
+.cf-editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--elev-2);
+  border-bottom: 1px solid var(--rule);
+}
+.cf-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--rule);
+}
+.cf-file {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+.cf-editor-code {
+  position: relative;
+  padding: 14px 16px;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.cf-code-line {
+  display: flex;
+  gap: 14px;
+  white-space: pre;
+}
+.cf-ln {
+  flex: 0 0 auto;
+  width: 22px;
+  color: var(--text-mute);
+  text-align: right;
+}
+.cf-code-text {
+  color: var(--text-1);
+}
+.cf-code-line.is-bug .cf-code-text {
+  color: var(--accent-warn);
+  text-decoration: var(--accent-warn) wavy underline;
+  text-underline-offset: 4px;
+}
+.cf-code-line.is-fixed .cf-code-text {
+  color: var(--accent-good);
+}
+.cf-editor-sweep {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  animation: cf-sweep-move 1.6s var(--ease-quart) infinite;
+}
+.cf-lens {
+  fill: none;
+  stroke: var(--accent-glow);
+  stroke-width: 3;
+}
+.cf-lens-h {
+  stroke: var(--accent-glow);
+  stroke-width: 4;
+}
+@keyframes cf-sweep-move {
+  0% { transform: translateX(-40px); opacity: 0.2; }
+  50% { opacity: 1; }
+  100% { transform: translateX(40px); opacity: 0.2; }
+}
+.cf-editor-console {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  border-top: 1px solid var(--rule);
+  background: var(--elev-2);
+}
+.cf-console-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+.cf-editor-console.is-err {
+  color: var(--accent-warn);
+}
+.cf-editor-console.is-err .cf-console-dot {
+  background: var(--accent-warn);
+}
+.cf-editor-console.is-ok {
+  color: var(--accent-good);
+}
+.cf-editor-console.is-ok .cf-console-dot {
+  background: var(--accent-good);
+}

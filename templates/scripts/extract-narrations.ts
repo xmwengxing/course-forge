@@ -40,38 +40,36 @@ interface Segment {
   audio: string;
 }
 
-/** Parse `src/registry/chapters.ts` to learn chapter id order. */
+/** Parse `src/registry/chapters.ts` to learn chapter id → folder order. */
 async function readChapterOrder(): Promise<{ id: string; folder: string }[]> {
   const src = await readFile(REGISTRY_PATH, "utf8");
-  // Match: id: "..."   AND   from "../chapters/<folder>/narrations"
-  const ids: string[] = [];
-  const folders: Record<string, string> = {};
 
-  for (const m of src.matchAll(/id:\s*["']([^"']+)["']/g)) ids.push(m[1]!);
+  // Only match CHAPTERS entries: a chapter object has BOTH `id` and
+  // `title` (nested objects such as quiz questions also carry an `id`
+  // but no `title`, so they are correctly excluded by this pattern).
+  const ids: string[] = [];
+  for (const m of src.matchAll(
+    /id:\s*["']([^"']+)["']\s*,\s*[\s\S]*?title:\s*["']([^"']+)["']/g,
+  )) {
+    ids.push(m[1]!);
+  }
+
+  // Chapter folders are imported as `../chapters/<folder>/narrations`.
+  const folders: string[] = [];
   for (const m of src.matchAll(
     /from\s+["']\.\.\/chapters\/([^"'\/]+)\/narrations["']/g,
   )) {
-    // We map by import order; pair 1:1 with `ids`. Both orders are the
-    // chapter declaration order in CHAPTERS so they line up.
-    const folder = m[1]!;
-    folders[folder] = folder;
+    folders.push(m[1]!);
   }
 
-  // Map id → folder by reading each chapter's narrations.ts existence.
-  // Folders are typically `<NN>-<id>`; fall back to plain `<id>` if not.
-  const result: { id: string; folder: string }[] = [];
-  for (const id of ids) {
-    const candidates = Object.keys(folders).filter((f) => f.endsWith(`-${id}`));
-    const folder = candidates[0] ?? Object.keys(folders).find((f) => f === id);
-    if (!folder) {
-      throw new Error(
-        `chapter id "${id}" registered but no matching folder found ` +
-          `under src/chapters/. Expected something like NN-${id}/narrations.ts`,
-      );
-    }
-    result.push({ id, folder });
+  if (ids.length !== folders.length) {
+    throw new Error(
+      `registered ${ids.length} chapters but found ${folders.length} ` +
+        `chapter folders under src/chapters/`,
+    );
   }
-  return result;
+
+  return ids.map((id, i) => ({ id, folder: folders[i]! }));
 }
 
 async function loadNarrations(folder: string): Promise<unknown[]> {

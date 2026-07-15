@@ -1,26 +1,31 @@
 {
   "name": "course-forge",
   "version": "1.0.0",
-  "description": "Build interactive, section-based courseware with narration, quizzes, 3D exploration, and embedded assessment — from a single knowledge document to a record-ready web presentation.",
+  "description": "Build interactive courses and lessonware from a knowledge document or narration script — outline planning, narration writing, screen-by-screen reveal, animation, in-screen interaction, and optional TTS audio. One output: interactive courseware.",
   "author": "course-forge contributors",
   "license": "MIT",
   "keywords": [
     "agent-skill",
     "courseware",
+    "interactive-courseware",
+    "lessonware",
     "interactive-presentation",
+    "narration",
+    "quiz",
+    "animation",
     "tts",
     "education",
     "training",
     "e-learning",
-    "slide-deck",
-    "video-production",
     "opencode",
     "claude-code",
-    "cursor"
+    "cursor",
+    "codebuddy",
+    "workbuddy"
   ],
   "skills": {
     "course-forge": {
-      "description": "Turn knowledge docs into interactive courseware with narration, quizzes, 3D scenes, and embedded assessment. Section-based development, TTS audio, chunk-based subtitles, multi-modal support.",
+      "description": "Turn knowledge docs into interactive courseware: plan outlines, write narration, build screen-by-screen revealed lessons with animation and in-screen interaction, optional TTS audio and subtitles.",
       "entry": "SKILL.md",
       "minimal": false,
       "minimalFiles": [

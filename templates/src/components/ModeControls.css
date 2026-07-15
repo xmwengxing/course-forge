@@ -186,3 +186,25 @@
   justify-content: center;
   width: 14px;
 }
+
+/* ─── Mobile (phones) ───
+   Standalone transport bar (single-video mode) + glyph-only buttons. */
+@media (max-width: 600px) {
+  .mc-bar {
+    padding: 6px 12px;
+    min-height: 48px;
+    gap: 10px;
+  }
+  .mc-btn {
+    min-height: 32px;
+    padding: 5px 10px;
+  }
+  .mc-status {
+    min-height: 32px;
+    padding: 5px 10px;
+  }
+  /* Glyph-only on phones — the CN labels waste horizontal space. */
+  .mc-btn-cn,
+  .mc-status-cn { display: none; }
+  .mc-hint { display: none; }
+}

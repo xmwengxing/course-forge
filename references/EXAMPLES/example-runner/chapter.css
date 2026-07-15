@@ -1,0 +1,56 @@
+/* example-runner — 仅放这一屏的布局；RunnerTrack 自身样式在组件里 */
+.exr-root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  height: 100%;
+  justify-content: center;
+}
+.exr-hd {
+  text-align: center;
+}
+.exr-hd h1 {
+  font-size: 46px;
+  color: var(--text-1);
+  margin: 8px 0 0;
+}
+.kicker {
+  color: var(--accent);
+}
+.exr-body {
+  display: flex;
+  gap: var(--space-7);
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.exr-array {
+  display: flex;
+  gap: 10px;
+}
+.exr-cell {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--elev-1);
+  color: var(--text-1);
+  font-family: var(--font-mono);
+  font-size: 22px;
+  border: 2px solid transparent;
+  transition: border-color 0.3s var(--ease-quart), background 0.3s var(--ease-quart),
+    transform 0.3s var(--ease-quart), box-shadow 0.3s var(--ease-quart);
+}
+.exr-cell.is-mid {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, var(--elev-1));
+  transform: translateY(-8px);
+  box-shadow: 0 0 0 1px var(--accent-glow) inset;
+}
+.exr-array-cap {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-mute);
+}

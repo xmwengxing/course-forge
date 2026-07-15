@@ -27,6 +27,89 @@ export interface ModeControlsProps {
 }
 
 /**
+ * TransportControls — the playback transport group: pause/play, the
+ * AUTO/MANUAL status badge, and fullscreen. Extracted from ModeControls
+ * so the bottom dock (AppDock) can compose it next to the progress
+ * readout without the surrounding `.mc-bar` chrome.
+ *
+ * Layout order (left → right):
+ *   ⏯ [Pause/Play]   ◉ [Status badge: AUTO or MANUAL]   ⛶ [Fullscreen]
+ *   hint text on the right
+ */
+export interface TransportControlsProps {
+  playbackPhase: "playing" | "paused";
+  onTogglePause?: () => void;
+  isPaused?: boolean;
+  onFullscreen?: () => void;
+  isFullscreen?: boolean;
+  hint?: string;
+}
+
+export function TransportControls({
+  playbackPhase,
+  onTogglePause,
+  isPaused,
+  onFullscreen,
+  isFullscreen,
+  hint,
+}: TransportControlsProps) {
+  return (
+    <div className="mc-group" role="group" aria-label="播放控制">
+      {onTogglePause && (
+        <button
+          type="button"
+          className={`mc-btn mc-btn--pause ${isPaused ? "mc-btn--pause-active" : ""}`}
+          onClick={onTogglePause}
+          aria-pressed={!!isPaused}
+          title="Space"
+          data-no-advance
+        >
+          <span className="mc-btn-icon">
+            {isPaused ? "▶" : "⏸"}
+          </span>
+          <span className="mc-btn-cn serif-cn">{isPaused ? "播放" : "暂停"}</span>
+        </button>
+      )}
+      <div className="mc-divider" aria-hidden="true" />
+      <div
+        className={`mc-status mc-status--${playbackPhase}`}
+        aria-live="polite"
+        aria-label={playbackPhase === "playing" ? "全自动播放中" : "手动暂停"}
+      >
+        {playbackPhase === "playing" ? (
+          <>
+            <span className="mc-status-dot" aria-hidden="true" />
+            <span className="mc-status-en label-mono">AUTO</span>
+            <span className="mc-status-cn serif-cn">全自动</span>
+          </>
+        ) : (
+          <>
+            <span className="mc-status-icon" aria-hidden="true">⏸</span>
+            <span className="mc-status-en label-mono">MANUAL</span>
+            <span className="mc-status-cn serif-cn">手动</span>
+          </>
+        )}
+      </div>
+      <div className="mc-divider" aria-hidden="true" />
+      {onFullscreen && (
+        <button
+          type="button"
+          className={`mc-btn mc-btn--fs ${isFullscreen ? "mc-btn--fs-active" : ""}`}
+          onClick={onFullscreen}
+          aria-pressed={!!isFullscreen}
+          title="F"
+          data-no-advance
+        >
+          <span className="mc-btn-icon">⛶</span>
+          <span className="mc-btn-cn serif-cn">{isFullscreen ? "退出全屏" : "全屏"}</span>
+        </button>
+      )}
+      {hint && <div className="mc-hint label-mono">{hint}</div>}
+    </div>
+  );
+}
+
+/**
  * ModeControls — compact playback transport (pause / fullscreen / state).
  *
  * The 3-state mode toggle (MANUAL / AUDIO / AUTO) has been collapsed
@@ -37,9 +120,10 @@ export interface ModeControlsProps {
  * cycles through the underlying modes, but the user doesn't see a
  * button for it.
  *
- * Layout order (left → right):
- *   ⏯ [Pause/Play]   ◉ [Status badge: AUTO or MANUAL]   ⛶ [Fullscreen]
- *   hint text on the right
+ * This component is now a thin wrapper around `TransportControls`, kept
+ * for the single-video mode footer (where it renders as its own bar).
+ * In course mode the bottom dock (AppDock) composes `TransportControls`
+ * directly so the progress bar and the transport share one row.
  */
 export function ModeControls({
   playbackPhase,
@@ -62,58 +146,14 @@ export function ModeControls({
 
   return (
     <div className="mc-bar">
-      <div className="mc-group" role="group" aria-label="播放控制">
-        {onTogglePause && (
-          <button
-            type="button"
-            className={`mc-btn mc-btn--pause ${isPaused ? "mc-btn--pause-active" : ""}`}
-            onClick={onTogglePause}
-            aria-pressed={!!isPaused}
-            title="Space"
-            data-no-advance
-          >
-            <span className="mc-btn-icon">
-              {isPaused ? "▶" : "⏸"}
-            </span>
-            <span className="mc-btn-cn serif-cn">{isPaused ? "播放" : "暂停"}</span>
-          </button>
-        )}
-        <div className="mc-divider" aria-hidden="true" />
-        <div
-          className={`mc-status mc-status--${playbackPhase}`}
-          aria-live="polite"
-          aria-label={playbackPhase === "playing" ? "全自动播放中" : "手动暂停"}
-        >
-          {playbackPhase === "playing" ? (
-            <>
-              <span className="mc-status-dot" aria-hidden="true" />
-              <span className="mc-status-en label-mono">AUTO</span>
-              <span className="mc-status-cn serif-cn">全自动</span>
-            </>
-          ) : (
-            <>
-              <span className="mc-status-icon" aria-hidden="true">⏸</span>
-              <span className="mc-status-en label-mono">MANUAL</span>
-              <span className="mc-status-cn serif-cn">手动</span>
-            </>
-          )}
-        </div>
-        <div className="mc-divider" aria-hidden="true" />
-        {onFullscreen && (
-          <button
-            type="button"
-            className={`mc-btn mc-btn--fs ${isFullscreen ? "mc-btn--fs-active" : ""}`}
-            onClick={onFullscreen}
-            aria-pressed={!!isFullscreen}
-            title="F"
-            data-no-advance
-          >
-            <span className="mc-btn-icon">⛶</span>
-            <span className="mc-btn-cn serif-cn">{isFullscreen ? "退出全屏" : "全屏"}</span>
-          </button>
-        )}
-      </div>
-      {hint && <div className="mc-hint label-mono">{hint}</div>}
+      <TransportControls
+        playbackPhase={playbackPhase}
+        onTogglePause={onTogglePause}
+        isPaused={isPaused}
+        onFullscreen={onFullscreen}
+        isFullscreen={isFullscreen}
+        hint={hint}
+      />
     </div>
   );
 }

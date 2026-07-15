@@ -1,0 +1,86 @@
+/* RunnerTrack — 执行跑道 */
+.cf-runner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+}
+.cf-runner-script {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.cf-run-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--elev-1);
+  color: var(--text-2);
+  border: 1px solid transparent;
+  transition: background 0.3s var(--ease-quart), color 0.3s var(--ease-quart),
+    border-color 0.3s var(--ease-quart);
+}
+.cf-run-line.is-run {
+  background: color-mix(in srgb, var(--accent) 16%, var(--elev-1));
+  color: var(--text-1);
+  border-color: var(--accent-glow);
+  box-shadow: 0 0 0 1px var(--accent-glow) inset;
+}
+.cf-run-n {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--text-mute);
+}
+.cf-run-line.is-run .cf-run-n {
+  background: var(--accent);
+  color: var(--surface);
+}
+.cf-run-text {
+  font-size: 18px;
+}
+.cf-runner-track {
+  width: 100%;
+  height: auto;
+}
+.cf-run-rail {
+  stroke: var(--rule);
+  stroke-width: 3;
+}
+.cf-run-target circle {
+  fill: var(--elev-2);
+  stroke: var(--accent-tech);
+  stroke-width: 2;
+}
+.cf-run-target-label {
+  fill: var(--text-mute);
+  font-size: 14px;
+  text-anchor: middle;
+}
+.cf-runner-body {
+  fill: var(--accent);
+}
+.cf-runner-head {
+  fill: var(--surface);
+}
+.cf-runner-eye {
+  fill: var(--text-1);
+}
+.cf-runner-mouth {
+  fill: var(--text-2);
+}
+.cf-runner-bubble {
+  fill: var(--accent-glow);
+}
+.cf-runner-bubble-text {
+  fill: var(--surface);
+  font-size: 16px;
+  text-anchor: middle;
+}

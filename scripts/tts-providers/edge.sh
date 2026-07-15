@@ -3,8 +3,16 @@ set -euo pipefail
 
 VOICE="${PRESENTATION_EDGE_VOICE:-zh-CN-YunxiNeural}"
 
+# Git-Bash on Windows ships the CLI as `edge-tts.exe`; plain `command -v
+# edge-tts` won't resolve the .exe extension, so probe both forms.
+edge_bin() {
+  if command -v edge-tts >/dev/null 2>&1; then echo "edge-tts"; return 0; fi
+  if command -v edge-tts.exe >/dev/null 2>&1; then echo "edge-tts.exe"; return 0; fi
+  return 1
+}
+
 tts_check() {
-  if ! command -v edge-tts >/dev/null; then
+  if ! edge_bin >/dev/null 2>&1; then
     echo "✗ edge-tts not found. Install: pip3 install edge-tts --break-system-packages" >&2
     return 1
   fi
@@ -28,5 +36,5 @@ tts_synthesize() {
   local out="$2"
   local voice="${3:-$VOICE}"
 
-  edge-tts --voice "$voice" --text "$text" --write-media "$out" >/dev/null 2>&1
+  "$(edge_bin)" --voice "$voice" --text "$text" --write-media "$out" >/dev/null 2>&1
 }

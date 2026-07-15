@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { ChapterStepProps } from "../../registry/types";
+import { Reveal } from "../../components/Reveal";
 import "./Ide.css";
 
 /**
@@ -105,7 +106,9 @@ export default function Ide({ step }: ChapterStepProps) {
       <div className="ide-scene scene-pad ide-hook">
         <div className="kicker">02 · 工程师工作台</div>
         <div className="ide-intro">
-          <div className="ide-intro-cn serif-cn">开工</div>
+          <Reveal show variant="scale">
+            <div className="ide-intro-cn serif-cn">开工</div>
+          </Reveal>
           <div className="ide-intro-en label-mono">Day 01 · IDE</div>
         </div>
       </div>
@@ -127,9 +130,13 @@ export default function Ide({ step }: ChapterStepProps) {
                 className={`ide-region ide-region--${r.id} ${isActive ? "ide-region--active" : "ide-region--dim"}`}
               >
                 <div className="ide-region-svg-wrap">{r.svg}</div>
-                <div className="ide-region-cn serif-cn">{r.cn}</div>
+                <Reveal show={isActive} variant="rise">
+                  <div className="ide-region-cn serif-cn">{r.cn}</div>
+                </Reveal>
                 <div className="ide-region-en label-mono">{r.en}</div>
-                <div className="ide-region-role serif-cn">{r.role}</div>
+                <Reveal show={isActive} variant="fade">
+                  <div className="ide-region-role serif-cn">{r.role}</div>
+                </Reveal>
               </div>
             );
           })}

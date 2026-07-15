@@ -1,0 +1,22 @@
+/* TypeOut — 终端打字机 */
+.cf-typeout {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--text-1);
+  white-space: pre-wrap;
+  min-height: 1.7em;
+}
+.cf-typeout-caret {
+  display: inline-block;
+  width: 9px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: cf-typeout-blink 1s steps(1) infinite;
+}
+@keyframes cf-typeout-blink {
+  50% { opacity: 0; }
+}

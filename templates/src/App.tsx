@@ -6,7 +6,8 @@ import "./styles/animations.css";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AutoStartGate } from "./components/AutoStartGate";
 import { ChapterMenu } from "./components/ChapterMenu";
-import { CourseProgress } from "./components/CourseProgress";
+import { CourseProgressReadout, computeSegmentProgress } from "./components/CourseProgress";
+import { AppDock } from "./components/AppDock";
 import { ModeControls, type PlaybackMode } from "./components/ModeControls";
 import { ProgressBar } from "./components/ProgressBar";
 import { QuizPanel } from "./components/QuizPanel";
@@ -69,7 +70,7 @@ export default function App() {
           <div className="app-error-title serif-cn">course.json 缺失或无效</div>
           <div className="app-error-body serif-cn">{loader.message}</div>
           <div className="app-error-hint label-mono">
-            请先在 public/ 目录生成 course.json (参考 references/COURSE-MODE.md § 模式判断 checklist)
+            请先在项目根生成 course.json (参考 references/COURSE-STRUCTURE.md § 课程结构)
           </div>
         </div>
       </div>
@@ -110,6 +111,12 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   const Cmp = ch.Component;
   const stepText = ch.narrations[stepper.cursor.step] ?? "";
 
+  // Data-driven interaction: each chapter may declare `quizzes`
+  // (see ChapterDef.quizzes / QuizStep). The runtime overlays the
+  // QuizPanel at the matching step and holds advancement until the
+  // learner submits (see quizOpen below).
+  const quiz = ch.quizzes?.find((q) => q.step === stepper.cursor.step);
+
   // Play/pause toggle — independent of playback mode. When paused:
   //   * audio element is paused
   //   * auto-advance is held (we override onAutoAdvance to a no-op)
@@ -117,6 +124,9 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   //     "behind the pause curtain") — but to keep behaviour simple,
   //     we also block manual advance while paused.
   const [isPaused, setIsPaused] = useState(false);
+  // Tracks whether the active quiz (if any) has been submitted. While a
+  // quiz is open and unanswered, advancement is held (manual + auto).
+  const [quizAnswered, setQuizAnswered] = useState(false);
 
   // Persist mode choice
   useEffect(() => {
@@ -127,9 +137,10 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
     }
   }, [playbackMode]);
 
-  // Reset pause state when the cursor changes (new step = fresh play)
+  // Reset pause / quiz state when the cursor changes (new step = fresh play)
   useEffect(() => {
     setIsPaused(false);
+    setQuizAnswered(false);
   }, [stepper.cursor.chapter, stepper.cursor.step]);
 
   const handleAdvance = useCallback(() => {
@@ -137,31 +148,39 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
     stepper.next();
   }, [stepper, isPaused]);
 
+  // Hold auto-advance while a quiz is open and unanswered.
+  const quizOpen = Boolean(quiz) && !quizAnswered;
+  const audioAdvance = useCallback(() => {
+    if (quizOpen) return;
+    handleAdvance();
+  }, [quizOpen, handleAdvance]);
+
   useAudioPlayer({
     src: `/audio/${ch.id}/${stepper.cursor.step + 1}.mp3`,
     paused: isPaused,
     mode,
     autoStarted,
-    onAutoAdvance: handleAdvance,
+    onAutoAdvance: audioAdvance,
     estimateFallbackMs: estimateMs(stepText),
   });
 
   const onAdvance = useCallback(() => {
     if (mode === "auto" && !autoStarted) return;
     if (isPaused) return;
+    if (quizOpen) return; // don't advance past an unanswered quiz
     stepper.next();
-  }, [mode, autoStarted, stepper, isPaused]);
-
-  // Demo: a quiz panel is hard-coded at the last step of the last
-  // chapter. Real projects should expose `quiz` data via the
-  // course.json or per-chapter metadata.
-  const isLastStep =
-    stepper.cursor.chapter === chapters.length - 1 &&
-    stepper.cursor.step === ch.narrations.length - 1;
+  }, [mode, autoStarted, stepper, isPaused, quizOpen]);
 
   // Fullscreen toggle (Fullscreen API on the main area)
   const fsRef = useRef<HTMLDivElement | null>(null);
   const [isFs, setIsFs] = useState(false);
+  // fsEmulated = the Fullscreen API was unavailable/rejected, so we fake
+  // "fullscreen" with a CSS rotate (used on iOS, where element fullscreen
+  // is flaky and the Orientation Lock API does not exist).
+  const [fsEmulated, setFsEmulated] = useState(false);
+  // fsPortrait = we are (really or emulated) fullscreen AND the viewport is
+  // portrait → the stage should rotate to landscape.
+  const [fsPortrait, setFsPortrait] = useState(false);
 
   // ChapterMenu visibility — collapsed by default to give Stage the full
   // 1920×1080 viewport. Reopens on hover near the left edge or on the
@@ -182,14 +201,74 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   }
   const toggleFullscreen = useCallback(() => {
     if (!fsRef.current) return;
+    // Already in CSS-emulated fullscreen → just exit it.
+    if (fsEmulated) {
+      setFsEmulated(false);
+      setFsPortrait(false);
+      return;
+    }
     if (!document.fullscreenElement) {
-      fsRef.current.requestFullscreen().catch(() => {});
-      setIsFs(true);
+      const el = fsRef.current;
+      const req = el.requestFullscreen?.bind(el);
+      if (req) {
+        req()
+          .then(() => {
+            /* fullscreenchange handler below does the rest */
+          })
+          .catch(() => {
+            // Fullscreen API rejected (e.g. iOS < 16.4) — emulate landscape
+            // via CSS so the 16:9 stage still fills the screen.
+            setFsEmulated(true);
+            setFsPortrait(window.innerHeight > window.innerWidth);
+          });
+      } else {
+        // No Fullscreen API at all → emulate landscape via CSS.
+        setFsEmulated(true);
+        setFsPortrait(window.innerHeight > window.innerWidth);
+      }
     } else {
       document.exitFullscreen().catch(() => {});
-      setIsFs(false);
     }
-  }, []);
+  }, [fsEmulated]);
+
+  // Keep the forced-landscape state in sync with reality. When fullscreen
+  // engages on a portrait phone, rotate the stage to landscape (CSS) and
+  // try the native Orientation Lock (Android). Re-evaluate if the device
+  // is rotated while fullscreen.
+  useEffect(() => {
+    function onFsChange() {
+      const active = document.fullscreenElement === fsRef.current;
+      setIsFs(active);
+      const portrait = window.innerHeight > window.innerWidth;
+      setFsPortrait(active && portrait);
+      if (active && portrait) {
+        try {
+          screen.orientation?.lock("landscape").catch(() => {});
+        } catch {
+          /* Orientation Lock API unavailable (iOS) — CSS rotate handles it */
+        }
+      } else if (!active) {
+        try {
+          screen.orientation?.unlock();
+        } catch {
+          /* not supported */
+        }
+        setFsEmulated(false);
+      }
+    }
+    function onViewport() {
+      const active = document.fullscreenElement === fsRef.current;
+      setFsPortrait((active || fsEmulated) && window.innerHeight > window.innerWidth);
+    }
+    document.addEventListener("fullscreenchange", onFsChange);
+    window.addEventListener("resize", onViewport);
+    window.addEventListener("orientationchange", onViewport);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFsChange);
+      window.removeEventListener("resize", onViewport);
+      window.removeEventListener("orientationchange", onViewport);
+    };
+  }, [fsEmulated]);
 
   const togglePause = useCallback(() => setIsPaused((p) => !p), []);
 
@@ -239,7 +318,12 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
   }, [togglePause, toggleFullscreen, mode, autoStarted, setAutoStarted]);
 
   return (
-    <div className={`app-root ${menuOpen ? "app-root--menu-open" : ""}`} ref={fsRef}>
+    <div
+      className={`app-root ${menuOpen ? "app-root--menu-open" : ""} ${
+        fsPortrait ? "app-root--fs-portrait" : ""
+      }`}
+      ref={fsRef}
+    >
       <ChapterMenu
         course={course}
         currentChapterId={ch.id}
@@ -288,36 +372,41 @@ function CourseView({ course, chapters, playbackMode, onModeChange }: CourseView
             onJumpChapter={(idx, step) => stepper.jumpToChapter(idx, step)}
           />
         ) : (
-          <CourseProgress chapters={chapters} cursor={stepper.cursor} course={course} />
+          <AppDock
+            railPct={computeSegmentProgress(chapters, stepper.cursor, course).stepPct}
+            readout={
+              <CourseProgressReadout
+                chapters={chapters}
+                cursor={stepper.cursor}
+                course={course}
+              />
+            }
+            playbackPhase={isPaused ? "paused" : "playing"}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
+            onFullscreen={toggleFullscreen}
+            isFullscreen={isFs}
+            hint="Space 暂停/播放 · F 全屏 · 鼠标点屏幕推进"
+          />
         )}
 
-        <ModeControls
-          playbackPhase={isPaused ? "paused" : "playing"}
-          onModeChange={onModeChange}
-          onFullscreen={toggleFullscreen}
-          isFullscreen={isFs}
-          isPaused={isPaused}
-          onTogglePause={togglePause}
-          hint="Space 暂停/播放 · F 全屏 · 鼠标点屏幕推进"
-        />
+        {course.courseId === "single" && (
+          <ModeControls
+            playbackPhase={isPaused ? "paused" : "playing"}
+            onModeChange={onModeChange}
+            onFullscreen={toggleFullscreen}
+            isFullscreen={isFs}
+            isPaused={isPaused}
+            onTogglePause={togglePause}
+            hint="Space 暂停/播放 · F 全屏 · 鼠标点屏幕推进"
+          />
+        )}
 
-        {isLastStep && (
+        {quiz && (
           <div className="app-quiz-overlay">
             <QuizPanel
-              question={{
-                id: "l1-reaction",
-                type: "single",
-                prompt: "这一课你最有收获的是哪个术语?",
-                options: [
-                  { id: "a", label: "IDE 集成开发环境" },
-                  { id: "b", label: "笛卡尔坐标" },
-                  { id: "c", label: "顺序执行" },
-                ],
-                rationale: "三个都是核心概念, 选择你认为最常用于你未来工作的。",
-              }}
-              onSubmit={() => {
-                /* TODO: surface a "submitted" badge / persistence */
-              }}
+              question={quiz.question}
+              onSubmit={() => setQuizAnswered(true)}
             />
           </div>
         )}

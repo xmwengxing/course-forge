@@ -10,15 +10,17 @@ Auto 模式会自动按 step 播放并自动推进——录屏可以一镜到底
 > 这个老问题。
 
 合成器是 **provider-agnostic** 的：runner 本身不绑定任何 TTS 后端，每个
-后端是 `scripts/tts-providers/<name>.sh` 一个文件。**内置 2 个 provider**：
+后端是 `scripts/tts-providers/<name>.sh` 一个文件。**内置 3 个 provider**
+（脚手架已随项目一起拷贝到 `scripts/tts-providers/`）：
 
 | Provider | 默认 | 何时用 |
 |---|---|---|
 | `minimax` | ✓ | 中文口播首选（直接 curl，要 `MINIMAX_API_KEY`） |
 | `openai`  | —— | 多数 agent 已有 `OPENAI_API_KEY`；curl-based、响应快 |
+| `edge`    | —— | **零 key 免费 fallback**：`pip install edge-tts` 即可，无 API key、无额外 CLI；中文音色自然（默认 `zh-CN-YunxiNeural`）。没 minimax / openai key 时直接用它 |
 
 换 / 加 provider 见
-[`scripts/tts-providers/README.md`](../templates/scripts/tts-providers/README.md)
+[`scripts/tts-providers/README.md`](../scripts/tts-providers/README.md)
 （脚手架跑完后路径是 `presentation/scripts/tts-providers/README.md`）。
 README 里还附了 5 套**可粘贴**的现成片段（ElevenLabs / edge-tts / macOS say /
 Azure / Google Cloud）和写自定义 provider 的三函数契约。
@@ -186,7 +188,7 @@ Cloud）。
 ```bash
 PRESENTATION_TTS=elevenlabs npm run synthesize-audio
 # 或
-npm run synthesize-audio -- --provider=edge-tts
+npm run synthesize-audio -- --provider=edge
 ```
 
 如果用户的 TTS 完全自研，**按三函数契约**写一个 `<name>.sh` 即可：
@@ -302,5 +304,5 @@ Auto 模式首次需要按一次 `Space` 启动（绕过浏览器自动播放限
 
 ## 相关链接
 
-- Provider 契约 + 现成片段：[`scripts/tts-providers/README.md`](../templates/scripts/tts-providers/README.md)
-- 验收时长统计：[`chapter-stats.py`](../templates/scripts/chapter-stats.py)
+- Provider 契约 + 现成片段：[`scripts/tts-providers/README.md`](../scripts/tts-providers/README.md)
+- 验收时长统计：[`chapter-stats.py`](../scripts/chapter-stats.py)

@@ -1,6 +1,6 @@
 # ANIMEJS-GUIDE.md
 
-> **Skill 角色定位**: 这是 course-forge 的"动画增量能力"层。SKILL.md / CHAPTER-CRAFT.md / COURSE-MODE.md 定义核心行为 (剧本、节奏、内容取舍), 本文档只覆盖"真正动画"那一层 — 当你准备给章节加 animejs 动画时读这一份。
+> **Skill 角色定位**: 这是 course-forge 的"动画增量能力"层。SKILL.md / CHAPTER-CRAFT.md / COURSE-STRUCTURE.md 定义核心行为 (剧本、节奏、内容取舍), 本文档只覆盖"真正动画"那一层 — 当你准备给章节加 animejs 动画时读这一份。
 > **面向读者**: LLM agent, 不是人。**结构按"先判断 → 再选模式 → 后实施"渐进式披露**; 代码块只放最小可运行片段, 不堆叙事; 每个原则单独可执行, 不依赖其他章节。
 > **适用版本**: `animejs ^4.4.1`
 > **包大小**: 80KB gzip, 一次性 cost; WAAPI 后端, 浏览器原生加速。
@@ -702,7 +702,7 @@ REQUIRED = {
 
 - **SKILL.md** — skill 主入口, 定义核心行为 (剧本/节奏/内容取舍); 本文档**不重复**核心, 只在动画层增量
 - **CHAPTER-CRAFT.md** — 单章开发全流程, 包含"动画升级"段; 本文档**配合**而非替代, LLM agent 写动画时**只读本文**
-- **COURSE-MODE.md** — 多课程管理; 动画配置**不涉及**课程级, 本文档不重复
+- **COURSE-STRUCTURE.md** — 课程结构 / 多课程管理; 动画配置**不涉及**课程级, 本文档不重复
 - **EXAMPLES/example-anime/** — 4 大共性综合 anchor, 1 章完整代码, LLM agent 写动画前**必读**
 - **ANIMEJS-EXAMPLES-INDEX.md** — animejs 官方 25 个示例索引, 详细看哪个示例做哪种效果
 

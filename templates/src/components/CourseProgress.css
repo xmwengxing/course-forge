@@ -53,3 +53,18 @@
   border-radius: 2px;
   transition: width 0.3s ease;
 }
+
+/* ─── Mobile (phones) ─── */
+@media (max-width: 600px) {
+  .cp-readout {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    gap: 6px;
+  }
+}
+
+/* Very narrow phones: drop the "Ch x/y" fraction + its separator. */
+@media (max-width: 420px) {
+  .cp-readout .cp-frac,
+  .cp-readout .cp-frac + .cp-sep { display: none; }
+}

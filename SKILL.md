@@ -1,108 +1,104 @@
 ---
 name: course-forge
-description: 把一篇文章或口播稿，做成"看起来像视频"的点击驱动 16:9 网页演示，可选合成口播音频。流程：原始文章 → 一次产出口播稿 + outline 开发计划 → 用户一次对齐 5 件事（稿子 / outline / 主题 / 素材 / 开发模式）→ 网页开发（逐章 / 顺序 / 并行）→ 可选音频合成（provider-agnostic：内置 MiniMax + OpenAI TTS，可换 ElevenLabs / edge-tts / Azure / 自带 TTS）。outline 只规划节奏与信息密度，不规划动画 —— 动画由章节开发时按 PART 0 原则即时设计。每一步独占整屏，进度条悬浮才出现。适用场景：用网页做视频、动态 PPT、口播稿 / 文章变成可交互的解说、为 B 站 / YouTube 录屏教程、做有电影感的产品 demo。本 Skill 沉淀的是设计方法论 + 协作流程 —— 不绑定任何特定样式 / 字体 / 颜色 —— 能复用到任意主题与美学。
+description: 把知识文档或口播稿做成可交互的课程/课件——规划大纲章节、撰写与扩展口播稿、计算课时；课件含演示舞台(画布)+大纲章节导航+字幕+音频+播放/暂停/全屏控制+章节进度条。每屏内容逐步揭示、含动画、每3屏至少1处互动、禁止纯文字、口播对齐画面/字幕/音频。流程：原始文档 → 口播稿 + outline 开发计划 → 一次对齐5件事(稿子/outline/主题/素材/开发模式) → 逐章网页开发(第1章为锚点) → 可选TTS音频 → 部署/嵌入(视频录制为可选项)。动画默认基于 animejs + CSS/SVG/Canvas，高阶视觉可通过渐进式披露加载设计类 skill 或 MCP。本 Skill 沉淀设计方法论 + 协作流程，不绑定任何样式，可复用于任意主题。
 ---
 
 # Course Forge — Interactive Courseware Builder
 
-把一篇文章或口播稿，一步步做成可录屏的"伪装成视频的网页"，可选合成
-口播音频。产出物 = Vite + React + TS 项目 + 按章节切分的音频。
+把一份知识文档或口播稿，一步步做成**可交互的课程 / 课件**：带演示舞台、章节导航、
+字幕、音频、播放控制与章节进度条。产出物 = Vite + React + TS 项目，可嵌入任意 Web 应用，
+也可选合成口播音频、可选录制成视频。
 
----
+本 Skill **以方法论 + 协作流程为核心**。脚手架模板提供 token 和原语，但每个美学决策
+（配色、字型、动效气质）都应针对你的主题重新设计——不要照搬。
 
 ## 适用场景
 
-- "我有口播稿 / 一篇文章，帮我做成视频" —— 口播驱动的内容
-- 动态 PPT / 课程 / 课件开发
-- 16:9 横屏录屏，大字、留白、每屏都要有动效
-- 教学 / 产品演示 / keynote 想要电影感
-- B 站 / YouTube / 抖音视频内容
+- 把口播稿 / 文章 / 课程大纲做成**可交互的教学课件**
+- 需要大纲章节规划、口播稿撰写与扩展、课时估算
+- 16:9 横屏、大字留白、每屏有动效、学员能动手互动
+- 教学 / 产品演示 / 培训课件，想要电影感但不止于「视频」
 
-本 Skill **以方法论 + 协作流程为核心**。脚手架模板提供 token 和原语，
-但每个美学决策（配色、字型、动效气质）都应该针对你的主题重新设计 ——
-不要照搬。
+---
+
+## 术语表（唯一口径，全仓统一）
+
+项目曾混用 `画面 / 章 / 屏 / 步 / section / segment / chapter`，造成 agent 误判。现统一如下（**屏 ≠ 步**：屏是画框容器，步是屏内揭示节拍）：
+
+| 术语 | 含义 | 运行时对应 |
+|---|---|---|
+| **课程 Course** | 一次交付的完整课件，可是一门课或一整套体系 | `course.json` 根（`courseId` / `title`） |
+| **大纲·分段 Outline Segment（原 S1~S5）** | 一级导航菜单项；按内容主题划分的块（如 导入/精讲/案例/收官），**段数依内容而定，不必是 5 段** | `course.json` 的 segment 条目（目标模型） |
+| **章节 Chapter（章 / 课）** | 二级导航菜单项，一个独立教学单元/知识点，如「1.1 你好，数字世界！」。一个章节由 1 屏或多屏组成 | `course.json` 章节条目 + `chapters.ts` 注册 |
+| **屏 Screen（画面）** | 章节内的 1920×1080 视觉画框（容器），承载多个步；1 章 = 1 屏 或 多屏讲完 | 章节 `.tsx` 内按屏切换的视图 |
+| **步 Step** | 屏内**原子揭示单元**：**1 步 = 1 口播节拍 = 1 字幕窗 = 1 音频段**；逐步揭示 = 一屏内逐个点亮各步 | 章节 `.tsx` 的 `step` + `narrations.ts` 的一项 |
+
+辅助（非结构单元）：**Stage** = 1920×1080 画框；**Canvas** = 渲染技法；**卡片** = 内容元素。
+
+🚫 **禁用**：`slide` / `PPT`。**屏 ≠ 步**——屏是画框容器，步是屏内揭示节拍。详情见 `references/COURSE-STRUCTURE.md`。
 
 ---
 
 ## 工作流总览
 
 ```
-Phase 0   **模式判断** (新流程第一步, 不能跳过)
-   0.1  源文档清单 + 章节号识别 (1.x / S1 / Lesson X)
-   0.2  回答 3 个问题 → 决定 [单视频模式] 或 [课程模式]
-        (详见 references/COURSE-MODE.md § 模式判断 checklist)
-   ▼
 Phase 1   内容编写
-   1.1  识别用户输入
-   1.2  一次产出 script.md + outline.md
-        （口播稿 + 开发计划）
+   1.1  识别用户输入（文章 / 口播稿 / 仅主题→反问）
+   1.2  一次产出 script.md + outline.md（口播稿 + 开发计划）
    ▼
 [Checkpoint Plan]      ← 必须停。一次对齐 5 件事：
                          稿子 / outline / 主题 / 素材 / 开发模式
    ▼
-Phase 2   网页开发
+Phase 2   网页开发（逐章）
    2.1  脚手架（按选定主题）
    2.2  第 1 章 = 主线程 + 完整版本（强制 anchor）
-        ▼
-        [硬节点] 用户验收第 1 章 ← 不可跳过
-        ▼
-   2.3  第 2~N 章（按选定模式：A 逐章 / B 顺序 / C 并行）
+        ▼  [硬节点] 用户验收第 1 章 ← 不可跳过
+   2.3  第 2~N 章（模式：A 逐章 / B 顺序 / C 并行）
+   2.4  实现单章（每章必走：逐步揭示 / 动画 / 互动 / 双源）
    ▼
 [Checkpoint Audio]     ← 必须停。是否合成音频
    ▼
 Phase 3   音频合成与字幕（可选）
    ▼
-Phase 4   部署嵌入 / 录屏 + 后期
+Phase 4   部署嵌入 / 可选录屏
 ```
 
-> ⚠️ **Phase 0 是新增的必做前置**。原流程把"模式判断"隐式塞进 Checkpoint Plan,
-> 但实操中 agent 经常**直接走单视频**而忽略"用户的源文档其实是某课程的某个章节"。
-> 现在改成显式 Phase 0: 先判断, 再产出。
->
-> 默认规则: **源文档含 `1.x`/`S1`/`Lesson X` 等章节号 + 兄弟文件 ≥ 2 份 → 课程模式**。
+> 没有「模式判断」步骤——本 skill **只有一种产出：交互式课程 / 课件**。视频录制
+> （`references/RECORDING.md`）只是 Phase 4 的**可选项**，不影响主流程。
 
 ---
 
 ## 文件读取指南
 
-**长会话里 agent 容易遗忘原则**，特别是 Phase 2.4 的"实现单章"会重复 N 次。
-按下方表只读必需文件。
+**长会话里 agent 容易遗忘原则**，尤其 Phase 2.4 会重复 N 次。按下表**只读必需文件**。
 
-| 阶段 | 必读（每次都看） | 一次性看完 / 按需查 |
+| 阶段 | 必读（每次都看） | 按需查 |
 |---|---|---|
-| Phase 0 模式判断 | [`references/COURSE-MODE.md`](references/COURSE-MODE.md) § 模式判断 checklist (3 个问题) | —— |
-| Phase 1.1-1.2 内容编写 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) + [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) + `article.md`（用户原文，如有） | —— |
-| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`（用户想了解主题系统时）；`references/COURSE-MODE.md`（课程结构 / chrome 反模式 / 多课程管理 —— 课程模式时必读） |
-| Phase 2.1 脚手架 | —— | SKILL.md 本节看一次 |
-| **Phase 2.4 实现单章（×N 次）** | **[`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md)** 单一入口（`## 这是视频，不是 PPT` / `## 必须用 CSS / SVG / Canvas / JS 大胆绘制视觉演示 + 提供交互` / `## 逐步揭示，禁止一次全展示` / `## 视觉中心：舞台中心 ≠ 元素居中` / `## 内容取舍：抓重点，不要原文搬运` / `## 双源：节奏跟口播稿，细节回原文章` / `## 字体 / 配色 / 动画 / 留白 —— 视频演示基本审美` / `## 避免 AI 味` / `## 代码层最小约束` / `## 完工自检` / `## L. 动画升级（animejs v4 实战）`）+ 当前主题的 `themes/<id>/theme.json` + 当前章节的 outline.md 段落 + `article.md` 本章对应段落 + 素材清单 | `references/EXAMPLES/`（结构示意，不是抄袭模板）；`references/THEMES.md` 完整 token 契约 |
-| Phase 3 音频合成 | [`references/AUDIO.md`](references/AUDIO.md)（含 narrations.ts → segments.json → 任意 provider 流程） | `templates/scripts/tts-providers/README.md`（换 provider / 自带 TTS 时） |
-| Phase 4 录屏 + 后期 | [`references/RECORDING.md`](references/RECORDING.md) + [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md)（分发嵌入方案） | —— |
-| 选 / 造 / 切主题 | —— | `references/THEMES.md` |
+| Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | —— |
+| **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`；`references/COURSE-STRUCTURE.md`（课程结构） |
+| Phase 2.1 脚手架 | —— | 本文件 § Phase 2.1 看一次 |
+| **Phase 2.4 实现单章（×N）** | **`references/CHAPTER-CRAFT.md`** 单一入口 + 当前主题 `themes/<id>/theme.json` + 本章 outline.md 段落 + `article.md` 本章段落 + 素材清单 | `references/EXAMPLES/`（结构示意，非抄袭模板）；`references/THEMES.md` 完整 token 契约；`references/ANIMEJS-GUIDE.md`（需真动画时） |
+| Phase 3 音频合成 | `references/AUDIO.md`（narrations.ts → segments.json → 任意 provider） | `scripts/tts-providers/README.md`（换 / 自带 provider 时） |
+| Phase 4 部署 | `references/DEPLOYMENT.md`（嵌入） | `references/RECORDING.md`（可选录屏） |
 
-> **写章节时只读一份 `CHAPTER-CRAFT.md`**。十条原则 / 开工 self-prompting /
-> 决策树 / 反 AI 味反模式 / 完工自检全部并入这一份单一入口。
->
-> ⚠️ **课程模式必读 `templates/src/App.tsx` 的 CourseView 内部视图**（不是默认的简单 App.tsx）+
-> `templates/src/hooks/useCourseLoader.ts` 头注释 + `references/COURSE-MODE.md` § 多课程管理。
-> **不读 App.tsx CourseView = 不会写课程模式**——会自动退化为"单视频写法"（直接读 chapters 数组、忽略 course.json、不渲染 ChapterMenu、不调 useCourseLoader）。
-> 课程模式写完必须验证：1) `?course=<id>` 路由可切多课；2) 左侧 ChapterMenu 渲染三级结构；3) 顶/底 ModeControls 三态按钮可见；4) localStorage key 含 `courseId` 命名空间。
+> **写章节时只读一份 `CHAPTER-CRAFT.md`**：十条原则 / 开工 self-prompting / 决策树 /
+> 反 AI 味 / 完工自检全部并入这一份。
 
 ---
 
 ## 硬性自检协议
 
-每个产物（`script.md` / `outline.md` / 单章）完成后**必须**走：
-**自检 → 修复 → 汇报**。直接汇报原始结论 = 违规。
+每个产物（`script.md` / `outline.md` / 单章）完成后**必须**走 **自检 → 修复 → 汇报**。
+直接汇报原始结论 = 违规。
 
 | 产物 | 自检清单出处 |
 |---|---|
-| `script.md` | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) 三层自检 |
-| `outline.md` | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) 自检 |
-| 单章实现完成 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) § 完工自检 |
+| `script.md` | `references/SCRIPT-STYLE.md` 三层自检 |
+| `outline.md` | `references/OUTLINE-FORMAT.md` 自检 |
+| 单章实现完成 | `references/CHAPTER-CRAFT.md` § 完工自检 + 课件内容硬规则（见下） |
 
-**执行方式**（按能力降级，**优先用更隔离的方式**）：
-
-1. **Agent Teams**：开独立 reviewer agent，给它产物路径 + 对应清单 + 关键上下文，让它逐项核查并出结论
+**执行方式**（按能力降级，优先更隔离的方式）：
+1. **Agent Teams**：开独立 reviewer agent，给它产物路径 + 对应清单 + 关键上下文，逐项核查
 2. **subAgent**：开 subagent 走同样流程
 3. **自检**：自己严格逐项核查，不允许目测一遍就放行
 
@@ -114,35 +110,52 @@ agent 在用户当前目录下创建 / 编辑：
 
 ```
 my-course/
-├── article.md          # 用户给原文时必有 —— 不删！开发阶段画面信息源
+├── article.md          # 用户给原文时必有——不删！开发阶段画面信息源
 ├── script.md           # 必有：保持原文语言的平台化口播稿（决定节拍）
-├── outline.md          # 必有：开发计划（章节切分 + 每步内容 + 信息池）
+├── outline.md          # 必有：开发计划（大纲·分段切分 + 章节切分 + 每屏/每步内容 + 信息池）
 └── presentation/       # 脚手架产出的 Vite + React + TS 项目
     ├── src/chapters/<NN>-<id>/
-    │   ├── <Chapter>.tsx     # 视觉实现
+    │   ├── <Chapter>.tsx     # 视觉实现（按 屏/step 逐步揭示）
     │   ├── <Chapter>.css
-    │   └── narrations.ts     # ★ step 数 + 口播文本的唯一真相源
-    ├── src/registry/chapters.ts    # 章节注册
-    ├── course.json                 # 课程模式专属菜单（单视频模式可删）
-    ├── course-<id>.json            # 多课程时多份
-    ├── public/course*.json         # vite 服务的副本（dev 期用 regenerate-course-json.py 同步）
+    │   └── narrations.ts     # ★ 步数（口播节拍）+ 口播文本的唯一真相源；屏数由各章结构推导
+    ├── src/registry/chapters.ts    # 章节注册（含可选 quizzes 数据驱动交互）
+    ├── course.json                 # 课程结构（大纲·分段 + 章节菜单，放项目根）
     ├── scripts/
     │   ├── extract-narrations.ts   # 扫所有 narrations.ts → audio-segments.json
-    │   ├── synthesize-audio.sh     # provider-agnostic runner（循环 segments）
+    │   ├── synthesize-audio.sh     # provider-agnostic runner
     │   ├── subtitle-timing.py      # --chapters 可过滤
-    │   ├── regenerate-course-json.py  # 校验 + 格式化 + 同步 course*.json
-    │   └── tts-providers/          # 每 provider 一个 .sh（内置 2 个）
-    │       ├── README.md           # 三函数契约 + 5 段现成代码片段
-    │       ├── minimax.sh          # 默认 provider
-    │       └── openai.sh           # 内置 OpenAI TTS
+    │   ├── regenerate-course-json.py  # 校验 + 格式化 course.json
+    │   ├── lint-course.py          # 校验 5 条硬规则（npm run lint）
+    │   └── tts-providers/          # 每 provider 一个 .sh（minimax 默认 / openai 内置）
     ├── audio-segments.json         # extract 产出（合成前 review）
     └── public/audio/<id>/<N>.mp3   # 可选：合成的音频
 ```
 
-> **关键**：`narrations.ts` 是 step 数和音频合成的**唯一真相源**。
-> 章节 `.tsx` 里的 `if (step === N)` 出现的最大 N + 1 必须等于
-> `narrations.length`。这保证 5 处地方（script / outline / 章节代码 /
-> chapters.ts / 音频文件）永远不会漂。
+> **关键不变量**：`narrations.ts` 是**步数（口播节拍）**和音频合成的**唯一真相源**；**屏数由各章结构（屏边界）推导，不手填**。章节 `.tsx` 里
+> `if (step === N)` 的最大 N + 1 必须等于 `narrations.length`（步数）。这保证 5 处
+> （script / outline / 章节代码 / chapters.ts / 音频文件）永远不漂。
+
+---
+
+## 核心不变量 + 课件内容硬规则
+
+### 3 条架构不变量
+
+1. **`narrations.ts` 是单一真相源** —— 数组长度 = 章节**步数（口播节拍）** = `max(if (step === N)) + 1`；**屏数由各章结构推导（1 章可 1 屏或多屏），不手填**。
+2. **主题 = CSS token + JSON 元数据** —— 切主题只覆盖 `tokens.css`，组件不引入主题专属值。
+3. **每章渲染进固定 1920×1080 舞台** —— `useStageScale` + `transform: scale()`，不用视口像素。
+
+### 5 条课件内容硬规则（每章完工必须全过）
+
+1. **逐步揭示**：每屏内内容随 **步(step)** 推进逐项亮起，禁止一次性全展示。一个清单/多想法的展开 = 多步，**清单 1 项 = 1 步**（不是 1 屏）；一屏可含多步。
+2. **动效必具**：每屏至少 1 处动态元素或动画（CSS / SVG / Canvas / JS）；静止屏 = 不合格。
+3. **互动密度**：每 **3 屏** 内至少 1 处**真互动**（点击 / 拖拽 / 选择 / 输入触发 `useState`）；
+   `hover` / 翻页导航 ≠ 互动。无互动 = 回去加。
+4. **禁止纯文字**：每屏不得仅为文字；必须有视觉演示 / 图形 / 媒体。
+5. **口播对齐**：口播文本、屏上元素、字幕、音频（若合成）必须一一对应；守 `narrations.ts` 不变量。
+
+> 这 5 条是「交互式课程」区别于「视频」的核心。已由 `scripts/lint-course.py`
+> （脚手架接入 `npm run lint`）在每章完工后自动拦截。
 
 ---
 
@@ -150,69 +163,58 @@ my-course/
 
 ### 1.1 识别用户输入
 
-| 用户给的东西 | 该做的 |
+| 用户给的 | 该做的 |
 |---|---|
 | 原始文章（书面语 / 公众号 / 论文 / 博客） | 一次产出 `script.md` + `outline.md`（1.2），过 Checkpoint Plan |
-| 直接的口播稿 / 视频脚本 | 落盘成 `script.md`，一次产出 `outline.md`（1.2 简化版），过 Checkpoint Plan |
-| 啥都没有，只说"帮我做个 X 主题的视频" | **反问**：先给一段素材或大纲。Skill 不替用户构思内容 |
+| 口播稿 / 视频脚本 | 落盘成 `script.md`，产出 `outline.md`（1.2 简化版），过 Checkpoint Plan |
+| 啥都没有，只说「做个 X 主题的课程」 | **反问**：先给素材或大纲。Skill 不替用户构思内容 |
 
-### 1.2 一次产出 script.md + outline.md
+### 1.2 一次产出 script.md + outline.md（同一次思考中完成）
 
-**两份产出物在一次思考中完成**：
+1. **`script.md`**：按 `references/SCRIPT-STYLE.md` 把 article 转成保持原文语言的平台化口播稿。
+   **保留 `article.md` 不删** —— 它是画面细节源（双源原则）。
+2. **`outline.md`**：按 `references/OUTLINE-FORMAT.md` 切**章节** + 切**屏** + 每章首段抽**信息池**。
 
-1. **生成 `script.md`**：按 [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md)
-   的规则把 article 转成保持原文语言的平台化口播稿。**保留 `article.md` 不删**——它是
-   outline 写信息池和章节实现画面时的细节源（双源原则）。
-2. **生成 `outline.md`**：按 [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md)
-   规则切章节 + 切 step + 每章首段抽**信息池**。
-
-**outline 的边界**（关键）：
+**outline 的边界**：
 
 | outline 必须写 | outline 不要写 |
 |---|---|
-| 章节切分 / 每章 step 数 / 估时 | 具体动画类型（blur clear / wipe / 弹簧） |
-| 每步屏幕内容（hero / 数据 / 标语 / 列表项） | CSS 实现手段（filter / SVG / clip-path） |
-| 章节级**信息池**：从 article 抽的数字 / 引用 / 案例 / 标签 | 时长数值（不写 ~2.5s / 80~120ms） |
-| 步级关系名前缀（"反差对照" / "递进列表" / "金句" 等可选 hint） | 持续微动 / 错峰量等微观节奏 |
+| 章节切分 / 每章屏数 / 估时 | 具体动画类型（blur / wipe / 弹簧） |
+| 每屏内容（hero / 数据 / 标语 / 列表项） | CSS 实现手段（filter / SVG / clip-path） |
+| 章节级**信息池**（从 article 抽的数字 / 引用 / 案例） | 时长数值 |
+| 屏级关系名前缀（「反差对照」/「金句」等可选 hint） | 持续微动 / 错峰量等微观节奏 |
 
-> outline 不写动画的理由 + 双源原则 + 信息池展开，详见
-> [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) § 这是视频，不是 PPT / § 双源：节奏跟口播稿，细节回原文章。
+> 理由与展开见 `references/CHAPTER-CRAFT.md` § 这是课件不是 PPT / § 双源原则。
 
-**落盘后必须先走自检再进 Checkpoint Plan**：按上文「硬性自检协议」分别
-对 `script.md` / `outline.md` 执行，按结论修复完成后再进入 Checkpoint Plan。
+**落盘后先走「硬性自检协议」再进 Checkpoint Plan。**
 
 ---
 
 ## Checkpoint Plan —— 5 件事一次对齐（**硬节点**）
 
-`script.md` + `outline.md` 写完后必须停下来。**用户在这一个节点同时确认
-5 件事**：
+`script.md` + `outline.md` 写完必须停。**用户在这一个节点同时确认 5 件事**：
 
 1. 稿子（script.md）
 2. 开发计划（outline.md）
-3. 主题（从 `themes/*/theme.json` 读出，按 `bestFor` 智能推荐 2~3 套）
-4. 素材（Checkpoint Plan 列粗略清单 → a) 我帮你挑 b) 你提供 c) 全 placeholder）
+3. 主题（从 `themes/*/theme.json` 读出，按 `bestFor` 推荐 2~3 套）
+4. 素材（列粗略清单 → a) 我帮你挑 b) 你提供 c) 全 placeholder）
 5. 开发模式（A 逐章 / B 顺序 / C 并行）
 
-**agent 预备工作**：
-- 动态读所有 `themes/*/theme.json`（**不要硬编码清单**）
-- 按 `script.md` 内容/关键词/语气主动挑 2~3 套**最匹配**的（`bestFor` 命中）
-- 扫 `outline.md` 末尾"素材清单"
+**agent 预备**：动态读所有 `themes/*/theme.json`（不硬编码清单）；按 script 内容 / 语气挑
+2~3 套 `bestFor` 命中的；扫 `outline.md` 末尾「素材清单」。
 
 **模式说明**：
 
 | 模式 | 节奏 | 何时用 |
 |---|---|---|
-| **A · 逐章确认（默认）** | 每章做完 → 暂停验收 → OK → 下一章 | 用户不明确选模式时默认走这个 |
-| B · 第 1 章后顺序开发 | 第 2~N 章主线程顺序做完，最后统一验收 | agent 不支持并行任务的环境 |
-| C · 第 1 章后并行开发（subagent） | 用 subagent 把第 2~N 章并行做，最大并行数由用户控制 | 最快，但风格各章会有差异 |
+| **A · 逐章确认（默认）** | 每章做完 → 暂停验收 → OK → 下一章 | 用户不明确选模式时默认 |
+| B · 第 1 章后顺序开发 | 第 2~N 章主线程顺序做完，最后统一验收 | 不支持并行任务的环境 |
+| C · 第 1 章后并行开发（subagent） | subagent 并行做第 2~N 章，并行数由用户控制 | 最快，但各章风格有差异 |
 
 **第 1 章无论哪种模式都必须主线程做完 + 用户验收**（强制 anchor）。
 
-收到反馈后：
-- 稿子 / outline 要改：直接编辑文件
-- **主题必须明确**才进入 Phase 2。用户说"主题你帮我选" → 取你推荐第 1 个，**告诉用户你选了什么、为什么**，给反悔机会
-- 模式选定 → 进 Phase 2
+收到反馈后：稿子 / outline 要改直接编辑；**主题必须明确**才进 Phase 2（用户说「你帮我选」
+→ 取推荐第 1 个并说明理由，给反悔机会）；模式选定 → 进 Phase 2。
 
 ---
 
@@ -225,140 +227,136 @@ bash <path-to-course-forge>/scripts/scaffold.sh ./presentation --theme=<id>
 bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 ```
 
-> ⚠️ **`course.json` 单一源**：放在**项目根**（`./course.json`），**不要**拷到
-> `public/course.json`。`useCourseLoader` 走 vite **静态 import**（+ 多课程
-> 走 `import.meta.glob`），不发起网络请求。手动拷到 `public/` 后，源文件改动
-> 不会同步，UI 会显示旧版。CI 阶段跑
-> [`scripts/check-course-json-sync.sh`](scripts/check-course-json-sync.sh)
-> 会自动检测这个错。
+> ⚠️ **`course.json` 单一源**：放**项目根**（`./course.json`），**不要**拷到 `public/course.json`。
+> `useCourseLoader` 走 vite **静态 import**，不发网络请求；手动拷到 `public/` 后源文件改动不同步。
+> CI 阶段跑 `scripts/check-course-json-sync.sh` 会自动检测这个错。
+>
+> 自定义主题 → 先按 `references/THEMES.md`「创作新主题」做一个 `themes/<my-theme>/`，再 `--theme=<my-theme>`。
 
-> 自定义主题 → 先按 [`references/THEMES.md`](references/THEMES.md)
-> "创作新主题"流程做一个 `themes/<my-theme>/`，再 `--theme=<my-theme>`。
-
-脚手架带一个 `01-example` demo。在写第一章真实内容前**删掉**：
-
-```bash
-rm -rf presentation/src/chapters/01-example
-```
-
-并把 `presentation/src/registry/chapters.ts` 里 `ExampleChapter` 的
-import 和 `CHAPTERS` 数组里的示例项移除。
+脚手架带 `01-example` demo，写第一章前**删掉**：`rm -rf presentation/src/chapters/01-example`，
+并移除 `registry/chapters.ts` 里 `ExampleChapter` 的 import 和 `CHAPTERS` 数组示例项。
 
 ### 2.2 第 1 章 —— 主线程 + 强制验收
 
-**核心**：第 1 章 = 完整版本一次到位（节奏 + 视觉 + 真素材齐全）。
-**没有"骨架版"概念** —— 第一章就要做出**用户能直接验收**的样板。
+**核心**：第 1 章 = 完整版本一次到位（节奏 + 视觉 + 真素材齐全）。**没有「骨架版」** ——
+第一章就要做出用户能直接验收的样板。
 
-为什么第 1 章必须主线程：
+必须主线程的理由：它是 `CHAPTER-CRAFT.md` 在当前主题 + 题材下的第一次落地，若指引有盲区 /
+token 不够用会立刻暴露，早改成本最低；后续章节都参考它的代码模式。
 
-- 它是 [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) 在**当前
-  主题 + 当前题材**下的第一次落地
-- 如果指引有盲区 / 主题颜色 / 字体 token 不够用，第 1 章一定会暴露 ——
-  这时候有人类反馈就能修指引 / 调主题，**早改成本最低**
-- 后续章节（无论顺序 / 并行）都要参考第 1 章的代码模式
-
-**做完第 1 章后必须停下来**等用户验收，并给出 dev server 链接（默认 `http://localhost:5174/`，多课程用 `?course=<id>`，录屏模式 `&auto=1`）。
+做完后停下等验收，给 dev server 链接（默认 `http://localhost:5174/`，多课程 `?course=<id>`）。
 
 **验收重点**：
-- □ 视觉气质对不对？符合当前主题的预期吗？
-- □ 节奏对不对？某些步太快 / 太慢 / 信息太薄？
-- □ 内容驱动动画是否到位？还是有几步是无脑入场动画？
-- □ 双源原则：屏幕画面有没有"口播没念但 article 能挂"的细节？
-- □ **逐步揭示检查**：除开场 hook 屏外，**每屏独立槽位 ≥ 2**？ 屏内仅 1 个独立信息（不论卡上有多少文字）= **反模式，回去拆**（参见原则 #8）
-- □ **交互点检查**（每 3 章内必须含 ≥ 1 处真交互）：onClick / onChange / drag / 切换 tab 触发 `useState` 状态变化 = 合格。**hover 动画 / transition / 闪烁 ≠ 交互**。**章节屏"看完点 → 下一屏"是导航，不算交互**。无交互 = **回去加**
-- □ 反 AI 味检查（视觉层）：紫粉渐变 / 圆角彩色边框 / 假插画 / emoji 是否有？
-- □ 反 AI 味检查（内容层）：假共情 / 万能模板 / 自我标榜 / 排比堆砌是否出现？参考 [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) § 去 AI 味五类
-- □ **DevTools Responsive 切 1920×1080 / 1280×720 两个视口看**：内容完整不被裁切
+- □ 视觉气质 / 节奏对不对？某些屏太快 / 太慢 / 信息太薄？
+- □ 内容驱动动画是否到位？还是有几屏是无脑入场动画？
+- □ 双源原则：画面有没有「口播没念但 article 能挂」的细节？
+- □ **逐步揭示**：除开场 hook 屏外，**每屏独立槽位 ≥ 2**？屏内仅 1 个独立信息 = 反模式，回去拆
+- □ **互动点**（每 3 屏内 ≥ 1 处真互动）：onClick / onChange / drag / 切 tab 触发 `useState` = 合格；
+  hover / transition / 「看完点下一屏」的导航 **≠ 互动**。无互动 = 回去加
+- □ **禁止纯文字**：每屏是否有视觉演示 / 图形 / 媒体？
+- □ 反 AI 味（视觉）：紫粉渐变 / 圆角彩边 / 假插画 / emoji？
+- □ 反 AI 味（内容）：假共情 / 万能模板 / 自我标榜 / 排比堆砌？见 `references/SCRIPT-STYLE.md` § 去 AI 味五类
+- □ DevTools 切 1920×1080 / 1280×720 两视口：内容不被裁切
 
 ### 2.3 第 2~N 章 —— 按选定模式
 
-详见 [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) ——
-**单一必读入口**，覆盖：视觉演示要求 / 逐步揭示 / 内容取舍 / 双源原则
-/ 视频演示基本审美 / 反 AI 味 / 代码红线 / 完工自检。
-
-**所有模式下的共同规则**：每章独立按 `CHAPTER-CRAFT.md` 开发。
-**风格不强求章节间完全一致** —— 主题颜色 / 字体 token 兜底视觉
-统一，动画 / 节奏 / 视觉演示由章节自由发挥是设计预期。
+每章独立按 `references/CHAPTER-CRAFT.md`（单一必读入口）开发。**风格不强求章节间完全一致** ——
+主题颜色 / 字体 token 兜底统一，动画 / 节奏 / 视觉演示由章节自由发挥是设计预期。
 
 ### 2.4 实现单章（每章必走）
 
-详细指引见 [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) ——
-**单一必读入口**。
-
-**核心要点**：
-
+**核心要点**（详见 `references/CHAPTER-CRAFT.md`）：
 - **每章必须有 CSS / SVG / Canvas / JS 视觉演示**，禁纯文字章节
-- **逐步揭示**：清单 / 列表必须 1 项 = 1 step，禁一次全展示
-- **双源原则**：节奏跟口播稿（顺序不能乱），细节回原文章抽（信息池 +
-  本章 article 段落）
-- **完工自检逐项过**，不达标回去改 —— 按上文「硬性自检协议」执行，
-  **改完再向用户汇报本章交付**
+- **逐步揭示**：清单 / 列表 1 项 = 1 步，禁一次全展示；一屏含多步逐步亮起
+- **每 3 屏至少 1 处真互动**（点击 / 拖拽 / 选择 / 输入）
+- **双源原则**：节奏跟口播稿（顺序不乱），细节回原文章抽（信息池 + 本章 article 段落）
+- **动画 / 交互设计能力（渐进式披露）**：见下
+- **完工自检逐项过**，按「硬性自检协议」+ 课件内容硬规则执行，改完再向用户汇报本章交付
+
+#### 动画与交互设计能力（渐进式披露）
+
+本 skill 的动画默认基于 **animejs v4 + CSS / SVG / Canvas**（详见
+`references/ANIMEJS-GUIDE.md`），足以覆盖多数章节的逐步揭示与动态元素。
+
+当某章需要**更高阶的视觉 / 交互设计**（复杂动效编排、专业级交互原型、设计系统级质感）时，
+agent **应**通过**渐进式披露**按需加载现成的**设计类 skill 或 MCP**：
+
+- 在对话中调用对应的设计 skill / MCP 获取专业能力，再把结果落回本 skill 的章节实现约定
+  （仍守 `narrations.ts` 不变量与 5 条硬规则）；
+- **本仓库不硬编码具体依赖**——要加载哪个设计 skill / MCP，由运行时按可用环境决定；
+- 具体常用组合会在后续课件开发测试中逐步迭代确定，并回填到本段。
+
+> 这是本项目最难的部分。先保证「每屏有动画 + 每 3 屏有互动 + 口播对齐」的基线，
+> 再借设计 skill / MCP 提升上限，通过真实课件测试持续打磨。
+
+**基线工具已内置，优先用**：
+- **元素级逐步揭示**优先用 `Reveal` 组件（`templates/src/components/Reveal.tsx`，支持
+  `rise / scale / pop / fade` 变体 + `delay`/`duration`），不止文字——包裹卡片 / SVG 组 /
+  图片 / 按钮即可随 `step` 逐元素进场，避免手写重复 CSS。
+- 每章完工跑 **`npm run lint`**（`templates/scripts/lint-course.py`）——静态校验 5 条硬规则
+  （视觉演示 / 互动密度 / 逐步揭示 / 口播对齐），0 FAIL 才向用户汇报。
 
 ### 2.5 大改后 bump STORAGE_KEY
 
-改动 `chapters.ts`（增加 / 删除 / 重排章节，或某章 `narrations.ts`
-长度变化）后，**bump** `presentation/src/hooks/useStepper.ts` 的
-`STORAGE_KEY`（如 `v4` → `v5`），避免持久化游标落到不存在的 step 上。
+改动 `chapters.ts`（增删 / 重排章节，或某章 `narrations.ts` 长度变化）后，**bump**
+`hooks/useStepper.ts` 的 `STORAGE_KEY`（如 `v4`→`v5`），避免持久化游标落到不存在的屏。
 
 ---
 
 ## Checkpoint Audio —— 是否合成音频（**硬节点**）
 
-Phase 2 结束后必须停下来，问用户是否合成音频做"自动播放录屏"。
-
-- **合成** → Phase 3
-- **不合成** → 直接 Phase 4（手动录屏 + 后期配音）
+Phase 2 结束后必须停，问用户是否合成音频（自动播放 / 字幕对齐）。
+**合成** → Phase 3；**不合成** → 直接 Phase 4（手动播放 + 可选后期配音）。
 
 ---
 
 ## Phase 3 —— 音频合成与字幕（可选）
 
-详细流程见 [`references/AUDIO.md`](references/AUDIO.md)。
+详见 `references/AUDIO.md`。
 
 ---
 
-## Phase 4 —— 部署嵌入 / 录屏 + 后期
+## Phase 4 —— 部署嵌入 / 可选录屏
 
-课件 `dist/` 是纯静态文件。两种分发方式任选其一或同时使用：
-
-- **嵌入 Web 应用** —— 见 [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md)
-- **录制为 MP4 视频** —— 见 [`references/RECORDING.md`](references/RECORDING.md)
+课件 `dist/` 是纯静态文件，两种分发任选或并用：
+- **嵌入 Web 应用** —— `references/DEPLOYMENT.md`
+- **录制为视频（可选）** —— `references/RECORDING.md`，仅作后期分发，不影响主流程
 
 ---
 
-## 十条原则（一句话清单）
+## 十条原则（一句话索引）
 
-完整展开见 [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) § 这是视频，不是 PPT —— **写章节时回那里查**，下面只是索引。
+完整展开见 `references/CHAPTER-CRAFT.md` § 这是课件，不是 PPT —— 写章节时回那里查。
 
 | # | 原则 | 一句话 |
 |---|---|---|
-| 1 | 16:9 固定舞台 | 内容 1920×1080 + transform scale，没���响应式 |
+| 1 | 16:9 固定舞台 | 内容 1920×1080 + transform scale，没有响应式 |
 | 2 | 全局 step 计数器 | 章节是 step 的纯函数，无定时器 |
 | 3 | 每步独占整屏 | `if (step === N) return <FullScene />` |
-| 4 | 口播节拍 = step | 一节拍 = 一 step = 一聚焦想法 |
+| 4 | 口播节拍 = step（步） | 一节拍 = 一步 = 一聚焦想法；一屏 = 多步 |
 | 5 | 隐藏的边角控件 | 进度条 / 翻页器默认 opacity 0 |
 | 6 | 舞台无 chrome | 没有 header / footer / 页码 / 品牌条 |
-| 7 | **内容驱动动画** | 先找内在动作，找不到才入场动画兜底；持续微动慎用 |
-| 8 | **逐步揭示（同屏多槽位 + 步推进逐项亮）** | 1 项 = 1 step = 1 屏 = 该项在屏内**某个槽位**被激活。**除开场 hook 屏外，每屏必须有 ≥ 2 个独立槽位**（术语卡、坐标箭头、积木块、按钮等），步 N 推进 = 第 N 个槽位激活，其他槽位**灰化保留作上下文**。**屏内仅 1 个独立信息 = 反模式**。"1 屏 1 焦点"是错解——正确的是"1 屏多槽位、步推进逐项亮"。**判定方法**：关掉所有 `pointer-events: none`，屏上是否有 ≥ 2 个可独立激活/灰化的元素？有 = 合格。**反例**：1 屏只放 1 张完整卡（不论卡上有多少文字）= 反模式。**正例**：1 屏放 4 槽位术语卡，步 0 只亮卡 1，其他 3 张灰态；步 1 亮卡 1+2，灰态卡 3+4；...；步 3 全部亮。**与"每章 3-8 步"协同**：3-8 屏章节里**每屏至少 2 槽位、步推进逐项亮**——两条规则同源，不交叉阅读必踩坑。详见 references/CHAPTER-CRAFT.md § 逐步揭示 + § 完工自检。 |
-| 9 | 整片同一主题 | 章节间不翻表面色；**颜色 / 字体走 token**，其它尺度章节自由 |
-| 10 | 双源原则 | script 定节拍，**article 定画面密度**（落到信息池） |
+| 7 | 内容驱动动画 | 先找内在动作，找不到才入场动画兜底；持续微动慎用 |
+| 8 | 逐步揭示（同屏多槽位、步推进逐项亮） | 1 项 = 1 步 = 该项在屏内某槽位被激活。**一屏含多个步**，步 N 激活第 N 个，其余灰化保留作上下文；**除开场 hook 屏外，每屏 ≥ 2 步（≥ 2 独立槽位）**。屏内仅 1 步（1 个独立信息）= 反模式 |
+| 9 | 整片同一主题 | 章节间不翻表面色；颜色 / 字体走 token，其它尺度章节自由 |
+| 10 | 双源原则 | script 定节拍，article 定画面密度（落到信息池） |
 
 ---
 
-## 相关资源
+## 参考文档速查
 
-按"何时读"标注，避免一次性全读：
+按「何时读」标注，避免一次性全读。各文件对应阶段已见上文「文件读取指南」，此处按文件角度补充：
 
 | 文件 | 何时读 |
 |---|---|
-| [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1.2 必读 — 文章 → 口播稿规则、平台变体 |
-| [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1.2 必读 — outline.md 字段 spec、命名约定、章节切分、信息池 |
-| [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | **Phase 2.4 每章单一必读入口** — 十条原则 / 视觉演示要求 / 逐步揭示 / 内容取舍 / 双源原则 / 视频演示审美 / 避免 AI 味 / 代码层最小约束 / 完工自检 / 附录 L: animejs 升级 |
-| [`references/ANIMEJS-GUIDE.md`](references/ANIMEJS-GUIDE.md) | 写章节需要"真正动画"或"物理级拖拽"时 |
-| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | 课程模式（明确要求时）— S1-S5 灵活骨架 / 互动测验 / 多课程管理 |
-| [`references/THEMES.md`](references/THEMES.md) | 选 / 造 / 切主题时 — 完整 token 契约 + 内置主题清单 + 创作流程 |
-| [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 才读 — provider-agnostic 音频合成流程、故障排查 |
-| [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 才读 — 录屏工具 + 后期合成 |
-| [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md) | Phase 4 才读 — 部署嵌入决策树 + 7 方案精简范本 |
-| [`themes/`](themes) | Checkpoint Plan / Phase 1.2 时翻 — 内置主题（每个含 `theme.json` + `tokens.css`） |
-| [`scripts/scaffold.sh`](scripts/scaffold.sh) | Phase 2.1 跑一次 — 一键项目脚手架 |
+| `references/SCRIPT-STYLE.md` | Phase 1.2 必读 — 文章→口播稿规则、平台变体、去 AI 味五类 |
+| `references/OUTLINE-FORMAT.md` | Phase 1.2 必读 — outline.md 字段 spec、章节切分、信息池 |
+| `references/CHAPTER-CRAFT.md` | **Phase 2.4 每章单一入口** — 十条原则 / 视觉演示 / 逐步揭示 / 双源 / 反 AI 味 / 代码红线 / 完工自检 / animejs 升级 |
+| `references/ANIMEJS-GUIDE.md` | 需要「真动画」或「物理级拖拽」时 |
+| `references/COURSE-STRUCTURE.md` | 课程结构（课程 > 大纲·分段 > 章节 > 屏 > 步）、密度约束、chrome 组件 |
+| `references/THEMES.md` | 选 / 造 / 切主题 — token 契约 + 内置主题 + 创作流程 |
+| `references/AUDIO.md` | Phase 3 — provider-agnostic 音频合成、故障排查 |
+| `references/RECORDING.md` | Phase 4 — 可选录屏工具 + 后期合成 |
+| `references/DEPLOYMENT.md` | Phase 4 — 部署嵌入决策树 + 方案范本 |
+| `themes/` | Checkpoint Plan / Phase 1.2 — 内置主题（`theme.json` + `tokens.css`） |
+| `scripts/scaffold.sh` | Phase 2.1 — 一键项目脚手架 |

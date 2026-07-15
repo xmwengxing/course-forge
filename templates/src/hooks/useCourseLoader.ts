@@ -90,14 +90,12 @@ function findChapters(
   const flatIds: string[] = [];
   const matched: ChapterDef[] = [];
   const missing: string[] = [];
-  for (const section of course.sections) {
-    for (const seg of section.segments) {
-      for (const ref of seg.chapters) {
-        flatIds.push(ref.id);
-        const c = map.get(ref.id);
-        if (c) matched.push(c);
-        else missing.push(ref.id);
-      }
+  for (const seg of course.outlineSegments) {
+    for (const ref of seg.chapters) {
+      flatIds.push(ref.id);
+      const c = map.get(ref.id);
+      if (c) matched.push(c);
+      else missing.push(ref.id);
     }
   }
   return { matched, flatIds, missing };
@@ -114,17 +112,11 @@ export function useCourseLoader({
         course: {
           courseId: "single",
           title: "Single Video",
-          sections: [
+          outlineSegments: [
             {
               id: "single",
               title: "Single Video",
-              segments: [
-                {
-                  id: "S1",
-                  title: "Main",
-                  chapters: singleVideoChapters.map((c) => ({ id: c.id, title: c.title })),
-                },
-              ],
+              chapters: singleVideoChapters.map((c) => ({ id: c.id, title: c.title })),
             },
           ],
         },

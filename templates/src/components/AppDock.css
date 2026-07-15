@@ -1,0 +1,110 @@
+/* AppDock — merged bottom control region (course mode).
+ *
+ * The progress rail sits at the very top edge of the dock and doubles as
+ * the divider between the canvas and the controls. Below it, one compact
+ * row holds the readout (left) and the transport controls (right). This
+ * replaces the old two stacked bars (CourseProgress + ModeControls) so the
+ * stage canvas reclaims vertical space.
+ */
+
+.app-dock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--ui-surface-2);
+  /* No border-top here — the rail IS the top edge of this region. */
+}
+
+/* Top edge = the progress bar itself (filled portion = --ui-accent,
+   unfilled portion = --ui-rule, which reads as the hairline divider). */
+.dock-rail {
+  width: 100%;
+  height: 3px;
+  background: var(--ui-rule);
+  overflow: hidden;
+}
+
+.dock-rail-fill {
+  height: 100%;
+  background: var(--ui-accent);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
+}
+
+.dock-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 5px 16px;
+  min-height: 38px;
+}
+
+.dock-readout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--ui-text-mute);
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* Inside the dock the transport group drops its own surface box so the
+   buttons sit directly in the dock row. */
+.dock-row .mc-group {
+  background: transparent;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.dock-row .mc-btn {
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+.dock-row .mc-status {
+  min-height: 30px;
+  padding: 4px 12px;
+}
+
+/* ─── Mobile (phones) ───
+   Shrink the dock, drop the Chinese button labels (keep the glyph icons),
+   and drop the desktop hint so the transport + readout fit one row. */
+@media (max-width: 600px) {
+  .dock-row {
+    padding: 3px 10px;
+    gap: 10px;
+    min-height: 34px;
+  }
+  .dock-readout {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    gap: 6px;
+  }
+  .dock-row .mc-btn {
+    min-height: 28px;
+    padding: 3px 9px;
+  }
+  .dock-row .mc-status {
+    min-height: 28px;
+    padding: 3px 9px;
+  }
+  /* Glyph-only on phones — the CN labels waste horizontal space. */
+  .dock-row .mc-btn-cn,
+  .dock-row .mc-status-cn { display: none; }
+  /* The "Space/F" hint is irrelevant on touch devices. */
+  .dock-row .mc-hint { display: none; }
+  /* Clear the home-indicator / notch safe area on phones. */
+  .app-dock { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+/* Very narrow phones: the full "Ch x/y" readout no longer fits — keep
+   "Step a/b · p%" and drop the chapter fraction + its separator. */
+@media (max-width: 420px) {
+  .dock-readout .cp-frac,
+  .dock-readout .cp-frac + .cp-sep { display: none; }
+}

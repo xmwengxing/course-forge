@@ -13,11 +13,11 @@
 ## 怎么用
 
 ```bash
-# 默认（minimax）
+# 默认（edge-tts，零密钥）
 npm run synthesize-audio
 
 # 换 provider
-PRESENTATION_TTS=openai npm run synthesize-audio
+PRESENTATION_TTS=minimax npm run synthesize-audio
 npm run synthesize-audio -- --provider=elevenlabs
 
 # 指定音色（每个 provider 自己解析）
@@ -36,7 +36,8 @@ npm run synthesize-audio -- --force
 
 | 文件 | 后端 | 鉴权 | 备注 |
 |---|---|---|---|
-| `minimax.sh` | MiniMax T2A v2 (direct curl) | `MINIMAX_API_KEY` env var | **默认**；中文口播质量稳；无额外 CLI 依赖 |
+| `edge.sh` | Microsoft Edge TTS (edge-tts) | **无需 key（免费）** | **默认推荐**：`pip install edge-tts` 即可，零配置开箱即用 |
+| `minimax.sh` | MiniMax T2A v2 (direct curl) | `MINIMAX_API_KEY` env var | 中文口播质量稳；无额外 CLI 依赖 |
 | `openai.sh` | OpenAI Audio Speech API | `OPENAI_API_KEY` env var | curl-based；多数 agent 已有 key |
 
 只内置这两个 —— 我们不替你做更多技术选型。其它后端的代码片段在下面，

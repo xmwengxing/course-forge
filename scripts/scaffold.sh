@@ -18,9 +18,9 @@
 #   cp <path-to-course-forge>/themes/<id>/tokens.css \
 #      <project>/src/styles/tokens.css
 # ─────────────────────────────────────────────────────────────
-# 注意: course.json 不在 scaffold 里创建。开发者跑完脚手架后, 自己手写
-# course.json (在项目根), 由 useCourseLoader 静态 import。
-# 详见 SKILL.md § 2.1 脚手架 + scripts/check-course-json-sync.sh。
+# 注意: 脚手架会生成一份最小可用的 course.json (项目根), 供 useCourseLoader
+# 静态 import。开发者按自己的章节改写即可 (参考 references/COURSE-STRUCTURE.md)。
+# 详见 SKILL.md § 2.1 脚手架。
 # ─────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -68,6 +68,18 @@ for arg in "$@"; do
   esac
 done
 
+# `npm create vite` mis-handles Windows absolute paths (it DOUBLES them into
+# an invalid `E:\...\E:\...` form and aborts). Rewrite any absolute TARGET as
+# a path RELATIVE to the current directory — create-vite handles relative
+# targets correctly on every platform.
+if [[ "$TARGET" = /* || "$TARGET" == [A-Za-z]:* || "$TARGET" == [A-Za-z]:/* ]]; then
+  if command -v python3 >/dev/null 2>&1; then
+    TARGET="$(python3 -c "import os,sys;print(os.path.relpath(sys.argv[1], sys.argv[2]))" "$TARGET" "$(pwd)")"
+  elif command -v realpath >/dev/null 2>&1; then
+    TARGET="$(realpath --relative-to="$(pwd)" "$TARGET")"
+  fi
+fi
+
 TARGET="${TARGET:-presentation}"
 THEME_DIR="$THEMES_DIR/$THEME"
 THEME_TOKENS="$THEME_DIR/tokens.css"
@@ -94,7 +106,7 @@ fi
 
 echo "▸ 在 $TARGET 创建 Vite + React + TS 项目"
 echo "▸ 使用主题：$THEME"
-npm create vite@latest "$TARGET" -- --template react-ts >/dev/null
+npm create vite@latest "$TARGET" -- --template react-ts --no-interactive
 
 cd "$TARGET"
 echo "▸ 安装依赖（可能要等一会）..."
@@ -126,31 +138,23 @@ mkdir -p \
 cp "$TEMPLATES/vite.config.ts" .
 cp "$TEMPLATES/index.html" .
 
+# Favicon: copy so generated projects don't 404 on /favicon.ico.
+# (index.html already declares <link rel="icon" href="/favicon.svg">.)
+mkdir -p public
+cp -r "$TEMPLATES/public/." public/ 2>/dev/null || true
+
 cp "$TEMPLATES/src/main.tsx" src/main.tsx
 cp "$TEMPLATES/src/App.tsx"  src/App.tsx
 
-# tokens.css 来自所选主题
-cp "$THEME_TOKENS"                          src/styles/tokens.css
-cp "$TEMPLATES/src/styles/base.css"         src/styles/base.css
-cp "$TEMPLATES/src/styles/animations.css"   src/styles/animations.css
-cp "$TEMPLATES/src/styles/fonts.css"        src/styles/fonts.css
-
-cp "$TEMPLATES/src/hooks/useStageScale.ts"   src/hooks/useStageScale.ts
-cp "$TEMPLATES/src/hooks/useStepper.ts"      src/hooks/useStepper.ts
-cp "$TEMPLATES/src/hooks/useAudioPlayer.ts"  src/hooks/useAudioPlayer.ts
-cp "$TEMPLATES/src/hooks/useAutoMode.ts"     src/hooks/useAutoMode.ts
-
-cp "$TEMPLATES/src/components/Stage.tsx"          src/components/Stage.tsx
-cp "$TEMPLATES/src/components/MaskReveal.tsx"     src/components/MaskReveal.tsx
-cp "$TEMPLATES/src/components/ProgressBar.tsx"    src/components/ProgressBar.tsx
-cp "$TEMPLATES/src/components/ProgressBar.css"    src/components/ProgressBar.css
-cp "$TEMPLATES/src/components/AutoStartGate.tsx"  src/components/AutoStartGate.tsx
-cp "$TEMPLATES/src/components/AutoStartGate.css"  src/components/AutoStartGate.css
-cp "$TEMPLATES/src/components/AutoToggle.tsx"     src/components/AutoToggle.tsx
-cp "$TEMPLATES/src/components/AutoToggle.css"     src/components/AutoToggle.css
-
-cp "$TEMPLATES/src/registry/types.ts"    src/registry/types.ts
-cp "$TEMPLATES/src/registry/chapters.ts" src/registry/chapters.ts
+# tokens.css 来自所选主题；其余样式文件原样复制
+cp "$THEME_TOKENS"                        src/styles/tokens.css
+cp "$TEMPLATES/src/styles/"*              src/styles/
+# 整目录复制 hook / component / registry / chapters —— 避免漏文件导致 tsc 失败
+cp "$TEMPLATES/src/hooks/"*               src/hooks/
+# components 可能含子目录（如 scenes/ 实景组件库），用 -r 递归复制
+cp -r "$TEMPLATES/src/components/"*       src/components/
+cp "$TEMPLATES/src/registry/"*            src/registry/
+cp -r "$TEMPLATES/src/chapters/"*         src/chapters/
 
 cp "$TEMPLATES/src/chapters/01-example/Example.tsx"     src/chapters/01-example/Example.tsx
 cp "$TEMPLATES/src/chapters/01-example/Example.css"     src/chapters/01-example/Example.css
@@ -161,15 +165,23 @@ cp "$TEMPLATES/src/chapters/01-example/narrations.ts"   src/chapters/01-example/
 cp "$TEMPLATES/scripts/extract-narrations.ts"  scripts/extract-narrations.ts
 cp "$TEMPLATES/scripts/synthesize-audio.sh"    scripts/synthesize-audio.sh
 chmod +x scripts/synthesize-audio.sh
+cp "$TEMPLATES/scripts/subtitle-timing.py"    scripts/subtitle-timing.py
+chmod +x scripts/subtitle-timing.py
 
 mkdir -p scripts/tts-providers
 cp "$TEMPLATES/scripts/tts-providers/README.md"   scripts/tts-providers/README.md
 cp "$TEMPLATES/scripts/tts-providers/minimax.sh"  scripts/tts-providers/minimax.sh
 cp "$TEMPLATES/scripts/tts-providers/openai.sh"   scripts/tts-providers/openai.sh
+# edge-tts = zero-key fallback (no API key, just `pip install edge-tts`).
+# Ship it by default so `?auto=1` + subtitles work without a paid TTS key.
+cp "$TEMPLATES/scripts/tts-providers/edge.sh"     scripts/tts-providers/edge.sh
+chmod +x scripts/tts-providers/*.sh
 cp "$TEMPLATES/scripts/compress-audio.sh"     scripts/compress-audio.sh
 chmod +x scripts/compress-audio.sh
 cp "$TEMPLATES/scripts/regenerate-course-json.py" scripts/regenerate-course-json.py
 chmod +x scripts/regenerate-course-json.py
+cp "$TEMPLATES/scripts/lint-course.py"        scripts/lint-course.py
+chmod +x scripts/lint-course.py
 
 # Wire the audio scripts into npm so contributors don't have to remember
 # the exact command. Uses node to merge into the existing package.json.
@@ -181,9 +193,29 @@ p.scripts = Object.assign({}, p.scripts, {
   "synthesize-audio":   "bash scripts/synthesize-audio.sh",
   "compress-audio":     "bash scripts/compress-audio.sh",
   "regenerate-course-json": "python3 scripts/regenerate-course-json.py",
+  "lint":               "python3 scripts/lint-course.py",
 });
 fs.writeFileSync("package.json", JSON.stringify(p, null, 2) + "\n");
 '
+
+# 生成一份可用的 course.json —— useCourseLoader 静态 import ../../course.json，
+# 缺它 tsc 与运行都会直接报 "course.json 缺失"。开发者按自己的章节改写即可。
+cat > course.json <<'JSON'
+{
+  "courseId": "demo",
+  "title": "示例课程（Demo）",
+  "outlineSegments": [
+    {
+      "id": "seg-demo",
+      "title": "示例分段",
+      "chapters": [
+        { "id": "example", "title": "示例章节" },
+        { "id": "ide", "title": "工程师工作台" }
+      ]
+    }
+  ]
+}
+JSON
 
 # 留个标记，以后能查这个项目从哪个主题起步的
 {
@@ -217,9 +249,13 @@ cat <<EOF
      不分骨架 / 精修两步；动画选型由 chapter agent 按 CHAPTER-CRAFT.md
      § 这是视频，不是 PPT / § 视觉中心：舞台中心 ≠ 元素居中 决定）。
   • 在 src/registry/chapters.ts 注册每个新章节。
+  • course.json 已在项目根生成，按需增删 outlineSegments / chapters（id 必须
+    与 chapters.ts 注册一致），详见 references/COURSE-STRUCTURE.md。
   • **每章必须有 narrations.ts**（与 Example.tsx 同目录），
     数组长度 = step 数，是音频合成 + Auto 模式的唯一真相源。
   • 章节改了就 bump src/hooks/useStepper.ts 的 STORAGE_KEY 末尾版本号。
+  • 每写完一章跑 `npm run lint` —— 校验 5 条硬规则（视觉演示 / 互动密度 /
+    逐步揭示 / 口播对齐），静态拦截反模式。
 
 录制：
 

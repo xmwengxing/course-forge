@@ -1,6 +1,6 @@
 # Course Forge
 
-Turn a knowledge document or narration script into a record-ready, click-driven 16:9 web presentation — with optional TTS audio, chunk-based subtitles, and either web embed or MP4 export.
+Turn a knowledge document or narration script into an **interactive course / lesson** — a click-driven 16:9 web presentation with chapter navigation, subtitles, audio, playback controls, and per-chapter progress. Optional TTS audio and optional video recording are supported.
 
 [English](./README.md) · [中文文档](./README.zh-CN.md) · [SKILL entry](./SKILL.md)
 
@@ -14,7 +14,7 @@ You provide an article or script. The skill walks an agent through:
 2. Aligning with you on the script, outline, theme, source assets, and dev mode
 3. Scaffolding a Vite + React + TS project, then building chapters one-by-one (chapter 1 is always built in the main thread as the anchor)
 4. Optionally synthesizing audio via pluggable TTS (MiniMax / OpenAI / Edge / custom)
-5. Embedding into a web app, or auto-recording as MP4
+5. Embedding into a web app, or optionally recording as video (MP4)
 
 Output is a static `dist/` — deployable anywhere.
 
@@ -23,15 +23,19 @@ Output is a static `dist/` — deployable anywhere.
 ## Install
 
 ```bash
-# Recommended — skills CLI
+# Recommended (OpenCode-style registry) — skills CLI
 npx skills add xmwengxing/course-forge
 
-# Or — manual clone
+# Or — manual clone (works for any runtime)
 git clone https://github.com/xmwengxing/course-forge.git
-cp -r course-forge /your-project/.opencode/skills/
+#  OpenCode / Claude Code / Cursor / Codex:
+cp -r course-forge /your-project/.opencode/skills/   # adjust per runtime, see Compatibility
+#  WorkBuddy / CodeBuddy:
+cp -r course-forge /your-project/.workbuddy/skills/
 ```
 
-For Claude Code, also available as a plugin marketplace entry: `/plugin marketplace add xmwengxing/course-forge`.
+- **OpenCode / Claude Code**: also available via plugin marketplace — `/plugin marketplace add xmwengxing/course-forge`.
+- **WorkBuddy / CodeBuddy**: install through the in-app skill marketplace, or place the folder at `.workbuddy/skills/course-forge/` (manual clone above). `npx skills add` is an OpenCode-style registry command and does not apply here.
 
 ---
 
@@ -72,23 +76,28 @@ Phase 2  Web build     →  scaffold + chapters (chapter 1 = anchor)
                           [User review]      anchor must be approved
                           →  chapters 2..N   (per-chapter / sequential / parallel)
 Phase 3  Audio (opt.)  →  TTS synthesis + chunk-based subtitles
-Phase 4  Deploy        →  embed (new-tab / iframe / DB)  OR  record as MP4
+Phase 4  Deploy        →  embed (new-tab / iframe / DB)  ·  optional: record as MP4
 ```
 
 Hard stops are the `[]` lines — the agent must pause for human review at every one. For phase details and what to read at each stage, see [`SKILL.md`](./SKILL.md) § "File reading guide".
 
 ---
 
-## Course hierarchy (course mode)
+## Course hierarchy
+
+Canonical model: **课程(Course) > 大纲·分段(Outline Segment, 原 S1~S5, 段数可变) > 章节(Chapter) > 屏(Screen/画面) > 步(Step)**. 屏是画框容器（1 章可 1 屏或多屏），步是屏内原子揭示单元（1 步 = 1 口播节拍）。
 
 ```
-Course      — single domain or full-length curriculum (e.g. "Intro to X")
-Segment     — S1..SN, themed block within a course (导入 / 精讲 / 案例 / 收官 / ...)
-Chapter     — 30-60s screen = N steps, the unit the skill actually builds
-Step        — single narration beat = full-screen content
+Course   — single domain or full-length curriculum (e.g. "Intro to X")
+Segment  — themed block (导入/精讲/案例/收官…); L1 nav menu; count varies by content, not always 5
+Chapter  — a lesson; L2 nav menu unit (e.g. "1.1 Hello, digital world!")
+Screen   — a 1920×1080 canvas inside a chapter; a chapter = 1 screen or multiple
+Step     — atomic reveal unit inside a screen: 1 step = 1 narration beat = 1 subtitle window = 1 audio segment
 ```
 
-Single-video mode (most common) skips the `Course` and `Segment` tiers — `course.json` is optional and can be deleted. See [`references/COURSE-MODE.md`](references/COURSE-MODE.md).
+This skill builds **one kind of output**: interactive courseware. Video recording is an
+optional extra (see [`references/RECORDING.md`](references/RECORDING.md)), not a separate mode.
+Course structure details: [`references/COURSE-STRUCTURE.md`](references/COURSE-STRUCTURE.md).
 
 ---
 
@@ -122,8 +131,15 @@ Three things hold the whole system together. Break any one and chapters, audio, 
 | Claude Code | `.claude/skills/<name>/` or plugin marketplace |
 | Cursor | `.agents/skills/<name>/` |
 | Codex CLI | `.codex/skills/<name>/` |
+| WorkBuddy / CodeBuddy | `.workbuddy/skills/<name>/` |
 
 Requires Node 20+ for scaffolded projects. TTS requires network access to whichever provider you pick.
+
+## Platform notes (Windows / cross-platform)
+
+- **Shell scripts (`scripts/*.sh`)** use Bash and call `curl` / `npm` / `python3`. On **Windows** they do **not** run in `cmd.exe` or PowerShell — use **Git Bash** (bundled with Git for Windows) or **WSL**. Example: `bash scripts/scaffold.sh ./my-course --theme=chalk-garden`.
+- **Python scripts (`scripts/*.py`)** run natively with `python` / `python3` on any OS. If your Windows Python is only available as `python` (no `python3`), run `alias python3=python` in Git Bash, or invoke the script directly with `python script.py`.
+- **Node 20+** is required for scaffolded projects (the `npm create vite` step). TTS providers additionally need network access to the chosen endpoint.
 
 ## Upgrading from a previous version
 
@@ -152,10 +168,10 @@ bash scripts/check-course-json-sync.sh   # exit 0 = clean
 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | Writing each chapter — single source of truth for what makes a chapter pass review |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1 — turning an article into narration |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1 — the `outline.md` schema and chapter-split rules |
-| [`references/COURSE-MODE.md`](references/COURSE-MODE.md) | Phase 1/2 — only if building a multi-segment course |
+| [`references/COURSE-STRUCTURE.md`](references/COURSE-STRUCTURE.md) | Course structure — 课程>章节>屏, density rules, chrome |
 | [`references/THEMES.md`](references/THEMES.md) | Checkpoint Plan / any time you pick or change a theme |
 | [`references/AUDIO.md`](references/AUDIO.md) | Phase 3 — TTS pipeline, providers, subtitle timing |
-| [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 — auto-record the running site as MP4 |
+| [`references/RECORDING.md`](references/RECORDING.md) | Phase 4 — auto-record the running site as MP4; **also the formal autoplay policy & audio/subtitle fallback contract** |
 | [`references/DEPLOYMENT.md`](references/DEPLOYMENT.md) | Phase 4 — embed into an existing web app |
 | [`references/ANIMEJS-GUIDE.md`](references/ANIMEJS-GUIDE.md) | Writing a chapter that needs real animation or physics-style drag |
 

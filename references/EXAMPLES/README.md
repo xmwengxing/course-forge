@@ -29,6 +29,8 @@
 | [`hook-chapter/`](hook-chapter/) | **钩子型开场** —— 多张图片逐张揭示后 hero takeover | `chapter.tsx` + `chapter.css` |
 | [`list-reveal/`](list-reveal/) | **列举型** —— 口播说"三件事 / N 个特性"，每项 1 step | `chapter.tsx` + `chapter.css` |
 | [`example-anime/`](example-anime/) | **animejs v4 实战** —— 节点滚动 / 柱状图 grow / SVG 描线 + 拖拽节点 / 拖拽排序 | README + `chapter.tsx` + `chapter.css` |
+| [`example-runner/`](example-runner/) | **执行跑道讲算法** —— 拼装 `RunnerTrack` 把流程执行演出来 | README + `chapter.tsx` + `chapter.css` |
+| [`example-live-editor/`](example-live-editor/) | **现场改 Bug 讲调试** —— 拼装 `LiveEditor` 把修复演出来 | README + `chapter.tsx` + `chapter.css` |
 
 每个 example 都是**完整章节**：**内容驱动主导动作** + 必要的伴随动作
 （**不强求挂持续微动**，按 [`../CHAPTER-CRAFT.md`](../CHAPTER-CRAFT.md)

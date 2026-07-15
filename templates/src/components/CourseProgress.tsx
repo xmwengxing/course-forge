@@ -8,87 +8,127 @@ export interface CourseProgressProps {
   course: CourseJson;
 }
 
+export interface SegmentProgress {
+  stepPct: number;
+  currentChapterIdx: number;
+  totalChapters: number;
+  chapterTotalSteps: number;
+  safeStep: number;
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 /**
- * CourseProgress — per-section (课时) step bar.
+ * Compute the *current 大纲·分段 (Outline Segment)* progress percentage
+ * and readout fields. The bar's total length is the active segment's step
+ * count (sum of steps across every chapter in the segment the cursor is
+ * in), not the whole course and not a single chapter.
  *
- * The bar's **total length is the current section's step count** (i.e.
- * the sum of steps across every chapter in the section the user is
- * currently in), not the entire course and not a single chapter.
- *
- * When the user advances chapter by chapter, the bar fills smoothly
- * toward 100% — only when they leave the section entirely does the
- * bar reset (next section → 0%, then fills up again).
- *
- * Course  → 1.0 大纲 (section A) → 1.1 (section B) → 1.2 (section C) ...
- * Each section has segments → chapters → steps. The bar is keyed by
- * the section the cursor is in, not by a single chapter.
+ * Exported so the bottom dock (AppDock) can render the progress rail and
+ * the readout from a single source of truth.
  */
-export function CourseProgress({ chapters, cursor, course }: CourseProgressProps) {
+export function computeSegmentProgress(
+  chapters: ChapterDef[],
+  cursor: Cursor,
+  course: CourseJson,
+): SegmentProgress {
   const totalChapters = chapters.length;
   const currentChapterIdx = cursor.chapter;
   const currentChapter = chapters[currentChapterIdx];
 
-  // Locate the section containing the current chapter. We walk
-  // course.sections → segments → chapters in flat order and stop at
-  // currentChapterIdx. The bar's total = the section's chapter list.
+  // Walk course.outlineSegments → chapters in flat order; the bar's
+  // total = the active segment's chapter list.
   const flat: ChapterDef[] = [];
-  for (const section of course.sections) {
-    for (const seg of section.segments) {
-      for (const ref of seg.chapters) {
-        const c = chapters.find((x) => x.id === ref.id);
-        if (c) flat.push(c);
-      }
+  for (const seg of course.outlineSegments) {
+    for (const ref of seg.chapters) {
+      const c = chapters.find((x) => x.id === ref.id);
+      if (c) flat.push(c);
     }
   }
 
   // Map every chapter index (in the flat loader order) to its
-  // owning section id so we can group by section.
-  const sectionOfChapter = new Map<number, string>();
+  // owning segment id so we can group by segment.
+  const segmentOfChapter = new Map<number, string>();
   let globalIdx = 0;
-  for (const section of course.sections) {
-    for (const seg of section.segments) {
-      for (const ref of seg.chapters) {
-        if (chapters.find((x) => x.id === ref.id)) {
-          sectionOfChapter.set(globalIdx, section.id);
-          globalIdx++;
-        }
+  for (const seg of course.outlineSegments) {
+    for (const ref of seg.chapters) {
+      if (chapters.find((x) => x.id === ref.id)) {
+        segmentOfChapter.set(globalIdx, seg.id);
+        globalIdx++;
       }
     }
   }
 
-  const currentSectionId = sectionOfChapter.get(currentChapterIdx) ?? "";
+  const currentSegmentId = segmentOfChapter.get(currentChapterIdx) ?? "";
 
-  // Sum steps across all chapters in the current section.
-  let sectionTotalSteps = 0;
-  let sectionStepsCovered = 0; // steps from previous chapters in the section
+  // Sum steps across all chapters in the current segment.
+  let segmentTotalSteps = 0;
+  let segmentStepsCovered = 0; // steps from previous chapters in the segment
   for (let i = 0; i < flat.length; i++) {
-    const secId = sectionOfChapter.get(i) ?? "";
-    if (secId !== currentSectionId) continue;
+    const segId = segmentOfChapter.get(i) ?? "";
+    if (segId !== currentSegmentId) continue;
     const steps = flat[i]?.narrations.length ?? 0;
-    if (i < currentChapterIdx) sectionStepsCovered += steps;
-    sectionTotalSteps += steps;
+    if (i < currentChapterIdx) segmentStepsCovered += steps;
+    segmentTotalSteps += steps;
   }
 
   // Sanity cap: persisted cursor may be on a removed step.
   const chapterTotalSteps = currentChapter?.narrations.length ?? 1;
   const safeStep = Math.min(cursor.step, chapterTotalSteps - 1);
   const stepPct = Math.round(
-    ((sectionStepsCovered + safeStep + 1) / Math.max(1, sectionTotalSteps)) * 100,
+    ((segmentStepsCovered + safeStep + 1) / Math.max(1, segmentTotalSteps)) * 100,
   );
 
+  return { stepPct, currentChapterIdx, totalChapters, chapterTotalSteps, safeStep };
+}
+
+/**
+ * CourseProgressReadout — just the "Ch x/y · Step a/b · p%" text group
+ * (no rail, no border). Composed inside AppDock so the progress bar and
+ * the transport share one row.
+ */
+export function CourseProgressReadout({
+  chapters,
+  cursor,
+  course,
+}: CourseProgressProps) {
+  const { currentChapterIdx, totalChapters, chapterTotalSteps, safeStep, stepPct } =
+    computeSegmentProgress(chapters, cursor, course);
+  return (
+    <div className="cp-readout">
+      <span className="cp-frac label-mono">
+        Ch {pad2(currentChapterIdx + 1)} / {pad2(totalChapters)}
+      </span>
+      <span className="cp-sep" aria-hidden="true">·</span>
+      <span className="cp-step label-mono">
+        Step {pad2(safeStep + 1)} / {pad2(chapterTotalSteps)}
+      </span>
+      <span className="cp-sep" aria-hidden="true">·</span>
+      <span className="cp-pct label-mono">{stepPct}%</span>
+    </div>
+  );
+}
+
+/**
+ * CourseProgress — per-大纲·分段 (Outline Segment) step bar.
+ *
+ * The bar's **total length is the current segment's step count** (i.e.
+ * the sum of steps across every chapter in the segment the user is
+ * currently in), not the entire course and not a single chapter.
+ *
+ * When the user advances chapter by chapter, the bar fills smoothly
+ * toward 100% — only when they leave the segment entirely does the
+ * bar reset (next segment → 0%, then fills up again).
+ *
+ * Standalone variant: renders the readout + the progress rail. In
+ * course mode the bottom dock (AppDock) composes `CourseProgressReadout`
+ * (readout only) with its own top-edge rail instead.
+ */
+export function CourseProgress({ chapters, cursor, course }: CourseProgressProps) {
+  const { stepPct } = computeSegmentProgress(chapters, cursor, course);
   return (
     <div className="cp-bar" aria-label="当前课时进度">
-      <div className="cp-readout">
-        <span className="cp-frac label-mono">
-          Ch {String(currentChapterIdx + 1).padStart(2, "0")} / {String(totalChapters).padStart(2, "0")}
-        </span>
-        <span className="cp-sep" aria-hidden="true">·</span>
-        <span className="cp-step label-mono">
-          Step {String(safeStep + 1).padStart(2, "0")} / {String(chapterTotalSteps).padStart(2, "0")}
-        </span>
-        <span className="cp-sep" aria-hidden="true">·</span>
-        <span className="cp-pct label-mono">{stepPct}%</span>
-      </div>
+      <CourseProgressReadout chapters={chapters} cursor={cursor} course={course} />
       <div className="cp-rail" aria-hidden="true">
         <div className="cp-rail-fill" style={{ width: `${stepPct}%` }} />
       </div>

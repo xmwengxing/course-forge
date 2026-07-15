@@ -427,6 +427,24 @@ body {
   overflow: hidden;
 }
 
+/* Fullscreen on a portrait phone → rotate the WHOLE app 90° so the 16:9
+   stage fills the screen in landscape. The layout box is swapped to
+   100vh × 100vw (a landscape box) BEFORE the transform, so the
+   useStageScale hook still measures correct landscape dimensions and the
+   canvas fills the screen. iOS has no Orientation Lock API; this pure-CSS
+   fallback makes landscape work there too. On Android the native
+   lock("landscape") above also fires, so there is no double rotation. */
+.app-root--fs-portrait {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vh;
+  height: 100vw;
+  transform: rotate(90deg) translateY(-100%);
+  transform-origin: top left;
+  overflow: hidden;
+}
+
 .app-main {
   flex: 1;
   display: flex;

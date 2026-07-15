@@ -17,3 +17,18 @@ presentation/dist
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local preview example (generated via scaffold, not published)
+demo/
+
+# Stray / artifact directories
+e/
+
+# Build & dev logs
+*.log
+.demo-dev.log
+.demo-scaffold.log
+
+# Editor / temp backups
+*.bak
+SKILL.md.bak

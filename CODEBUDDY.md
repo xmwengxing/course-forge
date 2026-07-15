@@ -6,7 +6,7 @@ This file provides guidance to CodeBuddy Code when working with code in this rep
 
 ## What this repository is
 
-`course-forge` is **not an application** — it is an **agent skill package** distributed to multiple AI runtimes (OpenCode, Claude Code, Cursor, Codex CLI). It teaches an agent how to build interactive, record-ready courseware as a Vite + React + TypeScript project, with optional TTS narration and chunk-based subtitles.
+`course-forge` is **not an application** — it is an **agent skill package** distributed to multiple AI runtimes (OpenCode, Claude Code, Cursor, Codex CLI, WorkBuddy / CodeBuddy). It teaches an agent how to build **interactive courseware** as a Vite + React + TypeScript project, with optional TTS narration, chunk-based subtitles, and optional video recording.
 
 Two layers of code live here:
 
@@ -29,7 +29,7 @@ course-forge/
 │   ├── SCRIPT-STYLE.md       #   Narration writing rules (script.md)
 │   ├── OUTLINE-FORMAT.md     #   outline.md structure
 │   ├── CHAPTER-CRAFT.md      #   ★ Single entry for chapter implementation (read this every chapter)
-│   ├── COURSE-MODE.md        #   S1-S5 segment / multi-course / quizzes
+│   ├── COURSE-STRUCTURE.md   #   课程结构：课程>章节>屏 / 密度约束 / chrome 组件
 │   ├── AUDIO.md              #   TTS pipeline
 │   ├── THEMES.md             #   Theme system contracts
 │   ├── RECORDING.md          #   Auto-record via ?auto=1
@@ -38,15 +38,13 @@ course-forge/
 │   ├── ANIMEJS-GUIDE.md, ANIMEJS-EXAMPLES-INDEX.md
 │   └── EXAMPLES/             #   Anchor chapters (look up structure, do not copy)
 ├── scripts/
-│   ├── scaffold.sh           #   Generate a new presentation project from templates
-│   ├── regenerate-course-json.py   #   Validate + sync course.json (mandatory after edits)
+│   ├── scaffold.sh           #   Generate a new presentation project (copies scripts + tts-providers from templates/ into the project)
 │   ├── subtitle-timing.py    #   Generate subtitle-timing.json from audio
 │   ├── diagnose-tts.sh       #   Check TTS API / key / endpoint
-│   ├── compress-audio.sh
-│   ├── chapter-stats.py
-│   ├── check-animejs-cohesion.py
-│   ├── sync-course-json.sh
-│   ├── record.sh / record.js #   Auto-record the running presentation as video
+│   ├── chapter-stats.py      #   Estimate chapter duration from narrations
+│   ├── check-animejs-cohesion.py  #   Lint animejs usage for consistency
+│   ├── check-course-json-sync.sh  #   CI guard: fail if a stale public/course.json exists
+│   ├── record.sh / record.js #   Optional: auto-record the running presentation as video
 │   └── tts-providers/        #   Pluggable TTS backends (minimax.sh, openai.sh, README.md contract)
 ├── templates/
 │   ├── index.html
@@ -161,15 +159,11 @@ bash scripts/diagnose-tts.sh     # checks endpoint, key validity, Token Plan sta
 
 Every chapter has a `narrations.ts` exporting an array of strings. The number of `if (step === N)` branches in the chapter's `.tsx` must equal `narrations.length`. This invariant keeps **five artifacts** aligned: `script.md`, `outline.md`, chapter code, `chapters.ts` registry, and audio files. Never bypass it by hardcoding steps elsewhere.
 
-### Course hierarchy (course mode only)
+### Course hierarchy
 
-```
-Section (1.1, 1.2, ...)        # one independent course
-  └─ Segment (S1-S5)            # 5 teaching segments per course
-       └─ Chapter                # 3-8 chapters per segment; ~30-60s per chapter screen
-```
+Canonical model (see `SKILL.md` § 术语表): **课程(Course) > 大纲·分段(Outline Segment) > 章节(Chapter/课) > 屏(Screen/画面) > 步(Step)**. 屏是画框容器（1 章可 1 屏或多屏），步是屏内原子揭示单元（1 步 = 1 口播节拍）。
 
-Single-video mode can ignore `course.json` and `course-<id>.json` entirely.
+Runtime note (过渡期): 当前模板 `course.json` 仍是 `sections → segments → chapters` 三级。映射统一模型：runtime `section` ≈ 大纲·分段(Segment)、runtime `segment` ≈ 章节(Chapter)、runtime `chapter` ≈ 屏组（1 屏或一组屏）。`narrations.ts` 长度 = 该屏组的总步数（口播节拍），屏数由各章结构推导。架构阶段重映射为 **课程 > 大纲·分段 > 章节 > 屏**（步来自各章 narrations），并让 ChapterMenu 支持「大纲·分段 → 章节」两级菜单。现在写文档/产出一律用 课程/大纲·分段/章节/屏/步 术语。
 
 ### Theme = CSS tokens + JSON metadata
 
@@ -207,7 +201,7 @@ Avoid setting `X-Frame-Options` at nginx server level — the inheritance will o
 - **MiniMax TTS quota errors ≠ invalid key.** Most failures are rate limits (1002 RPM / 1039 TPM) — wait 60s and retry. Use `diagnose-tts.sh` to confirm the failure mode before changing the API key.
 - **DEV.md is gitignored.** It's internal-only. Do not commit or reference it in user-facing docs.
 - **Don't use the term "PPT"** when describing the output — even though the workflow resembles a slide deck, the project's identity is "click-driven 16:9 web presentation that behaves like video". README and SKILL.md deliberately avoid "PPT".
-- **`chapters.ts` registry name is historical** — it registers chapters (单视频模式 also uses this term for what is conceptually a "chapter" = a 30-60s screen, the main unit the skill builds). Don't rename it.
+- **`chapters.ts` registry name is historical** — it registers chapters (each = a teaching unit of 1+ screens; a screen holds multiple steps/口播节拍, the main unit the skill builds). Don't rename it.
 
 ---
 
