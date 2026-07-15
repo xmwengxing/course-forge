@@ -70,7 +70,9 @@ agent 会产出 `script.md` + `outline.md`，走完 5 件事对齐节点，然�
 ## 工作流速览
 
 ```
-Phase 1  内容编写    →  script.md + outline.md
+Phase 0  立项（大课时）→  brief.md（一级=课、二级=小节）· 用户确认冻结
+Phase 1  口播稿撰写  →  短视频：script.md + outline.md
+                       大课：逐章剧本（子代理并行，course-bible 衔接）
                        [Checkpoint Plan]  对齐 5 件事
 Phase 2  网页开发    →  脚手架 + 章节（第 1 章 = 锚点）
                        [用户验收]        锚点必须先通过
@@ -89,11 +91,13 @@ Phase 4  部署        →  嵌入（新窗口 / iframe / DB）  ·  可选：�
 
 ```
 Course   — 单门领域或完整课程（如"X 入门"）
-Segment  — 主题块（导入/精讲/案例/收官…）；一级导航菜单；段数依内容而定，不必是 5 段
-Chapter  — 一门课；二级导航菜单单元（如"1.1 你好，数字世界！"）
+Segment  — 一级导航菜单；两种尺度：短视频=主题块（导入/精讲/案例/收官），长课=一节课 Lesson
+Chapter  — 二级导航菜单单元；两种尺度：短视频=30~60s 微单元，长课=小节主题（1 屏或多屏，如"1.1 你好，数字世界！"）
 Screen   — 章节内的 1920×1080 画框；一个章节可由 1 屏或多屏组成
 Step     — 屏内原子揭示单元：1 步 = 1 口播节拍 = 1 字幕窗 = 1 音频段
 ```
+
+> 长课尺度下：1 节课 = 1 个一级 `大纲·分段`，1 个小节 = 1 个二级 `章节`；口播稿"细分主题"= 二级导航项。开发/验收说"逐小节"（= 二级），"分段"专指一级。详见 [`references/SCRIPT-WRITING.md`](references/SCRIPT-WRITING.md)。
 
 本 skill 只产出**一种东西：可交互课件**。视频录制是可选项（见 [`references/RECORDING.md`](references/RECORDING.md)），不是另一种模式。
 课程结构细节：[`references/COURSE-STRUCTURE.md`](references/COURSE-STRUCTURE.md)。
@@ -174,9 +178,13 @@ Auto 模式由"音频播完"驱动推进；音频缺失 / 失败 / `src` 为空�
 
 ### 字幕缺失降级
 
-`SubtitleStep` 拉取 `/subtitle-timing.json`：拉取失败 → 字幕条降级为红条
-"字幕加载失败: …"但**课程照常播放**；当前步无字幕块 → 显示"…"占位不报错。
-字幕是纯观感辅助，其有无永远不阻塞播放。
+`SubtitleStep` 拉取 `/subtitle-timing.json`：拉取失败且无 `narrations` → 字幕条
+降级为红条"字幕加载失败: …"但**课程照常播放**；当前步无字幕块但章节有
+`narrations[step]` → **回退显示口播稿原文（预览模式）**；两者皆无 → 显示"…"占位；
+均不报错。字幕是纯观感辅助，其有无永远不阻塞播放。
+
+> **口播稿预览**：无 TTS 时字幕会回退到 `narrations.ts` 口播文本，可在播放器里逐句
+> 审核口播稿，是口播稿撰写能力的核心验证路径。
 
 ### 判定清单（复现"问题"时先过一遍）
 
@@ -194,6 +202,7 @@ Auto 模式由"音频播完"驱动推进；音频缺失 / 失败 / `src` 为空�
 | [`SKILL.md`](./SKILL.md) | **始终先读** —— 工作流总览 + 各阶段读文件指引 |
 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | 写每章时 —— 单章能否通过验收的唯一标准 |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1 —— 文章转口播稿 |
+| [`references/SCRIPT-WRITING.md`](references/SCRIPT-WRITING.md) | 大课 / 需分工 —— 立项 + 逐章剧本(子代理并行) + 字数/时长公式 + course-bible 衔接 |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1 —— `outline.md` 字段规范和章节切分规则 |
 | [`references/COURSE-STRUCTURE.md`](references/COURSE-STRUCTURE.md) | 课程结构 —— 课程>章节>屏、密度规则、chrome |
 | [`references/THEMES.md`](references/THEMES.md) | Checkpoint Plan / 任何选换主题时刻 |

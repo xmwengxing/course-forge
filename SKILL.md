@@ -1,6 +1,6 @@
 ---
 name: course-forge
-description: 把知识文档或口播稿做成可交互的课程/课件——规划大纲章节、撰写与扩展口播稿、计算课时；课件含演示舞台(画布)+大纲章节导航+字幕+音频+播放/暂停/全屏控制+章节进度条。每屏内容逐步揭示、含动画、每3屏至少1处互动、禁止纯文字、口播对齐画面/字幕/音频。流程：原始文档 → 口播稿 + outline 开发计划 → 一次对齐5件事(稿子/outline/主题/素材/开发模式) → 逐章网页开发(第1章为锚点) → 可选TTS音频 → 部署/嵌入(视频录制为可选项)。动画默认基于 animejs + CSS/SVG/Canvas，高阶视觉可通过渐进式披露加载设计类 skill 或 MCP。本 Skill 沉淀设计方法论 + 协作流程，不绑定任何样式，可复用于任意主题。
+description: 把知识文档或口播稿做成可交互的课程/课件——规划大纲章节、撰写与扩展口播稿、计算课时；课件含演示舞台(画布)+大纲章节导航+字幕+音频+播放/暂停/全屏控制+章节进度条。每屏内容逐步揭示、含动画、每3屏至少1处互动、禁止纯文字、口播对齐画面/字幕/音频。流程：立项(确认课时量/单课时长) → 口播稿撰写(大课可走立项→子代理逐章剧本→画面设计流程，剧本文字描述动画与互动) → 一次对齐5件事(稿子/outline/主题/素材/开发模式) → 逐章网页开发(第1章为锚点) → 可选TTS音频 → 部署/嵌入(视频录制为可选项)。动画默认基于 animejs + CSS/SVG/Canvas，高阶视觉可通过渐进式披露加载设计类 skill 或 MCP。本 Skill 沉淀设计方法论 + 协作流程，不绑定任何样式，可复用于任意主题。
 ---
 
 # Course Forge — Interactive Courseware Builder
@@ -42,9 +42,14 @@ description: 把知识文档或口播稿做成可交互的课程/课件——规
 ## 工作流总览
 
 ```
-Phase 1   内容编写
+Phase 0   立项（课时量大时必做；见 references/SCRIPT-WRITING.md）
+   0.1  确认课时量（几节课）+ 每节课平均时长
+   0.2  产出 brief.md（基础课程大纲：一级=课、二级=小节）→ 用户确认冻结
+   ▼
+Phase 1   口播稿撰写（剧本）
    1.1  识别用户输入（文章 / 口播稿 / 仅主题→反问）
-   1.2  一次产出 script.md + outline.md（口播稿 + 开发计划）
+   1.2  短视频小课：一次产出 script.md + outline.md（inline）
+        大课 / 需分工：按 references/SCRIPT-WRITING.md 逐课写"剧本"（按课并行子代理，课内单代理）
    ▼
 [Checkpoint Plan]      ← 必须停。一次对齐 5 件事：
                          稿子 / outline / 主题 / 素材 / 开发模式
@@ -74,7 +79,7 @@ Phase 4   部署嵌入 / 可选录屏
 
 | 阶段 | 必读（每次都看） | 按需查 |
 |---|---|---|
-| Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | —— |
+| Phase 0 立项 / Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | 大课 / 需分工 → `references/SCRIPT-WRITING.md`（立项 + 逐课剧本 + 按课子代理分工 + 跨课衔接） |
 | **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`；`references/COURSE-STRUCTURE.md`（课程结构） |
 | Phase 2.1 脚手架 | —— | 本文件 § Phase 2.1 看一次 |
 | **Phase 2.4 实现单章（×N）** | **`references/CHAPTER-CRAFT.md`** 单一入口 + 当前主题 `themes/<id>/theme.json` + 本章 outline.md 段落 + `article.md` 本章段落 + 素材清单 | `references/EXAMPLES/`（结构示意，非抄袭模板）；`references/THEMES.md` 完整 token 契约；`references/ANIMEJS-GUIDE.md`（需真动画时） |
@@ -111,8 +116,12 @@ agent 在用户当前目录下创建 / 编辑：
 ```
 my-course/
 ├── article.md          # 用户给原文时必有——不删！开发阶段画面信息源
-├── script.md           # 必有：保持原文语言的平台化口播稿（决定节拍）
-├── outline.md          # 必有：开发计划（大纲·分段切分 + 章节切分 + 每屏/每步内容 + 信息池）
+├── brief.md            # 大课立项产出：课时量 / 单课时长 / 一级=课二级=小节的基础大纲（用户确认后冻结）
+├── script.md           # 短视频小课：保持原文语言的平台化口播稿（决定节拍）
+├── script/             # 大课：逐课"剧本"（每课 1 子代理写全部小节；口播 + 画面意图 + 互动意图 + 主题小节 + 字数/时长）
+│   └── NN-id.md        #   每小节一份，详见 references/SCRIPT-WRITING.md
+├── course-bible.md     # 大课：跨课交接物（已完成课的主题/术语/课末钩子），子代理写新课前必读
+├── outline.md          # 短视频小课：开发计划（大纲·分段切分 + 章节切分 + 每屏/每步内容 + 信息池）
 └── presentation/       # 脚手架产出的 Vite + React + TS 项目
     ├── src/chapters/<NN>-<id>/
     │   ├── <Chapter>.tsx     # 视觉实现（按 屏/step 逐步揭示）
@@ -161,6 +170,12 @@ my-course/
 
 ## Phase 1 —— 内容编写
 
+### 1.0 立项（课时量大时必做）
+
+当课程进入"多节课 / 每课数十分钟"区间，先走 `references/SCRIPT-WRITING.md` Phase 0：
+确认 **课时量（几节课）** 与 **每节课平均时长**，产出 `brief.md`（一级=课、二级=小节的基础大纲），
+**停下让用户确认冻结**，再进入 1.1 / 1.2。短视频小课可跳过本步。
+
 ### 1.1 识别用户输入
 
 | 用户给的 | 该做的 |
@@ -187,6 +202,11 @@ my-course/
 > 理由与展开见 `references/CHAPTER-CRAFT.md` § 这是课件不是 PPT / § 双源原则。
 
 **落盘后先走「硬性自检协议」再进 Checkpoint Plan。**
+
+> **大课 / 需分工**：课时量大时，不要一次性憋出整课 `script.md`，改按
+> `references/SCRIPT-WRITING.md` 把口播稿拆成**逐课剧本**（`script/NN-id.md`，每课 1 子代理写全部小节）——
+> 可**按课分配子代理并行**写（课内单代理保证连贯）、用 `course-bible.md` 保证跨课衔接、剧本里**用文字描述动画与互动意图**
+> （不写具体实现代码）。剧本阶段就完成"画面/互动设计"的脚本化，主代理 Phase 2 直接按剧本实现。
 
 ---
 
@@ -262,6 +282,8 @@ token 不够用会立刻暴露，早改成本最低；后续章节都参考它�
 
 每章独立按 `references/CHAPTER-CRAFT.md`（单一必读入口）开发。**风格不强求章节间完全一致** ——
 主题颜色 / 字体 token 兜底统一，动画 / 节奏 / 视觉演示由章节自由发挥是设计预期。
+
+> **默认「逐节开发」**：除非用户明确要求「多节」或「全部」，单次只实现 / 渲染 / 验证**一个小节**（= 二级章节）。用户显式点名多个小节（如「开发 01 和 02」）才是多节请求。这样改动范围小、易审查、可逐步回滚。
 
 ### 2.4 实现单章（每章必走）
 
@@ -351,6 +373,7 @@ Phase 2 结束后必须停，问用户是否合成音频（自动播放 / 字幕
 |---|---|
 | `references/SCRIPT-STYLE.md` | Phase 1.2 必读 — 文章→口播稿规则、平台变体、去 AI 味五类 |
 | `references/OUTLINE-FORMAT.md` | Phase 1.2 必读 — outline.md 字段 spec、章节切分、信息池 |
+| `references/SCRIPT-WRITING.md` | 大课 / 需分工 — 立项 + 逐课剧本(按课并行子代理/课内单代理) + 字数/时长公式 + 跨课衔接(course-bible) |
 | `references/CHAPTER-CRAFT.md` | **Phase 2.4 每章单一入口** — 十条原则 / 视觉演示 / 逐步揭示 / 双源 / 反 AI 味 / 代码红线 / 完工自检 / animejs 升级 |
 | `references/ANIMEJS-GUIDE.md` | 需要「真动画」或「物理级拖拽」时 |
 | `references/COURSE-STRUCTURE.md` | 课程结构（课程 > 大纲·分段 > 章节 > 屏 > 步）、密度约束、chrome 组件 |

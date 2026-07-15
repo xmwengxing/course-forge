@@ -70,7 +70,9 @@ Full signatures, design tokens, and a "create your own" walkthrough live in [`re
 ## Workflow at a glance
 
 ```
-Phase 1  Content       →  script.md + outline.md
+Phase 0  Brief (large courses) → brief.md (L1 = lesson, L2 = sub-section) · user confirms & freezes
+Phase 1  Narration     → short course: script.md + outline.md
+                        large course: per-chapter screenplay (sub-agents parallel, course-bible)
                           [Checkpoint Plan]  align 5 things
 Phase 2  Web build     →  scaffold + chapters (chapter 1 = anchor)
                           [User review]      anchor must be approved
@@ -89,11 +91,13 @@ Canonical model: **课程(Course) > 大纲·分段(Outline Segment, 原 S1~S5, �
 
 ```
 Course   — single domain or full-length curriculum (e.g. "Intro to X")
-Segment  — themed block (导入/精讲/案例/收官…); L1 nav menu; count varies by content, not always 5
-Chapter  — a lesson; L2 nav menu unit (e.g. "1.1 Hello, digital world!")
+Segment  — L1 nav menu; two scales: short-video = themed block (导入/精讲/案例/收官), long-course = a Lesson
+Chapter  — L2 nav menu unit; two scales: short-video = 30~60s unit, long-course = sub-section topic (1+ screens, e.g. "1.1 Hello, digital world!")
 Screen   — a 1920×1080 canvas inside a chapter; a chapter = 1 screen or multiple
 Step     — atomic reveal unit inside a screen: 1 step = 1 narration beat = 1 subtitle window = 1 audio segment
 ```
+
+> Long-course scale: 1 lesson = 1 L1 `大纲·分段`, 1 sub-section = 1 L2 `章节`; a narration's sub-topics = L2 nav items. Say "逐小节" (per sub-section = L2) for dev/acceptance; "分段" is reserved for L1. See [`references/SCRIPT-WRITING.md`](references/SCRIPT-WRITING.md).
 
 This skill builds **one kind of output**: interactive courseware. Video recording is an
 optional extra (see [`references/RECORDING.md`](references/RECORDING.md)), not a separate mode.
@@ -167,6 +171,7 @@ bash scripts/check-course-json-sync.sh   # exit 0 = clean
 | [`SKILL.md`](./SKILL.md) | **Always first** — workflow overview + per-phase reading guide |
 | [`references/CHAPTER-CRAFT.md`](references/CHAPTER-CRAFT.md) | Writing each chapter — single source of truth for what makes a chapter pass review |
 | [`references/SCRIPT-STYLE.md`](references/SCRIPT-STYLE.md) | Phase 1 — turning an article into narration |
+| [`references/SCRIPT-WRITING.md`](references/SCRIPT-WRITING.md) | Large courses — brief + per-chapter screenplay (sub-agents) + duration/word-count formula + course-bible |
 | [`references/OUTLINE-FORMAT.md`](references/OUTLINE-FORMAT.md) | Phase 1 — the `outline.md` schema and chapter-split rules |
 | [`references/COURSE-STRUCTURE.md`](references/COURSE-STRUCTURE.md) | Course structure — 课程>章节>屏, density rules, chrome |
 | [`references/THEMES.md`](references/THEMES.md) | Checkpoint Plan / any time you pick or change a theme |

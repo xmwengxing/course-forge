@@ -40,36 +40,44 @@ interface Segment {
   audio: string;
 }
 
-/** Parse `src/registry/chapters.ts` to learn chapter id → folder order. */
+/** Parse `src/registry/chapters.ts` to learn chapter id → folder order.
+ *
+ * Robust against nested objects (e.g. a chapter's `quizzes` array carries
+ * its own `id` with no `title`): we key each chapter by its `narrations`
+ * local binding and resolve the folder from the matching `import { narrations
+ * as X } from "../chapters/<folder>/narrations"` line. This works regardless
+ * of array-vs-import ordering and never mis-aligns chapters.
+ */
 async function readChapterOrder(): Promise<{ id: string; folder: string }[]> {
   const src = await readFile(REGISTRY_PATH, "utf8");
 
-  // Only match CHAPTERS entries: a chapter object has BOTH `id` and
-  // `title` (nested objects such as quiz questions also carry an `id`
-  // but no `title`, so they are correctly excluded by this pattern).
-  const ids: string[] = [];
+  // Top-level chapter objects begin with a `{` at 2-space indent and carry
+  // an `id` plus a `narrations: <localName>` binding.
+  const chapters: { id: string; narr: string }[] = [];
   for (const m of src.matchAll(
-    /id:\s*["']([^"']+)["']\s*,\s*[\s\S]*?title:\s*["']([^"']+)["']/g,
+    /^  \{\s*\n\s*id:\s*["']([^"']+)["'][\s\S]*?\n\s*narrations:\s*(\w+)/gm,
   )) {
-    ids.push(m[1]!);
+    chapters.push({ id: m[1]!, narr: m[2]! });
   }
 
-  // Chapter folders are imported as `../chapters/<folder>/narrations`.
-  const folders: string[] = [];
+  // Resolve each chapter's folder from its narrations import binding.
+  const folderByNarr: Record<string, string> = {};
   for (const m of src.matchAll(
-    /from\s+["']\.\.\/chapters\/([^"'\/]+)\/narrations["']/g,
+    /import\s+\{\s*narrations\s+as\s+(\w+)\s*\}\s+from\s+["']\.\.\/chapters\/([^"'\/]+)\/narrations["']/g,
   )) {
-    folders.push(m[1]!);
+    folderByNarr[m[1]!] = m[2]!;
   }
 
-  if (ids.length !== folders.length) {
+  const missing = chapters.filter((c) => !folderByNarr[c.narr]);
+  if (missing.length) {
     throw new Error(
-      `registered ${ids.length} chapters but found ${folders.length} ` +
-        `chapter folders under src/chapters/`,
+      `could not resolve folder for chapters: ${missing
+        .map((c) => c.id)
+        .join(", ")}`,
     );
   }
 
-  return ids.map((id, i) => ({ id, folder: folders[i]! }));
+  return chapters.map((c) => ({ id: c.id, folder: folderByNarr[c.narr]! }));
 }
 
 async function loadNarrations(folder: string): Promise<unknown[]> {

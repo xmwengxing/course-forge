@@ -27,6 +27,7 @@ course-forge/
 ├── .gitignore                # Excludes DEV.md, node_modules, .env, *.mp3
 ├── references/               # Long-form guidance consulted per phase
 │   ├── SCRIPT-STYLE.md       #   Narration writing rules (script.md)
+│   ├── SCRIPT-WRITING.md     #   口播稿撰写核心能力：立项→逐章剧本(子代理并行)→画面；字数/时长公式；course-bible 跨章衔接
 │   ├── OUTLINE-FORMAT.md     #   outline.md structure
 │   ├── CHAPTER-CRAFT.md      #   ★ Single entry for chapter implementation (read this every chapter)
 │   ├── COURSE-STRUCTURE.md   #   课程结构：课程>章节>屏 / 密度约束 / chrome 组件
@@ -64,12 +65,18 @@ Each theme's `theme.json` exposes: `id`, `name`, `nameZh`, `descriptionZh`, `moo
 
 ---
 
-## Skill workflow (4 phases, with hard checkpoints)
+## Skill workflow (5 phases, with hard checkpoints)
 
 ```
-Phase 1 — Content
+Phase 0 — Brief / intake (required when course is large)
+  0.1  Confirm lesson count (how many lessons) + avg lesson duration
+  0.2  Produce brief.md (L1 = lesson, L2 = sub-section) → user confirms & freezes
+        (see references/SCRIPT-WRITING.md)
+Phase 1 — Narration / screenplay
   1.1  Identify input (article | script | topic-only → must ask user for source)
-  1.2  Produce script.md + outline.md together (dual-source: narration = beat, article = visual density)
+  1.2  Short course: produce script.md + outline.md together
+       Large course: per-chapter "screenplay" (script/NN-id.md, sub-agents in parallel,
+       course-bible for cross-chapter continuity) — references/SCRIPT-WRITING.md
   → [Checkpoint Plan] HARD STOP — align 5 things: script / outline / theme / assets / dev mode
 Phase 2 — Web build
   2.1  Scaffold project (scaffold.sh)
@@ -93,6 +100,12 @@ Phase 4 — Deploy / record
 - chapter completion → `references/CHAPTER-CRAFT.md` § 完工自检
 
 ---
+
+## Operating conventions (how the agent develops with this skill)
+
+- **逐节开发是默认流程**：除非用户明确要求「多节」或「全部」，每次只开发 / 渲染 / 验证**一个小节**（= 二级章节）。用户显式点名多个小节（如「开发 01 和 02」）才是多节请求，才一次性做多个。这样改动范围小、易审查、可逐步回滚。
+- **每次 skill 优化必须落地到 skill 目录文件（即可调用目录），不能只停留在对话上下文**：course-forge 的「可调用目录」就是本仓库 `E:/workspace/course-forge`（WorkBuddy 从这里加载 `SKILL.md` / `references/` / `templates/`）。任何对玩法、术语、脚本、模板的修改都要**直接写入对应文件**，不能只留在对话里——否则会话上下文溢出后，新代理读到的还是旧版 skill。`templates/` 与 `demo/` 里若有同一脚本的引用副本（如 `extract-narrations.ts`、`subtitle-timing.py`），改一处要同步另一处。
+- **验证用 demo，不污染 skill 源**：端到端验证产物放 `demo/`（已在 `.gitignore`），不要放进 `course-forge/` 根目录。
 
 ## Commands commonly used in this repo
 
@@ -163,7 +176,9 @@ Every chapter has a `narrations.ts` exporting an array of strings. The number of
 
 Canonical model (see `SKILL.md` § 术语表): **课程(Course) > 大纲·分段(Outline Segment) > 章节(Chapter/课) > 屏(Screen/画面) > 步(Step)**. 屏是画框容器（1 章可 1 屏或多屏），步是屏内原子揭示单元（1 步 = 1 口播节拍）。
 
-Runtime note (过渡期): 当前模板 `course.json` 仍是 `sections → segments → chapters` 三级。映射统一模型：runtime `section` ≈ 大纲·分段(Segment)、runtime `segment` ≈ 章节(Chapter)、runtime `chapter` ≈ 屏组（1 屏或一组屏）。`narrations.ts` 长度 = 该屏组的总步数（口播节拍），屏数由各章结构推导。架构阶段重映射为 **课程 > 大纲·分段 > 章节 > 屏**（步来自各章 narrations），并让 ChapterMenu 支持「大纲·分段 → 章节」两级菜单。现在写文档/产出一律用 课程/大纲·分段/章节/屏/步 术语。
+Runtime model (已落地，两级): 模板 `course.json` 即 **课程 > 大纲·分段(outlineSegments) > 章节(chapters)** 两级；`ChapterMenu` 渲染「大纲·分段 → 章节」两级菜单；屏/步是内容粒度。`narrations.ts` 长度 = 该章节的总步数（口播节拍），屏数由各章结构推导。现在写文档/产出一律用 课程/大纲·分段/章节/屏/步 术语。
+
+Scale note: 同一套两级结构承载两种尺度（见 `references/COURSE-STRUCTURE.md` § 1.1）：默认短视频（一级=内容主题块，二级=30~60s 微单元）；**长课**（一节课数十分钟）重映射为 一级=一节课 Lesson、二级=小节主题（1 屏或多屏）。口播稿撰写 / 子代理逐章剧本流程见 `references/SCRIPT-WRITING.md`。开发/验收的增量单元说"逐小节"（= 二级），"分段"一词专指一级。
 
 ### Theme = CSS tokens + JSON metadata
 

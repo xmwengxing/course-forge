@@ -16,6 +16,13 @@ export interface SubtitleStepProps {
  * tuple. Renders up to 80 characters per chunk. The full layout sits
  * below the Stage so the user always sees what the narrator is saying
  * without overlapping the visual.
+ *
+ * **Preview fallback (no-TTS mode):** when `subtitle-timing.json` has no
+ * entry for the current (chapter, step) — e.g. the chapter has not been
+ * through TTS yet — we fall back to the chapter's `narrations[step]` text
+ * (the 口播稿 source of truth). This lets the 口播稿 be reviewed in the
+ * player *before* any audio is synthesized, instead of showing an empty
+ * "…" placeholder.
  */
 export function SubtitleStep({ chapters, cursor }: SubtitleStepProps) {
   const [data, setData] = useState<Record<string, Record<string, SubtitleChunk[]>> | null>(null);
@@ -42,8 +49,10 @@ export function SubtitleStep({ chapters, cursor }: SubtitleStepProps) {
   const chapter = chapters[cursor.chapter];
   const stepKey = String(cursor.step);
   const chunks = data && chapter ? data[chapter.id]?.[stepKey] : undefined;
+  const fallbackText = chapter?.narrations?.[cursor.step] ?? "";
 
-  if (error) {
+  // A load error only matters when we also have no narration to fall back to.
+  if (error && !fallbackText) {
     return (
       <div className="ss-bar ss-bar--err">
         <div className="ss-err label-mono">字幕加载失败: {error}</div>
@@ -51,7 +60,14 @@ export function SubtitleStep({ chapters, cursor }: SubtitleStepProps) {
     );
   }
 
-  if (!chunks || chunks.length === 0) {
+  const chunksToShow =
+    chunks && chunks.length > 0
+      ? chunks
+      : fallbackText
+        ? [{ text: fallbackText, ms: 0 }]
+        : null;
+
+  if (!chunksToShow) {
     return (
       <div className="ss-bar">
         <div className="ss-empty label-mono">…</div>
@@ -61,7 +77,7 @@ export function SubtitleStep({ chapters, cursor }: SubtitleStepProps) {
 
   return (
     <div className="ss-bar">
-      {chunks.map((c, i) => (
+      {chunksToShow.map((c, i) => (
         <div key={i} className="ss-chunk serif-cn">
           {c.text}
         </div>
