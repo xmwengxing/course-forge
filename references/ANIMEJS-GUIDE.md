@@ -703,14 +703,13 @@ REQUIRED = {
 - **SKILL.md** — skill 主入口, 定义核心行为 (剧本/节奏/内容取舍); 本文档**不重复**核心, 只在动画层增量
 - **CHAPTER-CRAFT.md** — 单章开发全流程, 包含"动画升级"段; 本文档**配合**而非替代, LLM agent 写动画时**只读本文**
 - **COURSE-STRUCTURE.md** — 课程结构 / 多课程管理; 动画配置**不涉及**课程级, 本文档不重复
-- **EXAMPLES/example-anime/** — 4 大共性综合 anchor, 1 章完整代码, LLM agent 写动画前**必读**
-- **ANIMEJS-EXAMPLES-INDEX.md** — animejs 官方 25 个示例索引, 详细看哪个示例做哪种效果
+- **ANIMEJS-EXAMPLES-INDEX.md** — animejs 官方 25 个示例索引, 详细看哪个示例做哪种效果（材质范例见 §X.4）
 
 **渐进式披露**:
 - 写普通章节 → 只读 SKILL.md + CHAPTER-CRAFT.md
-- 写需要动画的章节 → 加读 ANIMEJS-GUIDE.md (本文) + EXAMPLES/example-anime
+- 写需要动画的章节 → 加读 ANIMEJS-GUIDE.md (本文) + ANIMEJS-EXAMPLES-INDEX.md
 - 写需要参考官方范例的章节 → 加读 ANIMEJS-EXAMPLES-INDEX.md
-- 写需要 3D 立体感的章节 → 优先看 §1 + EXAMPLES/example-anime, 而不是用 Three.js
+- 写需要 3D 立体感的章节 → 优先看 §1 (CSS 3D), 而不是用 Three.js
 
 ---
 

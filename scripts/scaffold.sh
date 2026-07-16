@@ -12,7 +12,7 @@
 #   bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 #
 # 跑完后，看 SKILL.md "Phase 2.4 实现单章" + references/CHAPTER-CRAFT.md
-# 了解每章怎么写。卡壳时翻 references/EXAMPLES/ 找完整章节 anchor。
+# 了解每章怎么写（含视觉焦点与着重渲染四大支柱）。卡壳时翻 references/ANIMEJS-EXAMPLES-INDEX.md 找官方材质范例。
 #
 # 之后切换主题，覆盖一个文件即可：
 #   cp <path-to-course-forge>/themes/<id>/tokens.css \
@@ -132,7 +132,7 @@ rmdir src/assets 2>/dev/null || true
 # 把脚手架文件拷到项目根
 mkdir -p \
   src/styles src/hooks src/components src/registry \
-  src/chapters/01-example \
+  src/chapters \
   public scripts
 
 cp "$TEMPLATES/vite.config.ts" .
@@ -154,11 +154,7 @@ cp "$TEMPLATES/src/hooks/"*               src/hooks/
 # components 可能含子目录（如 scenes/ 实景组件库），用 -r 递归复制
 cp -r "$TEMPLATES/src/components/"*       src/components/
 cp "$TEMPLATES/src/registry/"*            src/registry/
-cp -r "$TEMPLATES/src/chapters/"*         src/chapters/
-
-cp "$TEMPLATES/src/chapters/01-example/Example.tsx"     src/chapters/01-example/Example.tsx
-cp "$TEMPLATES/src/chapters/01-example/Example.css"     src/chapters/01-example/Example.css
-cp "$TEMPLATES/src/chapters/01-example/narrations.ts"   src/chapters/01-example/narrations.ts
+cp -r "$TEMPLATES/src/chapters/"*         src/chapters/ 2>/dev/null || true
 
 # Audio pipeline scripts (extract-narrations + synthesize-audio runner +
 # pluggable TTS providers under tts-providers/).
@@ -244,14 +240,13 @@ cat <<EOF
 
   • 点舞台任意位置推进全局 step 计数器。
   • 鼠标移到底部边缘可显出进度条；鼠标移到右上角可显出播放模式切换。
-  • 把 src/chapters/01-example/ 替换成你自己的章节
+  • 在 src/chapters/ 下创建你自己的章节（mkdir src/chapters/01-<id>）
     （流程见 SKILL.md "Phase 2.4 实现单章" —— 每章一次到位完整版本，
-     不分骨架 / 精修两步；动画选型由 chapter agent 按 CHAPTER-CRAFT.md
-     § 这是视频，不是 PPT / § 视觉中心：舞台中心 ≠ 元素居中 决定）。
+     不分骨架 / 精修两步；视觉设计按 CHAPTER-CRAFT.md 四大支柱）。
   • 在 src/registry/chapters.ts 注册每个新章节。
   • course.json 已在项目根生成，按需增删 outlineSegments / chapters（id 必须
     与 chapters.ts 注册一致），详见 references/COURSE-STRUCTURE.md。
-  • **每章必须有 narrations.ts**（与 Example.tsx 同目录），
+  • **每章必须有 narrations.ts**（与章节 .tsx 同目录），
     数组长度 = step 数，是音频合成 + Auto 模式的唯一真相源。
   • 章节改了就 bump src/hooks/useStepper.ts 的 STORAGE_KEY 末尾版本号。
   • 每写完一章跑 `npm run lint` —— 校验 5 条硬规则（视觉演示 / 互动密度 /
@@ -283,8 +278,10 @@ cat <<EOF
 
 卡壳时可翻：
 
-  • $SKILL_DIR/references/EXAMPLES/
-      完整章节 anchor（钩子型 / 列举型）—— 看"形"，不要照搬
+  • $SKILL_DIR/references/CHAPTER-CRAFT.md
+      § 模拟实景模式库 + § 视觉焦点与着重渲染四大支柱
+  • $SKILL_DIR/references/ANIMEJS-EXAMPLES-INDEX.md
+      animejs 官方材质范例（看"形"，不要照搬）
 
 要换一个主题，覆盖 tokens.css 即可：
   cp $SKILL_DIR/themes/<id>/tokens.css src/styles/tokens.css

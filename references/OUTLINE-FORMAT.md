@@ -46,6 +46,7 @@
 **开发计划**：
 
 - step 1 (~Ts) — <屏幕内容>
+  - 🎯 互动【类型：点击/拖拽/选择/输入】：<说明>（可选，仅该步有互动时标注，便于开发时对照"每3屏≥1互动"密度）
 - ...
 
 口播节选：
@@ -65,10 +66,7 @@
 > 相对纯口播估算允许 ±20% 偏差**——这是给互动 beat 的预算额度，不是随意写长的免责牌
 > （完整公式与"剧本"写法见 [`SCRIPT-WRITING.md`](SCRIPT-WRITING.md) § 2 / § 5）。
 
-> **想看具象示例**：
-> - 钩子型开场结构 → [`EXAMPLES/hook-chapter/`](EXAMPLES/hook-chapter/)
-> - 列举型章节结构 → [`EXAMPLES/list-reveal/`](EXAMPLES/list-reveal/)
-> - 科技测评类（实测 / 对比 / 跑分） → [`EXAMPLES/case-tech-review/`](EXAMPLES/case-tech-review/)
+> **想看具象模式**：见 [`CHAPTER-CRAFT.md`](CHAPTER-CRAFT.md) § 模拟实景 模式库（蜕变对照/执行跑道/现场编辑器/积木堆叠/终端打字/交互画布）+ § 视觉焦点与着重渲染四大支柱。动画材质范例见 [`ANIMEJS-GUIDE.md`](ANIMEJS-GUIDE.md) §X 引用的 animejs 官方示例。
 
 ---
 
@@ -112,6 +110,10 @@ pull-quote 引用 / 数据浮层。
 > **没 article（用户直接给 script）**：信息池退化为"主动设计画面信息
 > 密度"——靠数字 / 对比 / 元数据等让画面比口播信息密。可以列"画面
 > 装饰元素池"而非"article 抽取池"。
+>
+> **article 为课程表 / 大纲（有标题无细节）**：信息池从条目标题推导核心
+> 知识点（如"认识 IDE + 坐标系"→ 抽"IDE 三区 / 坐标轴 / 顺序执行"），无原文
+> 细节处显式标 `—— 教学常识补`，让 chapter agent 知道哪些是补的、需核实。
 
 ### 屏 与 步 的关系（术语对齐）
 

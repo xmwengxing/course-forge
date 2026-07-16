@@ -1,0 +1,199 @@
+/* interactives.css — 互动原语共用样式
+ *
+ * it- 前缀（避免与 ide-coord 的 ic- 冲突）
+ * 隐藏态：opacity:0 占位（不 display:none，无回流，保留布局槽位）
+ * 材质：linear-gradient / radial-gradient + box-shadow（支柱3 · 材质立体）
+ * 颜色 / 字体全走主题 token；字号 / 间距硬编码
+ */
+
+/* ── 共用隐藏态 ── */
+.it-root { transition: opacity var(--dur-base) var(--ease-quart); }
+.it-root.is-hidden { opacity: 0; }
+
+/* ════════════════════════════════════════════════
+ * DragSort — 拖拽排序
+ * ════════════════════════════════════════════════ */
+.it-ds { width: 320px; }
+.it-ds-grid { display: flex; flex-direction: column; gap: 12px; }
+.it-ds-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-glow);
+  color: var(--text);
+  font-size: 16px;
+  cursor: grab;
+  user-select: none;
+  /* 材质：linear-gradient + box-shadow（支柱3） */
+  background: linear-gradient(180deg, var(--elev-1) 0%, var(--surface-2) 100%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform var(--dur-quick) var(--ease-quart),
+              box-shadow var(--dur-quick) var(--ease-quart),
+              border-color var(--dur-quick) var(--ease-quart),
+              opacity var(--dur-quick) var(--ease-quart);
+}
+.it-ds-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.it-ds-card:active { cursor: grabbing; }
+.it-ds-card.is-dragging { opacity: 0.4; transform: scale(0.98); }
+.it-ds-card.is-correct {
+  border-color: var(--accent-good);
+  box-shadow: 0 0 0 1px var(--accent-good), 0 4px 14px var(--accent-glow);
+}
+.it-ds-card.is-wrong {
+  border-color: var(--accent-warn);
+  box-shadow: 0 0 0 1px var(--accent-warn), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.it-ds-grip { color: var(--text-mute); font-size: 18px; letter-spacing: -0.1em; }
+.it-ds-label { flex: 1; }
+
+/* ════════════════════════════════════════════════
+ * SliderInput — 滑块输入
+ * ════════════════════════════════════════════════ */
+.it-sl { display: flex; flex-direction: column; gap: 10px; width: 320px; }
+.it-sl-label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--text-mute);
+}
+.it-sl-row { display: flex; align-items: center; gap: 14px; }
+.it-sl-input {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  /* 材质：linear-gradient + inset box-shadow */
+  background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+.it-sl-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  /* 材质：radial-gradient + box-shadow */
+  background: radial-gradient(circle at 35% 35%, var(--surface), var(--surface-3));
+  border: 2px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 0 3px var(--accent-glow);
+  cursor: pointer;
+}
+.it-sl-input::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--surface), var(--surface-3));
+  border: 2px solid var(--accent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), 0 0 0 3px var(--accent-glow);
+  cursor: pointer;
+}
+.it-sl-val {
+  min-width: 48px;
+  text-align: right;
+  font-size: 18px;
+  color: var(--accent);
+  font-feature-settings: "tnum";
+}
+
+/* ════════════════════════════════════════════════
+ * TabSwitch — 点击切 tab
+ * ════════════════════════════════════════════════ */
+.it-ts { display: flex; flex-direction: column; min-width: 280px; }
+.it-ts-bar { display: flex; gap: 4px; }
+.it-ts-tab {
+  padding: 8px 16px;
+  border-radius: 8px 8px 0 0;
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  background: var(--surface-2);
+  color: var(--text-mute);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  /* 材质：box-shadow（支柱3） */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: color var(--dur-quick) var(--ease-quart),
+              box-shadow var(--dur-quick) var(--ease-quart),
+              background var(--dur-quick) var(--ease-quart);
+}
+.it-ts-tab:hover { color: var(--text); }
+.it-ts-tab.is-active {
+  color: var(--accent);
+  background: var(--elev-1);
+  /* 材质：box-shadow + accent 描线（active 态 accent） */
+  box-shadow: 0 4px 12px var(--accent-glow), inset 0 -2px 0 var(--accent);
+}
+.it-ts-panel {
+  padding: 16px;
+  border: 1px solid var(--rule);
+  border-radius: 0 8px 8px 8px;
+  background: var(--elev-1);
+  color: var(--text);
+  font-size: 16px;
+  min-height: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+/* ════════════════════════════════════════════════
+ * NodeGraph — 可点击节点图
+ * ════════════════════════════════════════════════ */
+.it-ng { width: 280px; }
+.it-ng-board { display: flex; flex-direction: column; gap: 16px; }
+.it-ng-group { display: flex; flex-direction: column; gap: 8px; }
+.it-ng-node {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--accent-glow);
+  background-color: transparent;
+  /* 材质：radial-gradient + box-shadow（支柱3） */
+  background-image: radial-gradient(circle at 30% 30%, var(--elev-1), var(--surface-3));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  transition: transform var(--dur-quick) var(--ease-quart),
+              box-shadow var(--dur-quick) var(--ease-quart),
+              border-color var(--dur-quick) var(--ease-quart);
+}
+.it-ng-node:hover { transform: translateY(-1px); }
+.it-ng-node.is-open {
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.it-ng-label { flex: 1; text-align: left; }
+.it-ng-mark { color: var(--accent); font-size: 18px; }
+.it-ng-children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 20px;
+  margin-left: 14px;
+  border-left: 2px solid var(--accent-glow);
+}
+.it-ng-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+}
+.it-ng-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}

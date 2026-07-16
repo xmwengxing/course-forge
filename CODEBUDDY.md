@@ -36,8 +36,7 @@ course-forge/
 │   ├── RECORDING.md          #   Auto-record via ?auto=1
 │   ├── DEPLOYMENT.md         #   Distribution + embedding
 │   ├── DESIGN-SYSTEM.md
-│   ├── ANIMEJS-GUIDE.md, ANIMEJS-EXAMPLES-INDEX.md
-│   └── EXAMPLES/             #   Anchor chapters (look up structure, do not copy)
+│   └── ANIMEJS-GUIDE.md, ANIMEJS-EXAMPLES-INDEX.md
 ├── scripts/
 │   ├── scaffold.sh           #   Generate a new presentation project (copies scripts + tts-providers from templates/ into the project)
 │   ├── subtitle-timing.py    #   Generate subtitle-timing.json from audio
@@ -51,7 +50,7 @@ course-forge/
 │   ├── index.html
 │   ├── vite.config.ts        #   Port 5174, fs.allow [".."]
 │   └── presentation/src/
-│       ├── chapters/01-example/    #   Reference chapter (TSX + CSS + narrations.ts)
+│       ├── chapters/             #   章节目录（不带示例，从零创建）
 │       ├── components/             #   Reusable building blocks
 │       ├── hooks/                  #   useStepper, useAudioPlayer, useStageScale, useAutoMode
 │       ├── registry/chapters.ts, types.ts

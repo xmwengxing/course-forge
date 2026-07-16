@@ -82,7 +82,7 @@ Phase 4   部署嵌入 / 可选录屏
 | Phase 0 立项 / Phase 1.1-1.2 内容编写 | `references/SCRIPT-STYLE.md` + `references/OUTLINE-FORMAT.md` + `article.md`（用户原文，如有） | 大课 / 需分工 → `references/SCRIPT-WRITING.md`（立项 + 逐课剧本 + 按课子代理分工 + 跨课衔接） |
 | **Checkpoint Plan 选主题** | —— | `themes/*/theme.json`（动态读全部，列清单 + `bestFor` 推荐 + `descriptionZh`）；`references/THEMES.md`；`references/COURSE-STRUCTURE.md`（课程结构） |
 | Phase 2.1 脚手架 | —— | 本文件 § Phase 2.1 看一次 |
-| **Phase 2.4 实现单章（×N）** | **`references/CHAPTER-CRAFT.md`** 单一入口 + 当前主题 `themes/<id>/theme.json` + 本章 outline.md 段落 + `article.md` 本章段落 + 素材清单 | `references/EXAMPLES/`（结构示意，非抄袭模板）；`references/THEMES.md` 完整 token 契约；`references/ANIMEJS-GUIDE.md`（需真动画时） |
+| **Phase 2.4 实现单章（×N）** | **`references/CHAPTER-CRAFT.md`** 单一入口 + 当前主题 `themes/<id>/theme.json` + 本章 outline.md 段落 + `article.md` 本章段落 + 素材清单 | `references/THEMES.md` 完整 token 契约；`references/ANIMEJS-GUIDE.md`（需真动画时，材质 8 手法为硬约束） |
 | Phase 3 音频合成 | `references/AUDIO.md`（narrations.ts → segments.json → 任意 provider） | `scripts/tts-providers/README.md`（换 / 自带 provider 时） |
 | Phase 4 部署 | `references/DEPLOYMENT.md`（嵌入） | `references/RECORDING.md`（可选录屏） |
 
@@ -253,8 +253,9 @@ bash <path-to-course-forge>/scripts/scaffold.sh --list-themes
 >
 > 自定义主题 → 先按 `references/THEMES.md`「创作新主题」做一个 `themes/<my-theme>/`，再 `--theme=<my-theme>`。
 
-脚手架带 `01-example` demo，写第一章前**删掉**：`rm -rf presentation/src/chapters/01-example`，
-并移除 `registry/chapters.ts` 里 `ExampleChapter` 的 import 和 `CHAPTERS` 数组示例项。
+本模板**不带示例章节**（避免风格固化）。从零创建第一章：`mkdir src/chapters/01-<id>` →
+写 `<Chapter>.tsx` + `.css` + `narrations.ts`（见 `references/CHAPTER-CRAFT.md`，含「视觉焦点与着重渲染」四大支柱）→
+在 `registry/chapters.ts` 注册 → 在 `course.json` 加章节条目。
 
 ### 2.2 第 1 章 —— 主线程 + 强制验收
 
@@ -277,6 +278,7 @@ token 不够用会立刻暴露，早改成本最低；后续章节都参考它�
 - □ 反 AI 味（视觉）：紫粉渐变 / 圆角彩边 / 假插画 / emoji？
 - □ 反 AI 味（内容）：假共情 / 万能模板 / 自我标榜 / 排比堆砌？见 `references/SCRIPT-STYLE.md` § 去 AI 味五类
 - □ DevTools 切 1920×1080 / 1280×720 两视口：内容不被裁切
+- □ **`?auto=1` 验收需音频**：若要用自动播放（`?auto=1`，音频+字幕+自动推进）验收，**必须先合成该章音频**（提前走 Phase 3 的 extract→synthesize→subtitle 三步），否则只能手动点击推进验收（无音频时 Auto 模式退化为字数估时，听不到口播）
 
 ### 2.3 第 2~N 章 —— 按选定模式
 
@@ -329,6 +331,11 @@ agent **应**通过**渐进式披露**按需加载现成的**设计类 skill 或
 
 Phase 2 结束后必须停，问用户是否合成音频（自动播放 / 字幕对齐）。
 **合成** → Phase 3；**不合成** → 直接 Phase 4（手动播放 + 可选后期配音）。
+
+> **anchor 验收的特殊性**：第 1 章 anchor 验收（Phase 2.2）若用户想用 `?auto=1`（自动播放 + 字幕），
+> 需在验收前先合成该章音频（提前走 Phase 3 的 extract→synthesize→subtitle 三步）。即 anchor 的音频
+> 合成可前移到 Phase 2.2 验收前，不必等 Phase 2 全部完成——这是唯一允许 Phase 3 提前的场景。
+> 不合成音频时，anchor 只能手动点击推进验收。
 
 ---
 

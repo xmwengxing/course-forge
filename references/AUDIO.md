@@ -91,6 +91,12 @@ npm run synthesize-audio -- --force   # 全部重合成
 npm run synthesize-audio -- --voice=<voice-id>  # 指定音色
 ```
 
+> **Windows / Git-Bash 注意**：`npm run synthesize-audio` 的子进程可能不继承 `export PATH`
+> （如 venv 的 Scripts 目录）。若 `tts_check` 报 "not found" 但你确认已装，改用直接调用：
+> `export PATH="/c/path/to/venv/Scripts:$PATH" && bash scripts/synthesize-audio.sh --provider=edge`。
+> Git-Bash 的 `command -v` 需 `/c/` 格式 PATH（`C:/` 格式找不到 .exe）。edge provider 也支持
+> `export EDGE_TTS_BIN=/c/path/to/edge-tts.exe` 直接指定路径，或 fallback 到 `python -m edge_tts`。
+
 启动时 runner 会先调 provider 的 `tts_check`（针对 minimax 是检查 `MINIMAX_API_KEY` 是否已设置），缺啥报啥。修完再跑。每条段打印进度：
 
 ```

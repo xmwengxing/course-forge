@@ -32,3 +32,4 @@ e/
 # Editor / temp backups
 *.bak
 SKILL.md.bak
+.workbuddy/

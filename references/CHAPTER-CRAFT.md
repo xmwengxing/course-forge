@@ -85,6 +85,39 @@
 
 ---
 
+## 视觉焦点与着重渲染（四大支柱）
+
+> **这是课件区别于 PPT 的核心**：每屏一个视觉重心，核心知识点用材质 + 对比 + 动态强调"演"出来。
+> 纯色 flat + 瞬间显示 = 不合格。详见 `docs/VISUAL-DESIGN-UPGRADE.md`。
+
+### 支柱 1 · 视觉焦点单一化
+每屏一个视觉重心，核心知识点放大（1.5-2×）+ 居中，背景留白弱化。
+**自检**：关掉所有文字，屏上还有一个明确的视觉重心 → 合格；没有 → 回去补。
+
+### 支柱 2 · 对比层次（核心突出）
+核心 step 激活时，非核心元素 `opacity: 0.4` 弱化（dim），核心满亮。
+多色语义对比：用主题多个 accent 色表达不同语义（`--accent` 主 / `--accent-tech` 辅 /
+`--accent-good` 对 / `--accent-warn` 警 / `--accent-deep` 深层）。
+**禁**全屏单色；核心知识点必用"对比色对"（如黄+青、黄+绿）。
+
+### 支柱 3 · 材质立体（硬约束）
+核心视觉元素 ≥ 2 种材质手法叠加（见 `ANIMEJS-GUIDE.md` §X 8 手法）：
+`linear-gradient` / `radial-gradient` / `box-shadow` 多层 / `drop-shadow` /
+`mix-blend-mode` / 描线渐变 / `backdrop-filter` / `backface-visibility`。
+0-1 种纯色 flat = **FAIL**（lint 拦截）。告别纯色色块。
+
+### 支柱 4 · 动态强调手法库
+核心知识点出现时必"演"出来，禁瞬间显示：
+- **spotlight 聚光**：核心亮 + `radial-gradient` 蒙版 dim 周围
+- **描线自绘**：`stroke-dashoffset` 动画（轴线/路径非瞬间显示）
+- **粒子聚拢**：多点 `transform` 聚合（animejs stagger）
+- **缩放脉冲**：`scale` 0→1.2→1 弹跳（outBack easing）
+- **数字递增**：count-up（数据非直接显示）
+
+**禁**：核心知识点用 `opacity: 0→1` 瞬间淡入（= PPT）；必须伴随 ≥ 1 种动态强调。
+
+---
+
 ## 逐步揭示，禁止一次全展示
 
 `step >= N` 控制每步展什么。最重要的一条：
@@ -428,9 +461,9 @@ AI 生成的网页有几种共有的"视觉指纹"，**全部不要**：
 
 **完整指南**：[`ANIMEJS-GUIDE.md`](ANIMEJS-GUIDE.md)（animejs v4 实战指南，5 大常用封装 + step 驱动配合 + token 主题 + 性能与可访问性 + 故障排查）
 
-**完整章节 anchor**：[`EXAMPLES/example-anime/`](EXAMPLES/example-anime/)（30 步 + 3 处真视觉演示 + 2 处互动，全部用 animejs 替代手写 keyframes）
+**官方材质范例**：[`ANIMEJS-EXAMPLES-INDEX.md`](ANIMEJS-EXAMPLES-INDEX.md)（animejs 官方 25 个示例索引，材质技法见 §X.4）—— 本仓库不再自带示例章节，避免风格固化。
 
-> ⚠️ **警告**: anchor 中的动画设计（节点滚动 / 柱状图 grow / SVG 描线 / 拖拽排序）只是"animejs API 用法的最小示范"，**不是"标准答案"**。按你自己的内容自由设计——曾有项目因照抄"线条+形状+物体"套路导致所有章节动画风格固化，实际效果很差。**参考 API 用法，参考 step 驱动 + useEffect revert 的清理模式，参考 token 主题隔离原则**——其他都按内容现编。
+> ⚠️ **警告**: 动画设计按你自己的内容自由设计——曾有项目因照抄固定套路导致所有章节动画风格固化，实际效果很差。**参考官方 API 用法，参考 step 驱动 + useEffect revert 的清理模式，参考 token 主题隔离原则**——其他都按内容现编，套用四大支柱。
 
 ---
 
