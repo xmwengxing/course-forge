@@ -89,6 +89,11 @@
 
 > **这是课件区别于 PPT 的核心**：每屏一个视觉重心，核心知识点用材质 + 对比 + 动态强调"演"出来。
 > 纯色 flat + 瞬间显示 = 不合格。详见 `docs/VISUAL-DESIGN-UPGRADE.md`。
+>
+> **动画词汇与配色速查**（按内容现编，别照抄模板）：
+> - 原子配方（glow 辉光 / 镜像对比 / 景深聚焦 / 自绘描线 / 粒子 / 弹性 / count-up / 字符级 / 卡片组装，每条映射支柱）→ [`ANIMATION-RECIPES.md`](ANIMATION-RECIPES.md)
+> - 多阶段场景编排骨架（开场 / 对比 / 数据 / 概念墙 / 关系网 / 逐字 / 放大揭幕）→ [`SCENE-BLUEPRINTS.md`](SCENE-BLUEPRINTS.md)
+> - 按章节情绪选配色（9 套 mood → theme token 映射）→ [`PALETTES.md`](PALETTES.md)
 
 ### 支柱 1 · 视觉焦点单一化
 每屏一个视觉重心，核心知识点放大（1.5-2×）+ 居中，背景留白弱化。

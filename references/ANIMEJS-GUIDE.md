@@ -32,6 +32,8 @@ Q4: 你的画面是简单入场 / 出场 / 状态切换?
   →  仍想做"有质感的物体" → 走 §X 5 大共性 (含材质) 单独看
 ```
 
+> **动画词汇不够用？** 需要 glow 辉光 / 镜像对比 / 景深聚焦 / 自绘描线 / 粒子 / 弹性入场 / count-up / 字符级 / 卡片组装 等现成配方 → 见 [`ANIMATION-RECIPES.md`](ANIMATION-RECIPES.md)（已从 heygen-com/hyperframes 移植为 anime.js v4.4.1，每条映射四大支柱）。多阶段场景编排骨架见 [`SCENE-BLUEPRINTS.md`](SCENE-BLUEPRINTS.md)；按章节情绪选配色见 [`PALETTES.md`](PALETTES.md)。
+
 **v4.4.1 项目禁止直接 `animate(threeObj, ...)`** (实测抛 `str.includes is not a function`); **v4.5.0+ 项目可走 §6 Three.js adapter** (内置支持)。详见 §0.5 + §6。
 
 ---

@@ -383,6 +383,9 @@ Phase 2 结束后必须停，问用户是否合成音频（自动播放 / 字幕
 | `references/SCRIPT-WRITING.md` | 大课 / 需分工 — 立项 + 逐课剧本(按课并行子代理/课内单代理) + 字数/时长公式 + 跨课衔接(course-bible) |
 | `references/CHAPTER-CRAFT.md` | **Phase 2.4 每章单一入口** — 十条原则 / 视觉演示 / 逐步揭示 / 双源 / 反 AI 味 / 代码红线 / 完工自检 / animejs 升级 |
 | `references/ANIMEJS-GUIDE.md` | 需要「真动画」或「物理级拖拽」时 |
+| `references/ANIMATION-RECIPES.md` | Phase 2.4 做画面时 — 原子动画配方（glow/对比/聚焦/描线/粒子/弹性/count-up/字符级/组装，每条映射四大支柱），从 heygen-com/hyperframes 移植为 anime.js v4.4.1 |
+| `references/SCENE-BLUEPRINTS.md` | Phase 2.4 做画面时 — 多阶段场景编排骨架（开场/对比/数据/概念墙/关系网/逐字/放大揭幕） |
+| `references/PALETTES.md` | Phase 2.4 做画面时 — 按章节情绪选配色（9 套 mood → theme token 映射） |
 | `references/COURSE-STRUCTURE.md` | 课程结构（课程 > 大纲·分段 > 章节 > 屏 > 步）、密度约束、chrome 组件 |
 | `references/THEMES.md` | 选 / 造 / 切主题 — token 契约 + 内置主题 + 创作流程 |
 | `references/AUDIO.md` | Phase 3 — provider-agnostic 音频合成、故障排查 |
